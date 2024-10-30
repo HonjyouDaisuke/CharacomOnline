@@ -1,0 +1,26 @@
+﻿@inject ILogger<NavMenu> Logger
+
+<RadzenSidebar @bind-Expanded="@SidebarExpanded">
+	<RadzenPanelMenu>
+		<RadzenPanelMenuItem Text="Home" Path="/" Icon="home" />
+		<RadzenPanelMenuItem Text="Counter" Path=@("/counter") Icon="account_box" />
+		<RadzenPanelMenuItem Text="Test Page" Path=@("/test") Icon="account_box" />
+		<RadzenPanelMenuItem Text="CharaData Page" Path=@("/charaimages") Icon="account_box" />
+	</RadzenPanelMenu>
+</RadzenSidebar>
+
+@code {
+	[Parameter]
+	public bool SidebarExpanded { get; set; } = true;
+
+	// バインディングのためのイベントコールバック
+	[Parameter]
+	public EventCallback<bool> SidebarExpandedChanged { get; set; }
+
+	// RadzenSidebarの状態変更をSidebarExpandedプロパティに反映
+	private async Task ToggleSidebar()
+	{
+		bool newValue = !SidebarExpanded;
+		await SidebarExpandedChanged.InvokeAsync(newValue);
+	}
+}

@@ -1,0 +1,57 @@
+@using Toolbelt.Blazor.FileDropZone
+@inject FileUploadService FileUploadService
+
+
+<FileDropZone class="drop-zone">
+	<InputFile hidden OnChange="OnInputFileChange" multiple />
+	<RadzenDataGrid Data="@CharaDataView.charaDataRepository.appraisals">
+		<Columns>
+			<RadzenDataGridColumn Property="Id" Title="No" />
+			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
+			<RadzenDataGridColumn Property="MaterialName" Title="資料名" />
+			<RadzenDataGridColumn Property="Size" Title="サイズ" />
+			<RadzenDataGridColumn Title="イメージ">
+				<Template>
+					<RadzenImage Path="@context.ImageUrl" alt="Chara Image" width="50" height="50" />
+				</Template>
+			</RadzenDataGridColumn>
+		</Columns>
+	</RadzenDataGrid>
+</FileDropZone>
+
+<style>
+	.drop-zone {
+	padding: 2px;
+	border: dashed 2px transparent;
+	transition: border linear 0.2s;
+	}
+
+	.drop-zone.hover {
+	border: dashed 2px darkorange;
+	cursor: pointer;
+	}
+</style>
+
+@code {
+	private List<CharaDataClass> charaData = new List<CharaDataClass>();
+	[Parameter]
+	public CharaDataViewModel CharaDataView {get; set;} = new CharaDataViewModel();
+	private async void  OnInputFileChange(InputFileChangeEventArgs e)
+	{
+		try
+		{
+			foreach (var file in e.GetMultipleFiles(30))
+			{
+				//Console.WriteLine(file.Name);
+				await CharaDataView.DataInput(FileUploadService, file);
+			}
+
+			
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error: {ex.Message}");
+		}
+		StateHasChanged();
+	}
+}

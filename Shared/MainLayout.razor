@@ -1,0 +1,20 @@
+﻿@inherits LayoutComponentBase
+
+<PageTitle>CharacomOnline</PageTitle>
+
+<RadzenLayout>
+	<MainHeader @bind-SidebarExpanded="parentSidebarExpanded" />
+	<NavMenu @bind-SidebarExpanded="parentSidebarExpanded" />
+	<RadzenBody>
+		<div class="rz-p-4">
+			@Body
+		</div>
+	</RadzenBody>
+	<RadzenFooter>
+		Footer
+	</RadzenFooter>
+</RadzenLayout>
+
+@code {
+	private bool parentSidebarExpanded = true;
+}

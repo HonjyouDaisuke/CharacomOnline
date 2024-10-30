@@ -1,0 +1,21 @@
+<RadzenHeader>
+	<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+		<RadzenSidebarToggle Click="@ChangeExpand" />
+		<RadzenLabel Text="Characom Imapger Pro Online" />
+	</RadzenStack>
+</RadzenHeader>
+
+@code {
+	[Parameter]
+	public bool SidebarExpanded { get; set; } = true;
+
+	// 変更イベントのためのEventCallbackプロパティ
+	[Parameter]
+	public EventCallback<bool> SidebarExpandedChanged { get; set; }
+
+	private async Task ChangeExpand()
+	{
+		bool newValue = !SidebarExpanded;
+		await SidebarExpandedChanged.InvokeAsync(newValue);  // 親に新しい値を送信
+	}
+}

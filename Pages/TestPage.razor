@@ -1,0 +1,16 @@
+﻿@page "/test"
+
+<PageTitle>Test</PageTitle>
+
+<h1>Test Page</h1>
+<RadzenButton Click="@IncrementCount" Text="Click me"></RadzenButton>
+
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}

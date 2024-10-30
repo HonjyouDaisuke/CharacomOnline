@@ -1,0 +1,30 @@
+@page "/charaimages"
+@using CharacomOnline.Components
+<PageTitle>Chara Images</PageTitle>
+
+<h1>画像一覧</h1>
+
+<RadzenRow Gap="1rem">
+	<RadzenColumn>
+		<RadzenCard>
+			<CharaDataGrid CharaDataView="@charaDataViewModel"/>
+		</RadzenCard>
+	</RadzenColumn>
+	<RadzenColumn>
+		<RadzenCard>
+			<CharaDataGrid CharaDataView="@charaDataViewModel"/>
+		</RadzenCard>
+	</RadzenColumn>
+
+</RadzenRow>
+
+
+@code {
+	private int currentCount = 0;
+	private CharaDataViewModel charaDataViewModel = new CharaDataViewModel();
+
+	private void IncrementCount()
+	{
+		currentCount++;
+	}
+}
