@@ -4,11 +4,12 @@
 
 <FileDropZone class="drop-zone">
 	<InputFile hidden OnChange="OnInputFileChange" multiple />
-	<RadzenDataGrid Data="@CharaDataView.charaDataRepository.appraisals">
+	<RadzenDataGrid Data="@CharaDataView.charaDataRepository.appraisals" AllowGrouping="true" Render="OnRender">
 		<Columns>
 			<RadzenDataGridColumn Property="Id" Title="No" />
 			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
 			<RadzenDataGridColumn Property="MaterialName" Title="資料名" />
+			<RadzenDataGridColumn Property="NumString" Title="回数" />
 			<RadzenDataGridColumn Property="Size" Title="サイズ" />
 			<RadzenDataGridColumn Title="イメージ">
 				<Template>
@@ -36,6 +37,16 @@
 	private List<CharaDataClass> charaData = new List<CharaDataClass>();
 	[Parameter]
 	public CharaDataViewModel CharaDataView {get; set;} = new CharaDataViewModel();
+
+	void OnRender(DataGridRenderEventArgs<CharaDataClass> args)
+	{
+		if (args.FirstRender)
+		{
+			args.Grid.Groups.Add(new GroupDescriptor() { Title = "CharaName", Property = "CharaName", SortOrder = SortOrder.Descending });
+			StateHasChanged();
+		}
+	}
+
 	private async void  OnInputFileChange(InputFileChangeEventArgs e)
 	{
 		try

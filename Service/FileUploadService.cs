@@ -1,9 +1,4 @@
-using System.Drawing.Text;
-using System.Threading;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.TagHelpers;
-using Microsoft.AspNetCore.Routing.Constraints;
 
 namespace CharacomOnline;
 
@@ -54,6 +49,7 @@ public class FileUploadService
             Id = 0,
             CharaName = fileInfo.CharaName,
             MaterialName = fileInfo.MaterialName,
+            NumString = fileInfo.NumString,
             Size = fileInfo.Size,
             ImageUrl = imageUrl,
         };
