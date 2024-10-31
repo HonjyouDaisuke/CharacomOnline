@@ -1,18 +1,20 @@
 @page "/charaimages"
 @using CharacomOnline.Components
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Entity
 <PageTitle>Chara Images</PageTitle>
 
 <h1>画像一覧</h1>
 
-<RadzenRow>
+<RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+	<RadzenRow>
 	<RadzenColumn >
 		<RadzenCard>
-<RadzenImage AlignItems="AlignItems.Center" Path="@selectedData.ImageUrl" Height=300px Width=300px/>
-</RadzenCard>
-</RadzenColumn>
-</RadzenRow>
-<RadzenRow Gap="1rem">
-	
+			<RadzenImage AlignItems="AlignItems.Center" Path="@selectedData.ImageUrl" Height=300px Width=300px/>
+		</RadzenCard>
+	</RadzenColumn>
+	</RadzenRow>
+	<RadzenRow>
 	<RadzenColumn>
 		<RadzenCard>
 			<CharaDataGrid CharaDataView="@charaDataViewModel" SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
@@ -23,19 +25,16 @@
 			<CharaDataGrid CharaDataView="@charaDataViewModel" SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
 		</RadzenCard>
 	</RadzenColumn>
-
-</RadzenRow>
-
+	</RadzenRow>
+</RadzenStack>
 
 @code {
-	private int currentCount = 0;
-
 	private CharaDataClass selectedData { get; set; } = new CharaDataClass();
 	private CharaDataViewModel charaDataViewModel = new CharaDataViewModel();
 
 	private void OnSelectedDataChanged(CharaDataClass newSelectedData)
 	{
-Console.WriteLine("selected Data Changed!!");
+		Console.WriteLine("selected Data Changed!!");
 		selectedData = newSelectedData;
 	}
 }

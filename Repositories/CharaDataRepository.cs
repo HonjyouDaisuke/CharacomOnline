@@ -1,14 +1,17 @@
+using CharacomOnline.Entity;
 using System.Collections.ObjectModel;
-using CharacomOnline;
+
+namespace CharacomOnline.Repositories;
 
 public class CharaDataRepository
 {
-    public ObservableCollection<CharaDataClass> appraisals { get; set; } =
-        new ObservableCollection<CharaDataClass>();
-    List<CharaDataClass> targets = new List<CharaDataClass>();
+	private readonly List<CharaDataClass> targets = new();
 
-    public void addApprisals(CharaDataClass data)
-    {
-        appraisals.Add(data);
-    }
+	public ObservableCollection<CharaDataClass> Appraisals { get; set; } =
+			new ObservableCollection<CharaDataClass>();
+
+	public void AddAppraisals(CharaDataClass data)
+	{
+		Appraisals.Add(data);
+	}
 }

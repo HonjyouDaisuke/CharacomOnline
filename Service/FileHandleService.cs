@@ -1,15 +1,20 @@
 using Microsoft.AspNetCore.Components.Forms;
 using SixLabors.ImageSharp;
 
-public struct FileInfomation
+namespace CharacomOnline.Service;
+
+public struct FileInformation
 {
 	public string CharaName { get; set; }
+
 	public string MaterialName { get; set; }
+
 	public string NumString { get; set; }
+
 	public string Size { get; set; }
 }
 
-public struct SizeInfomation
+public struct SizeInformation
 {
 	public long Width;
 	public long Height;
@@ -17,10 +22,10 @@ public struct SizeInfomation
 
 public class FileHandleService
 {
-	public async Task<FileInfomation> GetDataInfo(IBrowserFile file)
+	public async Task<FileInformation> GetDataInfo(IBrowserFile file)
 	{
-		FileInfomation resData = new FileInfomation();
-		SizeInfomation resSize = await GetImageSizeAsync(file);
+		FileInformation resData = new();
+		SizeInformation resSize = await GetImageSizeAsync(file);
 
 		resData.CharaName = GetCharaNameFromFileName(file.Name);
 		resData.MaterialName = GetMaterialNameFromFileName(file.Name);
@@ -30,10 +35,10 @@ public class FileHandleService
 	}
 
 	// ImageSharp を使って画像サイズを取得
-	public async Task<SizeInfomation> GetImageSizeAsync(IBrowserFile file)
+	public async Task<SizeInformation> GetImageSizeAsync(IBrowserFile file)
 	{
 		using var stream = file.OpenReadStream();
-		SizeInfomation size = new SizeInfomation();
+		SizeInformation size = new();
 
 		// ImageSharp で画像を読み込み、画像情報から幅と高さを取得
 		var image = await Image.LoadAsync(stream);
@@ -42,26 +47,20 @@ public class FileHandleService
 		return size;
 	}
 
-	private string GetCharaNameFromFileName(string fileName)
+	private static string GetCharaNameFromFileName(string fileName)
 	{
-		string result = "";
-		result = fileName.Substring(0, 1);
-		return result;
+		return fileName[..1];
 	}
 
-	private string GetMaterialNameFromFileName(string fileName)
+	private static string GetMaterialNameFromFileName(string fileName)
 	{
-		string result = "";
-		result = fileName.Substring(1, fileName.LastIndexOf("-") - 1);
-		return result;
+		return fileName[1..fileName.LastIndexOf("-")];
 	}
 
-	private string GetNumStringFromFileName(string fileName)
+	private static string GetNumStringFromFileName(string fileName)
 	{
-		string result = "";
 		int startPos = fileName.LastIndexOf("-") + 1;
 		int endPos = fileName.LastIndexOf(".") - startPos;
-		result = fileName.Substring(startPos, endPos);
-		return result;
+		return fileName.Substring(startPos, endPos);
 	}
 }

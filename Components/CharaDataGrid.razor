@@ -1,10 +1,13 @@
+@using CharacomOnline.Service
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Entity
 @using Toolbelt.Blazor.FileDropZone
 @inject FileUploadService FileUploadService
 
 
 <FileDropZone class="drop-zone">
 	<InputFile hidden OnChange="OnInputFileChange" multiple />
-	<RadzenDataGrid TItem="CharaDataClass" Data="@CharaDataView.charaDataRepository.appraisals" RowSelect="@OnRowSelected" SelectionMode="DataGridSelectionMode.Single" AllowGrouping="true" Render="OnRender">
+	<RadzenDataGrid TItem="CharaDataClass" Data="@CharaDataView.CharaDataRepository.Appraisals" RowSelect="@OnRowSelected" SelectionMode="DataGridSelectionMode.Single" AllowGrouping="true" Render="OnRender">
 		<Columns>
 			<RadzenDataGridColumn Property="Id" Title="No" />
 			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
@@ -61,16 +64,19 @@
 		charaData.ImageUrl = "";
 		return charaData;
 	}
+
+	/**
 	protected override async Task OnInitializedAsync()
 	{
-/*
 		await base.OnInitializedAsync();
 		for (int i = 0; i < 10; i++)
 		{
-			CharaDataView.charaDataRepository.addApprisals(dataMake());
+			CharaDataView.charaDataRepository.addAppraisals(dataMake());
 		}
-		*/
+		
 	}
+	**/
+
 	void OnRender(DataGridRenderEventArgs<CharaDataClass> args)
 	{
 		if (args.FirstRender)
