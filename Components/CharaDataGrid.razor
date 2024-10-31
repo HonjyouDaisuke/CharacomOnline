@@ -4,7 +4,7 @@
 
 <FileDropZone class="drop-zone">
 	<InputFile hidden OnChange="OnInputFileChange" multiple />
-	<RadzenDataGrid Data="@CharaDataView.charaDataRepository.appraisals" AllowGrouping="true" Render="OnRender">
+	<RadzenDataGrid TItem="CharaDataClass" Data="@CharaDataView.charaDataRepository.appraisals" RowSelect="@OnRowSelected" SelectionMode="DataGridSelectionMode.Single" AllowGrouping="true" Render="OnRender">
 		<Columns>
 			<RadzenDataGridColumn Property="Id" Title="No" />
 			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
@@ -38,6 +38,39 @@
 	[Parameter]
 	public CharaDataViewModel CharaDataView {get; set;} = new CharaDataViewModel();
 
+	[Parameter]
+	public CharaDataClass SelectedData {get;set;} = new CharaDataClass();
+
+	[Parameter]
+	public EventCallback<CharaDataClass> SelectedDataChanged { get; set; }
+
+	private async void OnRowSelected(CharaDataClass selectedData)
+	{
+		SelectedData = selectedData;
+		Console.WriteLine(selectedData.ToString());
+		await SelectedDataChanged.InvokeAsync(selectedData);
+	}
+	private CharaDataClass dataMake()
+	{
+		CharaDataClass charaData = new CharaDataClass();
+		charaData.CharaName = "a";
+		charaData.MaterialName = "b";
+		charaData.Id = 1;
+		charaData.NumString = "5";
+		charaData.Size = "10 x 10";
+		charaData.ImageUrl = "";
+		return charaData;
+	}
+	protected override async Task OnInitializedAsync()
+	{
+/*
+		await base.OnInitializedAsync();
+		for (int i = 0; i < 10; i++)
+		{
+			CharaDataView.charaDataRepository.addApprisals(dataMake());
+		}
+		*/
+	}
 	void OnRender(DataGridRenderEventArgs<CharaDataClass> args)
 	{
 		if (args.FirstRender)

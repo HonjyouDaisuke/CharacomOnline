@@ -34,7 +34,7 @@ public class FileUploadService
         return $"/images/{uniqueFileName}";
     }
 
-    public async Task<CharaDataClass> FileUploadAsync(IBrowserFile file)
+    public async Task<CharaDataClass?> FileUploadAsync(IBrowserFile file)
     {
         var imageUrl = await SaveFileAsync(file);
 

@@ -4,15 +4,23 @@
 
 <h1>画像一覧</h1>
 
+<RadzenRow>
+	<RadzenColumn >
+		<RadzenCard>
+<RadzenImage AlignItems="AlignItems.Center" Path="@selectedData.ImageUrl" Height=300px Width=300px/>
+</RadzenCard>
+</RadzenColumn>
+</RadzenRow>
 <RadzenRow Gap="1rem">
+	
 	<RadzenColumn>
 		<RadzenCard>
-			<CharaDataGrid CharaDataView="@charaDataViewModel"/>
+			<CharaDataGrid CharaDataView="@charaDataViewModel" SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
 		</RadzenCard>
 	</RadzenColumn>
 	<RadzenColumn>
 		<RadzenCard>
-			<CharaDataGrid CharaDataView="@charaDataViewModel"/>
+			<CharaDataGrid CharaDataView="@charaDataViewModel" SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
 		</RadzenCard>
 	</RadzenColumn>
 
@@ -21,10 +29,13 @@
 
 @code {
 	private int currentCount = 0;
+
+	private CharaDataClass selectedData { get; set; } = new CharaDataClass();
 	private CharaDataViewModel charaDataViewModel = new CharaDataViewModel();
 
-	private void IncrementCount()
+	private void OnSelectedDataChanged(CharaDataClass newSelectedData)
 	{
-		currentCount++;
+Console.WriteLine("selected Data Changed!!");
+		selectedData = newSelectedData;
 	}
 }
