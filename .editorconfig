@@ -60,6 +60,7 @@ csharp_style_var_elsewhere = false:silent
 
 dotnet_diagnostic.SA0001.severity = none
 dotnet_diagnostic.SA1516.severity = none
+dotnet_diagnostic.SA1111.severity = none
 # SA1633: File should have header
 dotnet_diagnostic.SA1633.severity = none
 csharp_space_around_binary_operators = before_and_after
@@ -116,6 +117,9 @@ dotnet_diagnostic.SA1000.severity = none
 
 # SA1208: System using directives should be placed before other using directives
 dotnet_diagnostic.SA1208.severity = none
+
+# SA1111: Closing parenthesis should be on line of last parameter
+dotnet_diagnostic.SA1111.severity = none
 
 [*.vb]
 #### 命名スタイル ####

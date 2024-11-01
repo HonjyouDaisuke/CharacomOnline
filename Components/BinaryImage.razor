@@ -1,0 +1,39 @@
+@using CharacomOnline.Service
+@using Microsoft.AspNetCore.Components.Forms
+@using SkiaSharp
+@inject IWebHostEnvironment env
+
+<h3>画像の2値化</h3>
+
+<InputFile OnChange="OnInputFileChange" accept="image/*" />
+@if (binaryImageData != null)
+{
+	<img src="@binaryImageData" alt="Binary Image" />
+}
+
+@code {
+	private string? binaryImageData;
+
+	private async Task OnInputFileChange(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		Console.WriteLine(file.Name);
+		// 画像を非同期に読み込む
+		var originalBitmap = await ImageEffectService.LoadImageFileAsync(file);
+		if (originalBitmap == null) return;
+
+		var binaryBitmap = new SKBitmap(originalBitmap.Width, originalBitmap.Height);
+		binaryBitmap = await ImageEffectService.GetBinaryBitmap(originalBitmap);
+		if (binaryBitmap == null) return;
+		binaryBitmap = ImageEffectService.ResizeBitmap(binaryBitmap, 100, 100);
+		if (binaryBitmap != null) {
+			binaryImageData = ImageEffectService.GetBinaryImageData(binaryBitmap);
+		}
+	}
+}	using SixLabors.ImageSharp;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+	
