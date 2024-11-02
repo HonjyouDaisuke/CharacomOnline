@@ -23,12 +23,11 @@
 		if (originalBitmap == null) return;
 
 		var binaryBitmap = new SKBitmap(originalBitmap.Width, originalBitmap.Height);
-		binaryBitmap = await ImageEffectService.GetBinaryBitmap(originalBitmap);
+		binaryBitmap = ImageEffectService.ResizeBitmap(originalBitmap, 100, 100);
 		if (binaryBitmap == null) return;
-		binaryBitmap = ImageEffectService.ResizeBitmap(binaryBitmap, 100, 100);
-		if (binaryBitmap != null) {
-			binaryImageData = ImageEffectService.GetBinaryImageData(binaryBitmap);
-		}
+		binaryBitmap = await ImageEffectService.GetBinaryBitmap(binaryBitmap);
+		if (binaryBitmap == null) return;
+		binaryImageData = ImageEffectService.GetBinaryImageData(binaryBitmap);
 	}
 }	using SixLabors.ImageSharp;
 
