@@ -61,6 +61,101 @@ public static class ImageEffectService
     return Task.FromResult<SKBitmap?>(binaryBitmap);
   }
 
+  public static byte[,] ImageArrayFromBitmap(SKBitmap srcBitmap)
+  {
+    byte[,] result = new byte[srcBitmap.Height, srcBitmap.Width];
+
+    for (int j = 0; j < srcBitmap.Height; j++)
+    {
+      for (int i = 0; i < srcBitmap.Width; i++)
+      {
+        var color = srcBitmap.GetPixel(i, j);
+        result[j, i] = (color == SKColors.White) ? (byte)0 : (byte)1;
+      }
+    }
+
+    return result;
+  }
+
+public static SKBitmap WhiteFilledBitmap(SKBitmap srcBitmap)
+{
+    // 指定したサイズで新しいBitmapを作成
+    SKBitmap bitmap = new SKBitmap(srcBitmap.Width, srcBitmap.Height);
+    
+    using (var canvas = new SKCanvas(bitmap))
+    {
+        // 白で塗りつぶす
+        canvas.Clear(SKColors.White);
+    }
+    
+    return bitmap; // 塗りつぶしたBitmapを返す
+}
+
+  public static SKBitmap? OverlayBinaryImages(SKBitmap backBitmap, SKBitmap foreBitmap)
+  {
+    if (backBitmap.Width != foreBitmap.Width || backBitmap.Height != foreBitmap.Height)
+    {
+      return null;
+    }
+
+    // 背景画像と同じサイズでアルファチャンネルを持つ新しいビットマップを作成
+    SKBitmap resultBitmap = new SKBitmap(backBitmap.Width, backBitmap.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+    using (var canvas = new SKCanvas(resultBitmap))
+    {
+        // 背景画像を描画
+        canvas.DrawBitmap(backBitmap, 0, 0);
+
+        // 前景画像のピクセルを走査して白色を透明にする
+        for (int y = 0; y < foreBitmap.Height; y++)
+        {
+            for (int x = 0; x < foreBitmap.Width; x++)
+            {
+                var color = foreBitmap.GetPixel(x, y);
+                if (color.Alpha != 255 || (color.Red == 255 && color.Green == 255 && color.Blue == 255))
+                {
+                    continue; // 白色または完全に透明な場合はスキップ
+                }
+
+                resultBitmap.SetPixel(x, y, color);
+            }
+        }
+    }
+
+    return resultBitmap;
+}
+
+  public static SKBitmap ColorChangeBitmap(SKBitmap srcBitmap, SKColor toColor)
+{
+    SKBitmap resultBitmap = new SKBitmap(srcBitmap.Width, srcBitmap.Height);
+
+    for (int y = 0; y < srcBitmap.Height; y++)
+    {
+        for (int x = 0; x < srcBitmap.Width; x++)
+        {
+            // 現在のピクセルの色を取得
+            var pixelColor = srcBitmap.GetPixel(x, y);
+
+            // 黒であれば、toColorに変換、白であればそのまま
+            if (pixelColor == SKColors.Black)
+            {
+                resultBitmap.SetPixel(x, y, toColor);
+            }
+            else if (pixelColor == SKColors.White)
+            {
+                resultBitmap.SetPixel(x, y, SKColors.White);
+            }
+            else
+            {
+                // 他の色は透明にするなど、任意の処理を指定
+                resultBitmap.SetPixel(x, y, SKColors.Transparent);
+            }
+        }
+    }
+
+    return resultBitmap;
+}
+
   public static SKBitmap ResizeBitmap(SKBitmap skBitmap, int width, int height)
   {
     var resizedBitmap = skBitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.High);

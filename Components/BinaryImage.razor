@@ -1,38 +1,81 @@
 @using CharacomOnline.Service
+@using CharacomOnline.ImageProcessing
 @using Microsoft.AspNetCore.Components.Forms
 @using SkiaSharp
 @inject IWebHostEnvironment env
 
 <h3>画像の2値化</h3>
 
-<InputFile OnChange="OnInputFileChange" accept="image/*" />
+<InputFile OnChange="OnInputFileChange1" accept="image/*" />
+<InputFile OnChange="OnInputFileChange2" accept="image/*" />
 @if (binaryImageData != null)
 {
 	<img src="@binaryImageData" alt="Binary Image" />
+	<p> aaa </p>
+}
+@if (binaryImageData1 != null)
+{
+	<img src="@binaryImageData1" alt="Binary Image" />
+	<p> bbb </p>
+}
+@if (binaryImageData2 != null)
+{
+	<img src="@binaryImageData2" alt="Binary Image" />
+	<p> ccc </p>
 }
 
 @code {
 	private string? binaryImageData;
+	private string? binaryImageData1;
+	private string? binaryImageData2;
+	private IBrowserFile? file1;
+	private IBrowserFile? file2;
 
-	private async Task OnInputFileChange(InputFileChangeEventArgs e)
-	{
-		var file = e.File;
-		Console.WriteLine(file.Name);
-		// 画像を非同期に読み込む
-		var originalBitmap = await ImageEffectService.LoadImageFileAsync(file);
-		if (originalBitmap == null) return;
+	private async Task DrawBitmap() {
+		if (file1 == null || file2 == null) return;
+		Console.WriteLine($"File1 = {file1.Name} File2 = {file2.Name}");
+		var fileBitmap = await ImageEffectService.LoadImageFileAsync(file1);
+		if (fileBitmap == null) return;
 
-		var binaryBitmap = new SKBitmap(originalBitmap.Width, originalBitmap.Height);
-		binaryBitmap = ImageEffectService.ResizeBitmap(originalBitmap, 100, 100);
-		if (binaryBitmap == null) return;
-		binaryBitmap = await ImageEffectService.GetBinaryBitmap(binaryBitmap);
-		if (binaryBitmap == null) return;
-		binaryImageData = ImageEffectService.GetBinaryImageData(binaryBitmap);
+		var file1SKBitmap = new SKBitmap(fileBitmap.Width, fileBitmap.Height);
+		if (file1SKBitmap == null) return;
+		file1SKBitmap = ImageEffectService.ResizeBitmap(fileBitmap, 100, 100);
+		if (file1SKBitmap == null) return;
+		file1SKBitmap = await ImageEffectService.GetBinaryBitmap(file1SKBitmap);
+		if (file1SKBitmap == null) return;
+		file1SKBitmap = await ThinningProcess.ThinBinaryImageAsync(file1SKBitmap);
+		file1SKBitmap = ImageEffectService.ColorChangeBitmap(file1SKBitmap, SKColors.Green);
+		
+		var file2Bitmap = await ImageEffectService.LoadImageFileAsync(file2);
+		if (file2Bitmap == null) return;
+		var file2SKBitmap = new SKBitmap(file2Bitmap.Width, file2Bitmap.Height);
+		if (file2SKBitmap == null) return;
+		file2SKBitmap = ImageEffectService.ResizeBitmap(file2Bitmap, 100, 100);
+		if (file2SKBitmap == null) return;
+		file2SKBitmap = await ImageEffectService.GetBinaryBitmap(file2SKBitmap);
+		if (file2SKBitmap == null) return;
+		file2SKBitmap = ImageEffectService.ColorChangeBitmap(file2SKBitmap, SKColors.Blue);
+		
+		var overlayBitmap = ImageEffectService.OverlayBinaryImages(file1SKBitmap, file2SKBitmap);
+		if (overlayBitmap == null) return;
+		binaryImageData = ImageEffectService.GetBinaryImageData(overlayBitmap);
+
+		binaryImageData1 = ImageEffectService.GetBinaryImageData(file1SKBitmap);
+		binaryImageData2 = ImageEffectService.GetBinaryImageData(file2SKBitmap);
+		Console.WriteLine($"size = {overlayBitmap.Width} x {overlayBitmap.Height}");
+		StateHasChanged();
 	}
-}	using SixLabors.ImageSharp;
 
-#line default
-#line hidden
-#nullable disable
-#nullable restore
-	
+	private async Task OnInputFileChange1(InputFileChangeEventArgs e)
+	{
+		file1 = e.File;
+		await DrawBitmap();
+		return;
+	}
+	private async Task OnInputFileChange2(InputFileChangeEventArgs e)
+	{
+		file2 = e.File;
+		await DrawBitmap();
+		return;
+	}
+}		

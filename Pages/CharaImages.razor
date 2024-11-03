@@ -1,4 +1,5 @@
 @page "/charaimages"
+@using Radzen
 @using CharacomOnline.Components
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Entity
@@ -31,6 +32,7 @@
 @code {
 	private CharaDataClass selectedData { get; set; } = new CharaDataClass();
 	private CharaDataViewModel charaDataViewModel = new CharaDataViewModel();
+
 
 	private void OnSelectedDataChanged(CharaDataClass newSelectedData)
 	{
