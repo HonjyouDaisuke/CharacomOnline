@@ -121,6 +121,9 @@ dotnet_diagnostic.SA1208.severity = none
 # SA1111: Closing parenthesis should be on line of last parameter
 dotnet_diagnostic.SA1111.severity = none
 
+# SA1010: Opening square brackets should be spaced correctly
+dotnet_diagnostic.SA1010.severity = none
+
 [*.vb]
 #### 命名スタイル ####
 

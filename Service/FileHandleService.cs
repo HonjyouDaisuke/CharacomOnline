@@ -54,13 +54,13 @@ public class FileHandleService
 
 	private static string GetMaterialNameFromFileName(string fileName)
 	{
-		return fileName[1..fileName.LastIndexOf("-")];
+		return fileName[1..fileName.LastIndexOf('-')];
 	}
 
 	private static string GetNumStringFromFileName(string fileName)
 	{
-		int startPos = fileName.LastIndexOf("-") + 1;
-		int endPos = fileName.LastIndexOf(".") - startPos;
+		int startPos = fileName.LastIndexOf('-') + 1;
+		int endPos = fileName.LastIndexOf('.') - startPos;
 		return fileName.Substring(startPos, endPos);
 	}
 }

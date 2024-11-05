@@ -1,9 +1,12 @@
 @using CharacomOnline.Service
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Entity
+@using Microsoft.AspNetCore.Components.Forms
 @using Toolbelt.Blazor.FileDropZone
+@using Radzen.Blazor
 @inject FileUploadService FileUploadService
 
+@namespace CharacomOnline.ImageProcessing
 
 <FileDropZone class="drop-zone">
 	<InputFile hidden OnChange="OnInputFileChange" multiple />
