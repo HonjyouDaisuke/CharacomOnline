@@ -274,11 +274,11 @@ public static class WeightedDirectionHistogramAnalyzer
 	/// <summary>
 	///  量子化用補助関数.
 	/// </summary>
-	/// <param name="src">元データ</param>
-	/// <param name="d">方向</param>
-	/// <param name="x">x座標</param>
-	/// <param name="y">y座標</param>
-	/// <returns>量子化合計値</returns>
+	/// <param name="src">元データ.</param>
+	/// <param name="d">方向.</param>
+	/// <param name="x">x座標.</param>
+	/// <param name="y">y座標.</param>
+	/// <returns>量子化合計値.</returns>
 	private static byte CountQuantizationFeature(byte[,,] src, int d, int x, int y)
 	{
 		byte sum = 0;
@@ -299,7 +299,7 @@ public static class WeightedDirectionHistogramAnalyzer
 	///  160 x 160 →　10 x 10マスを合計して16x16に圧縮
 	/// </summary>
 	/// <param name="srcArray">方向線素データ</param>
-	/// <returns>量子化後のデータ</returns>
+	/// <returns>量子化後のデータ.</returns>
 	private static byte[,,] Quantization(byte[,,] srcArray)
 	{
 		const int DIRECTIONS = 16;
@@ -307,11 +307,11 @@ public static class WeightedDirectionHistogramAnalyzer
 		const int MAX_Y = 16;
 		byte[,,] quantizationData = new byte[DIRECTIONS, MAX_Y, MAX_X];
 
-		for (int d = 0; d < 16; d++)
+		for (int d = 0; d < DIRECTIONS; d++)
 		{
-			for (int y = 0; y < 16; y++)
+			for (int y = 0; y < MAX_Y; y++)
 			{
-				for (int x = 0; x < 16; x++)
+				for (int x = 0; x < MAX_X; x++)
 				{
 					quantizationData[d, y, x] = CountQuantizationFeature(srcArray, d, x, y);
 				}
@@ -325,7 +325,7 @@ public static class WeightedDirectionHistogramAnalyzer
 	{
 
 		int m, n, i, j, k;
-		double sum = 0.0;
+		double sum;
 		//Type work;
 
 		System.Diagnostics.Debug.WriteLine(data4.GetLength(0).ToString() + "," + data4.GetLength(1).ToString() + "," + data4.GetLength(2).ToString());
@@ -361,10 +361,10 @@ public static class WeightedDirectionHistogramAnalyzer
 	/// <param name="d">方向</param>
 	/// <param name="x">x座標</param>
 	/// <param name="y">y座標</param>
-	/// <returns>圧縮値</returns>
+	/// <returns>圧縮値.</returns>
 	private static double GetDirCompress(double[,,] src, int d, int x, int y)
 	{
-		double sum = 0.0;
+		double sum;
 
 		if (d == 0)
 		{
