@@ -5,6 +5,15 @@ namespace CharacomOnline.ImageProcessing;
 
 public static class WeightedDirectionHistogramAnalyzer
 {
+	private static readonly double[,] Gaussian =
+				{
+						{ 0.00, 0.09, 0.17, 0.09, 0.00 },
+						{ 0.09, 0.57, 1.05, 0.57, 0.09 },
+						{ 0.17, 1.05, 1.94, 1.05, 0.17 },
+						{ 0.09, 0.57, 1.05, 0.57, 0.09 },
+						{ 0.00, 0.09, 0.17, 0.09, 0.00 },
+				};
+
 	public static double[] GenerateWeightedDirectionHistogram(SKBitmap srcBitmap)
 	{
 		SKBitmap workBitmap = ImageEffectService.ResizeBitmap(srcBitmap, 160, 160);
@@ -224,7 +233,8 @@ public static class WeightedDirectionHistogramAnalyzer
 		x = sx; y = sy;
 		tuiseki2(dat3, data2, ap, bp, x, y, bx, by, sc, n);
 	}
-	static void rasta(byte[,] dat3, byte[,,] data2, int ap, int bp)
+
+	private static void RasterScan(byte[,] dat3, byte[,,] data2, int ap, int bp)
 	{
 		int i, j, n = 3;
 		for (i = 0; i < 161; i++)
@@ -261,38 +271,63 @@ public static class WeightedDirectionHistogramAnalyzer
 		}
 	}
 
-	static void ryousika(byte[,,] data2, byte[,,] data3)
+	/// <summary>
+	///  量子化用補助関数.
+	/// </summary>
+	/// <param name="src">元データ</param>
+	/// <param name="d">方向</param>
+	/// <param name="x">x座標</param>
+	/// <param name="y">y座標</param>
+	/// <returns>量子化合計値</returns>
+	private static byte CountQuantizationFeature(byte[,,] src, int d, int x, int y)
 	{
-		int i, j, k, m, n;
+		byte sum = 0;
 
-		for (i = 0; i < 16; i++)
+		for (int m = 0; m < 10; m++)
 		{
-			for (j = 0; j < 16; j++)
+			for (int n = 0; n < 10; n++)
 			{
-				for (k = 0; k < 16; k++)
+				sum += src[d, (10 * y) + m, (10 * x) + n];
+			}
+		}
+
+		return sum;
+	}
+
+	/// <summary>
+	///  量子化
+	///  160 x 160 →　10 x 10マスを合計して16x16に圧縮
+	/// </summary>
+	/// <param name="srcArray">方向線素データ</param>
+	/// <returns>量子化後のデータ</returns>
+	private static byte[,,] Quantization(byte[,,] srcArray)
+	{
+		const int DIRECTIONS = 16;
+		const int MAX_X = 16;
+		const int MAX_Y = 16;
+		byte[,,] quantizationData = new byte[DIRECTIONS, MAX_Y, MAX_X];
+
+		for (int d = 0; d < 16; d++)
+		{
+			for (int y = 0; y < 16; y++)
+			{
+				for (int x = 0; x < 16; x++)
 				{
-					for (m = 0; m < 10; m++)
-					{
-						for (n = 0; n < 10; n++)
-						{
-							data3[i, j, k] += data2[i, (10 * j) + m, (10 * k) + n];
-						}
-					}
+					quantizationData[d, y, x] = CountQuantizationFeature(srcArray, d, x, y);
 				}
 			}
 		}
+
+		return quantizationData;
 	}
 
 	static void gaus_fil<Type>(Type[,,] data3, double[,,] data4)
 	{
+
 		int m, n, i, j, k;
 		double sum = 0.0;
 		//Type work;
-		double[,] gaus ={{0.00,0.09,0.17,0.09,0.00},
-														 {0.09,0.57,1.05,0.57,0.09},
-														 {0.17,1.05,1.94,1.05,0.17},
-														 {0.09,0.57,1.05,0.57,0.09},
-														 {0.00,0.09,0.17,0.09,0.00}};
+
 		System.Diagnostics.Debug.WriteLine(data4.GetLength(0).ToString() + "," + data4.GetLength(1).ToString() + "," + data4.GetLength(2).ToString());
 		for (i = 0; i < data4.GetLength(0); i++)
 		{
@@ -309,7 +344,7 @@ public static class WeightedDirectionHistogramAnalyzer
 							{
 								//work = data3[i,2*j+m-2,2*k+n-2];
 								//sum+=data3[i,2*j+m-2,2*k+n-2]*gaus[m,n];
-								sum += Convert.ToDouble(data3[i, 2 * j + m - 2, 2 * k + n - 2]) * gaus[m, n];
+								sum += Convert.ToDouble(data3[i, 2 * j + m - 2, 2 * k + n - 2]) * Gaussian[m, n];
 							}
 						}
 					}
@@ -319,38 +354,81 @@ public static class WeightedDirectionHistogramAnalyzer
 		}
 	}
 
-	static void houkou(double[,,] data4, double[,,] data5)
+	/// <summary>
+	///  方向圧縮用補助関数.
+	/// </summary>
+	/// <param name="src">元データ</param>
+	/// <param name="d">方向</param>
+	/// <param name="x">x座標</param>
+	/// <param name="y">y座標</param>
+	/// <returns>圧縮値</returns>
+	private static double GetDirCompress(double[,,] src, int d, int x, int y)
 	{
-		int i, j, k;
+		double sum = 0.0;
 
-		for (i = 0; i < 16; i += 2)
+		if (d == 0)
 		{
-			for (j = 0; j < 8; j++)
-			{
-				for (k = 0; k < 8; k++)
-				{
-					if (i == 0) data5[i / 2, j, k] = data4[15, j, k] + data4[0, j, k] * 2 + data4[1, j, k];
-					else data5[i / 2, j, k] = data4[i - 1, j, k] + data4[i, j, k] * 2 + data4[i + 1, j, k];
-				}
-			}
+			sum = src[15, y, x] + (src[0, y, x] * 2) + src[1, y, x];
 		}
+		else
+		{
+			sum = src[d - 1, y, x] + (src[d, y, x] * 2) + src[d + 1, y, x];
+		}
+
+		return sum;
 	}
 
-	static void douitusi(double[,,] data5, double[,,] data6)
+	/// <summary>
+	///  方向圧縮（16方向→8方向）
+	///  偶数方向＊２＋両脇方向.
+	/// </summary>
+	/// <param name="srcArray">追跡後の方向データ</param>
+	/// <returns>圧縮された配列</returns>
+	private static double[,,] DirectionalCompression(double[,,] srcArray)
 	{
-		int i, j, k;
+		const int DIRECTIONS = 8;
+		const int SRC_DIRECTIONS = 16;
+		const int MAX_X = 8;
+		const int MAX_Y = 8;
 
-		for (i = 0; i < 8; i++)
+		double[,,] compressedArray = new double[DIRECTIONS, MAX_Y, MAX_X];
+		for (int y = 0; y < MAX_Y; y++)
 		{
-			for (j = 0; j < 8; j++)
+			for (int x = 0; x < MAX_X; x++)
 			{
-				for (k = 0; k < 8; k++)
+				for (int d = 0; d < SRC_DIRECTIONS; d += 2)
 				{
-					if (i > 3) data6[i - 4, j, k] += data5[i, j, k];
-					else data6[i, j, k] += data5[i, j, k];
+					compressedArray[d / 2, x, y] = GetDirCompress(srcArray, d, x, y);
 				}
 			}
 		}
+
+		return compressedArray;
+	}
+
+	/// <summary>
+	/// 	反対方向同一視.
+	/// </summary>
+	/// <param name="srcArray">入力側配列</param>
+	private static double[,,] ContrarianIdentification(double[,,] srcArray)
+	{
+		const int DIRECTIONS = 8;
+		const int MAX_X = 8;
+		const int MAX_Y = 8;
+		double[,,] contraViewArray = new double[DIRECTIONS / 2, MAX_Y, MAX_X];
+
+		for (int direction = 0; direction < DIRECTIONS; direction++)
+		{
+			for (int y = 0; y < MAX_Y; y++)
+			{
+				for (int x = 0; x < MAX_X; x++)
+				{
+					contraViewArray[direction - ((int)(direction / 4) * 4), y, x] += srcArray[direction, y, x];
+				}
+			}
+		}
+
+		return contraViewArray;
 	}
 
 	static void kajyu_data(double[,,] data6, double[] nyuuryoku)
@@ -399,7 +477,7 @@ public static class WeightedDirectionHistogramAnalyzer
 		ryousika(data2, data3);
 		gaus_fil(data3, data4);
 		houkou(data4, data5);
-		douitusi(data5, data6);
+		ContrarianIdentification(data5, data6);
 
 		kajyu_data(data6, kajyu);
 		maxd = 0.0;
