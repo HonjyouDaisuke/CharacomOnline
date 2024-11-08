@@ -5,14 +5,7 @@ namespace CharacomOnline.ImageProcessing;
 
 public static class WeightedDirectionHistogramAnalyzer
 {
-  private static readonly double[,] Gaussian =
-  {
-    { 0.00, 0.09, 0.17, 0.09, 0.00 },
-    { 0.09, 0.57, 1.05, 0.57, 0.09 },
-    { 0.17, 1.05, 1.94, 1.05, 0.17 },
-    { 0.09, 0.57, 1.05, 0.57, 0.09 },
-    { 0.00, 0.09, 0.17, 0.09, 0.00 },
-  };
+  
 
   public static async Task<double?[]> GenerateWeightedDirectionHistogram(SKBitmap srcBitmap)
   {
@@ -289,7 +282,7 @@ public static class WeightedDirectionHistogramAnalyzer
 
 	private static void VerticalCheck(byte[,] data3, byte[,,] data2, int ap, int bp)
 	{
-		if (data3[i, j] == 0 &&)
+		if (data3[i, j] == 0) return;
 	}
   private static void RasterScan(byte[,] dat3, byte[,,] data2, int ap, int bp)
   {
@@ -331,198 +324,6 @@ public static class WeightedDirectionHistogramAnalyzer
   }
 
   /// <summary>
-  ///  量子化用補助関数.
-  /// </summary>
-  /// <param name="src">元データ.</param>
-  /// <param name="d">方向.</param>
-  /// <param name="x">x座標.</param>
-  /// <param name="y">y座標.</param>
-  /// <returns>量子化合計値.</returns>
-  private static byte CountQuantizationFeature(byte[,,] src, int d, int x, int y)
-  {
-    byte sum = 0;
-
-    for (int m = 0; m < 10; m++)
-    {
-      for (int n = 0; n < 10; n++)
-      {
-        sum += src[d, (10 * y) + m, (10 * x) + n];
-      }
-    }
-
-    return sum;
-  }
-
-  /// <summary>
-  ///  量子化
-  ///  160 x 160 →　10 x 10マスを合計して16x16に圧縮
-  /// </summary>
-  /// <param name="srcArray">方向線素データ</param>
-  /// <returns>量子化後のデータ.</returns>
-  private static byte[,,] Quantization(byte[,,] srcArray)
-  {
-    const int DIRECTIONS = 16;
-    const int MAX_X = 16;
-    const int MAX_Y = 16;
-    byte[,,] quantizationData = new byte[DIRECTIONS, MAX_Y, MAX_X];
-
-    for (int d = 0; d < DIRECTIONS; d++)
-    {
-      for (int y = 0; y < MAX_Y; y++)
-      {
-        for (int x = 0; x < MAX_X; x++)
-        {
-          quantizationData[d, y, x] = CountQuantizationFeature(srcArray, d, x, y);
-        }
-      }
-    }
-
-    return quantizationData;
-  }
-
-  /// <summary>
-  /// ガウスフィルタ用補助関数
-  /// </summary>
-  /// <param name="src">元データ</param>
-  /// <param name="d">方向</param>
-  /// <param name="x">x座標</param>
-  /// <param name="y">y座標</param>
-  /// <returns>フィルタリング合計値</returns>
-  private static double GetFilteredSum(double[,,] src, int d, int x, int y)
-  {
-    double result = 0.0;
-    for (int j = 0; j < Gaussian.GetLength(0); j++)
-    {
-      for (int i = 0; i < Gaussian.GetLength(1); i++)
-      {
-        int pointX = (x * 2) + i;
-        int pointY = (y * 2) + j;
-        if (pointX < 0 || pointX > src.GetLength(2))
-        {
-          continue;
-        }
-
-        if (pointY < 0 || pointY > src.GetLength(1))
-        {
-          continue;
-        }
-
-        result += src[d, pointY, pointX] * Gaussian[j, i];
-      }
-    }
-
-    return result;
-  }
-
-  /// <summary>
-  ///  ガウスフィルタプロセス
-  ///  元のデータに人マスおきにガウスフィルタを掛ける.
-  /// </summary>
-  /// <param name="srcArray">元データ(16方向 x 16 x 16)</param>
-  /// <returns>フィルタ後のデータ(16方向 x 8 x 8)</returns>
-  private static double[,,] GaussianFilterProcess(double[,,] srcArray)
-  {
-    const int DIRECTIONS = 16;
-    const int MAX_X = 8;
-    const int MAX_Y = 8;
-    double[,,] filteredArray = new double[DIRECTIONS, MAX_Y, MAX_X];
-
-    for (int d = 0; d < srcArray.GetLength(0); d++)
-    {
-      for (int j = 0; j < 8; j++)
-      {
-        for (int i = 0; i < 8; i++)
-        {
-          filteredArray[d, j, i] = GetFilteredSum(srcArray, d, i, j);
-        }
-      }
-    }
-
-    return filteredArray;
-  }
-
-  /// <summary>
-  ///  方向圧縮用補助関数.
-  /// </summary>
-  /// <param name="src">元データ</param>
-  /// <param name="d">方向</param>
-  /// <param name="x">x座標</param>
-  /// <param name="y">y座標</param>
-  /// <returns>圧縮値.</returns>
-  private static double GetDirCompress(double[,,] src, int d, int x, int y)
-  {
-    double sum;
-
-    if (d == 0)
-    {
-      sum = src[15, y, x] + (src[0, y, x] * 2) + src[1, y, x];
-    }
-    else
-    {
-      sum = src[d - 1, y, x] + (src[d, y, x] * 2) + src[d + 1, y, x];
-    }
-
-    return sum;
-  }
-
-  /// <summary>
-  ///  方向圧縮（16方向→8方向）
-  ///  偶数方向＊２＋両脇方向.
-  /// </summary>
-  /// <param name="srcArray">追跡後の方向データ</param>
-  /// <returns>圧縮された配列</returns>
-  private static double[,,] DirectionalCompression(double[,,] srcArray)
-  {
-    const int DIRECTIONS = 8;
-    const int SRC_DIRECTIONS = 16;
-    const int MAX_X = 8;
-    const int MAX_Y = 8;
-
-    double[,,] compressedArray = new double[DIRECTIONS, MAX_Y, MAX_X];
-    for (int y = 0; y < MAX_Y; y++)
-    {
-      for (int x = 0; x < MAX_X; x++)
-      {
-        for (int d = 0; d < SRC_DIRECTIONS; d += 2)
-        {
-          compressedArray[d / 2, x, y] = GetDirCompress(srcArray, d, x, y);
-        }
-      }
-    }
-
-    return compressedArray;
-  }
-
-  /// <summary>
-  /// 	反対方向同一視.
-  /// </summary>
-  /// <param name="srcArray">入力側配列</param>
-  private static double[,,] ContrarianIdentification(double[,,] srcArray)
-  {
-    const int DIRECTIONS = 8;
-    const int MAX_X = 8;
-    const int MAX_Y = 8;
-    double[,,] contraViewArray = new double[DIRECTIONS / 2, MAX_Y, MAX_X];
-
-    for (int direction = 0; direction < DIRECTIONS; direction++)
-    {
-      for (int y = 0; y < MAX_Y; y++)
-      {
-        for (int x = 0; x < MAX_X; x++)
-        {
-          contraViewArray[direction - ((int)(direction / 4) * 4), y, x] += srcArray[
-            direction,
-            y,
-            x
-          ];
-        }
-      }
-    }
-
-    return contraViewArray;
-  }
-
-  /// <summary>
   ///  加重方向指数ヒストグラム特徴を1次元配列にする
   /// </summary>
   /// <param name="srcArray">元データ(4 x 8 x 8)</param>
@@ -546,7 +347,7 @@ public static class WeightedDirectionHistogramAnalyzer
     return result;
   }
 
-  public static void GetKajyu(Bitmap bmp, double[] kajyu, double[] kajyuView, double R)
+  public static void GetKajyu(SKBitmap bmp, double[] kajyu, double[] kajyuView, double R)
   {
     int j,
       m,
@@ -563,23 +364,23 @@ public static class WeightedDirectionHistogramAnalyzer
       work;
     double R1 = 10.0;
 
-    Noize(bmp);
-    Normalize(bmp, R);
-    data1 = GetArrayFromBmp(bmp);
-    data2Syoki(data2);
-    Data3Initialize(data3);
-    data4Syoki(data4);
-    data5Syoki(data5);
-    data6Syoki(data6);
+    //// Noize(bmp);
+    //// Normalize(bmp, R);
+    // data1 = GetArrayFromBmp(bmp);
+    // data2Syoki(data2);
+    // Data3Initialize(data3);
+    // data4Syoki(data4);
+    // data5Syoki(data5);
+    // data6Syoki(data6);
 
-    syokika(dat3, data1);
-    rasta(dat3, data2, ap, bp);
-    ryousika(data2, data3);
-    gaus_fil(data3, data4);
-    houkou(data4, data5);
-    ContrarianIdentification(data5, data6);
+    // syokika(dat3, data1);
+    // rasta(dat3, data2, ap, bp);
+    // ryousika(data2, data3);
+    // gaus_fil(data3, data4);
+    // houkou(data4, data5);
+    // ContrarianIdentification(data5, data6);
 
-    kajyu_data(data6, kajyu);
+    // kajyu_data(data6, kajyu);
     maxd = 0.0;
     mind = 10000.0;
     for (j = 0; j < 4; j++)
