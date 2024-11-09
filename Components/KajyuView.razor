@@ -1,0 +1,42 @@
+﻿@using CharacomOnline.Service
+@using CharacomOnline.ImageProcessing
+@using Microsoft.AspNetCore.Components.Forms
+@using SkiaSharp
+@inject IWebHostEnvironment env
+
+<h3>KajyuView</h3>
+
+<InputFile OnChange="OnInputFileChange1" accept="image/*" />
+@if (binaryImageData != null)
+{
+	<img src="@binaryImageData" alt="Binary Image" />
+	<p> aaa </p>
+}
+
+
+@code {
+	private string? binaryImageData;
+	private IBrowserFile? file1;
+	private async Task DrawBitmap()
+	{
+		if (file1 == null) return;
+		Console.WriteLine($"File1 = {file1.Name}");
+		var fileBitmap = await ImageEffectService.LoadImageFileAsync(file1);
+		if (fileBitmap == null) return;
+
+		var kajyu = await WeightedDirectionHistogramAnalyzer.WeightedDirectionProcessAsync(fileBitmap);
+		binaryImageData = ImageEffectService.GetBinaryImageData(fileBitmap);
+		foreach(double k in kajyu)
+		{
+			Console.WriteLine($"{k}");
+		}
+
+		StateHasChanged();
+	}
+	private async Task OnInputFileChange1(InputFileChangeEventArgs e)
+	{
+		file1 = e.File;
+		await DrawBitmap();
+		return;
+	}
+}

@@ -19,6 +19,7 @@ public static class ThinningProcess
 		int check, m;
 		SKBitmap workBitmap = new(srcBitmap.Width, srcBitmap.Height);
 		workBitmap = ImageEffectService.WhiteFilledBitmap(workBitmap);
+		Console.WriteLine("Start--->");
 
 		for (int i = 0; i < srcBitmap.Height; i++)
 		{

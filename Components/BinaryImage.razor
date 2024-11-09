@@ -39,11 +39,16 @@
 
 		var file1SKBitmap = new SKBitmap(fileBitmap.Width, fileBitmap.Height);
 		if (file1SKBitmap == null) return;
+		Console.WriteLine("ResizeStart");
 		file1SKBitmap = ImageEffectService.ResizeBitmap(fileBitmap, 100, 100);
 		if (file1SKBitmap == null) return;
-		file1SKBitmap = await ImageEffectService.GetBinaryBitmap(file1SKBitmap);
+		Console.WriteLine("GetBinaryBitmap");
+		file1SKBitmap = ImageEffectService.GetBinaryBitmap(file1SKBitmap);
 		if (file1SKBitmap == null) return;
-		file1SKBitmap = await ThinningProcess.ThinBinaryImageAsync(file1SKBitmap);
+		Console.WriteLine("ThinBinaryImage");
+		file1SKBitmap = ThinningProcess.ThinBinaryImage(file1SKBitmap);
+		if (file1SKBitmap == null) return;
+		Console.WriteLine("ColorChangeBitmap");
 		file1SKBitmap = ImageEffectService.ColorChangeBitmap(file1SKBitmap, SKColors.Green);
 		
 		var file2Bitmap = await ImageEffectService.LoadImageFileAsync(file2);
@@ -52,7 +57,7 @@
 		if (file2SKBitmap == null) return;
 		file2SKBitmap = ImageEffectService.ResizeBitmap(file2Bitmap, 100, 100);
 		if (file2SKBitmap == null) return;
-		file2SKBitmap = await ImageEffectService.GetBinaryBitmap(file2SKBitmap);
+		file2SKBitmap = ImageEffectService.GetBinaryBitmap(file2SKBitmap);
 		if (file2SKBitmap == null) return;
 		file2SKBitmap = ImageEffectService.ColorChangeBitmap(file2SKBitmap, SKColors.Blue);
 		

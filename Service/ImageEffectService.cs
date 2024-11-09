@@ -14,6 +14,27 @@ public static class ImageEffectService
 		return $"data:image/png;base64,{base64}";
 	}
 
+	/// <summary>
+	///  SKBitmapがすべて代かどうかを判定する
+	/// </summary>
+	/// <param name="skBitmap">チェックするビットマップ</param>
+	/// <returns>true: 真っ白 false: 何か描かれている</returns>
+	public static bool IsWhiteCanvas(SKBitmap skBitmap)
+	{
+		for (int i = 0; i < skBitmap.Height; i++)
+		{
+			for (int j = 0; j < skBitmap.Width; j++)
+			{
+				if (skBitmap.GetPixel(i, j) != SKColors.White)
+				{
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	public static async Task<SKBitmap?> LoadImageFileAsync(IBrowserFile file)
 	{
 		try
@@ -42,7 +63,7 @@ public static class ImageEffectService
 		}
 	}
 
-	public static Task<SKBitmap?> GetBinaryBitmap(SKBitmap srcBitmap)
+	public static SKBitmap GetBinaryBitmap(SKBitmap srcBitmap)
 	{
 		int threshold = GetThreshold(srcBitmap);
 		var binaryBitmap = new SKBitmap(srcBitmap.Width, srcBitmap.Height);
@@ -58,7 +79,7 @@ public static class ImageEffectService
 			}
 		}
 
-		return Task.FromResult<SKBitmap?>(binaryBitmap);
+		return binaryBitmap;
 	}
 
 	public static byte[,] ImageArrayFromBitmap(SKBitmap srcBitmap)

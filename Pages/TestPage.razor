@@ -1,10 +1,11 @@
 ﻿@page "/test"
+@using CharacomOnline.Components
 
 <PageTitle>Test</PageTitle>
 
 <h1>Test Page</h1>
 <RadzenButton Click="@IncrementCount" Text="Click me"></RadzenButton>
-
+<KajyuView />
 
 @code {
     private int currentCount = 0;
