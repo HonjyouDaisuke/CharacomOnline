@@ -127,6 +127,9 @@ dotnet_diagnostic.SA1010.severity = none
 # SA1629: Documentation text should end with a period
 dotnet_diagnostic.SA1629.severity = none
 
+# SA1009: Closing parenthesis should be spaced correctly
+dotnet_diagnostic.SA1009.severity = none
+
 [*.vb]
 #### 命名スタイル ####
 

@@ -23,9 +23,9 @@
 		Console.WriteLine($"File1 = {file1.Name}");
 		var fileBitmap = await ImageEffectService.LoadImageFileAsync(file1);
 		if (fileBitmap == null) return;
-
-		var kajyu = await WeightedDirectionHistogramAnalyzer.WeightedDirectionProcessAsync(fileBitmap);
 		binaryImageData = ImageEffectService.GetBinaryImageData(fileBitmap);
+		
+		var kajyu = await WeightedDirectionHistogramAnalyzer.WeightedDirectionProcessAsync(fileBitmap);
 		foreach(double k in kajyu)
 		{
 			Console.WriteLine($"{k}");
