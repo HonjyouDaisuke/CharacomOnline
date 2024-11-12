@@ -59,12 +59,12 @@ public static class GaussianClass
 			{
 				int pointX = (x * 2) + i;
 				int pointY = (y * 2) + j;
-				if (pointX < 0 || pointX > src.GetLength(2))
+				if (pointX < 0 || pointX >= src.GetLength(2))
 				{
 					continue;
 				}
 
-				if (pointY < 0 || pointY > src.GetLength(1))
+				if (pointY < 0 || pointY >= src.GetLength(1))
 				{
 					continue;
 				}
