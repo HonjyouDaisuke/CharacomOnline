@@ -46,7 +46,8 @@
 		file1SKBitmap = ImageEffectService.GetBinaryBitmap(file1SKBitmap);
 		if (file1SKBitmap == null) return;
 		Console.WriteLine("ThinBinaryImage");
-		file1SKBitmap = ThinningProcess.ThinBinaryImage(file1SKBitmap);
+		ThinningProcess thinningProc = new ThinningProcess(file1SKBitmap);
+		file1SKBitmap = thinningProc.ThinBinaryImage();
 		if (file1SKBitmap == null) return;
 		Console.WriteLine("ColorChangeBitmap");
 		file1SKBitmap = ImageEffectService.ColorChangeBitmap(file1SKBitmap, SKColors.Green);

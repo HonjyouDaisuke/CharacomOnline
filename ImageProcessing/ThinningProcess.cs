@@ -1,121 +1,152 @@
 using CharacomOnline.Service;
-using Microsoft.AspNetCore.SignalR;
-using SixLabors.ImageSharp;
 using SkiaSharp;
 
 namespace CharacomOnline.ImageProcessing;
 
 public class ThinningProcess(SKBitmap srcBitmap)
 {
-  private SKBitmap _srcBitmap = srcBitmap;
-  private byte[,] srcArray = ImageEffectService.ImageArrayFromBitmap(srcBitmap);
-  private int[,] b;
-  private int[,] be;
+	// 8連結データ配列
+	private readonly int[] py = [0, -1, -1, -1, 0, 1, 1, 1, 0];
+	private readonly int[] px = [1, 1, 0, -1, -1, -1, 0, 1, 1];
+	private readonly SKBitmap _srcBitmap = srcBitmap;
+	private readonly byte[,] srcArray = ImageEffectService.ImageArrayFromBitmap(srcBitmap);
+	private int[,] b = new int[1, 1];
 
-  // 8連結データ配列
-  private readonly int[] py = [0, -1, -1, -1, 0, 1, 1, 1, 0];
-  private readonly int[] px = [1, 1, 0, -1, -1, -1, 0, 1, 1];
+	// private int[,] be;
 
-  public async Task<SKBitmap?> ThinBinaryImageAsync(SKBitmap inputBitmap)
-  {
-    Console.WriteLine("Start--->");
-    return await Task.Run(() => ThinBinaryImage());
-  }
+	public async Task<SKBitmap?> ThinBinaryImageAsync(SKBitmap inputBitmap)
+	{
+		ArgumentNullException.ThrowIfNull(inputBitmap);
 
-  public SKBitmap ThinBinaryImage()
-  {
-    if (srcArray == null)
-    {
-      return _srcBitmap;
-    }
+		Console.WriteLine("Start--->");
+		return await Task.Run(() => ThinBinaryImage());
+	}
 
-    CloneToWorkArray();
+	public SKBitmap ThinBinaryImage()
+	{
+		if (srcArray == null)
+		{
+			return _srcBitmap;
+		}
 
-    do
-    {
-      ProcessThinning();
-    } while (UpdateCheck());
+		CloneToWorkArray();
 
-    return DrawBitmap();
-  }
+		do
+		{
+			ProcessThinning();
+		}
+		while (UpdateCheck());
 
-  private void CloneToWorkArray()
-  {
-    if (srcArray == null)
-    {
-      return;
-    }
+		return DrawBitmap();
+	}
 
-    b = new int[srcArray.GetLength(0) + 2, srcArray.GetLength(1) + 2];
-    be = new int[srcArray.GetLength(0) + 2, srcArray.GetLength(1) + 2];
+	private static int GetConnection(byte[] connectingPixels)
+	{
+		const int NEIGHBORHOODS = 8;
+		int sum = 0;
 
-    for (int i = 0; i < srcArray.GetLength(0); i++)
-    {
-      for (int j = 0; j < srcArray.GetLength(1); j++)
-      {
-        b[i + 1, j + 1] = srcArray[i, j];
-        be[i + 1, j + 1] = srcArray[i, j];
-      }
-    }
-  }
+		for (int i = 0; i < NEIGHBORHOODS; i += 2)
+		{
+			int a = 1 - Math.Abs(connectingPixels[i]);
+			int b = 1 - Math.Abs(connectingPixels[i + 1]);
+			int c = 1 - Math.Abs(connectingPixels[i + 2]);
+			sum += a - (a * b * c);
+		}
 
-  private void ProcessThinning()
-  {
-    for (int j = 0; j < b.GetLength(0) - 1; j++)
-    {
-      for (int i = 0; i < b.GetLength(0) - 1; i++)
-      {
-        if (b[j + 1, i + 1] == 0)
-        {
-          continue;
-        }
+		return sum;
+	}
 
-        SSearch(i, j);
-      }
-    }
-  }
+	private static int GetIsolation(byte[] aroundPixels)
+	{
+		const int NEIGHBORHOODS = 8;
 
-  private bool UpdateCheck()
-  {
-    bool isUpdated = false;
+		int sum = 0;
+		for (int i = 0; i < NEIGHBORHOODS; i++)
+		{
+			sum += aroundPixels[i];
+		}
 
-    for (int i = 0; i < b.GetLength(0) + 1; i++)
-    {
-      for (int j = 0; j < b.GetLength(1) + 1; j++)
-      {
-        if (b[i + 1, j + 1] != -1)
-        {
-          continue;
-        }
+		return sum;
+	}
 
-        b[i + 1, j + 1] = 0;
-        isUpdated = true;
-      }
-    }
+	private void CloneToWorkArray()
+	{
+		if (srcArray == null)
+		{
+			return;
+		}
 
-    return isUpdated;
-  }
+		b = new int[srcArray.GetLength(0) + 2, srcArray.GetLength(1) + 2];
+		//be = new int[srcArray.GetLength(0) + 2, srcArray.GetLength(1) + 2];
 
-  private SKBitmap DrawBitmap()
-  {
-    SKBitmap workBitmap = new(_srcBitmap.Width, _srcBitmap.Height);
+		for (int i = 0; i < srcArray.GetLength(0); i++)
+		{
+			for (int j = 0; j < srcArray.GetLength(1); j++)
+			{
+				b[i + 1, j + 1] = srcArray[i, j];
+				//be[i + 1, j + 1] = srcArray[i, j];
+			}
+		}
+	}
 
-    for (int j = 0; j < workBitmap.Height; j++)
-    {
-      for (int i = 0; i < workBitmap.Width; i++)
-      {
-        if (b[j + 1, i + 1] == 0)
-        {
-          continue;
-        }
+	private void ProcessThinning()
+	{
+		for (int j = 0; j < _srcBitmap.Height + 1; j++)
+		{
+			for (int i = 0; i < _srcBitmap.Width + 1; i++)
+			{
+				if (b[j + 1, i + 1] == 0)
+				{
+					continue;
+				}
 
-        workBitmap.SetPixel(i, j, SKColors.Black);
-      }
-    }
+				SSearch(i + 1, j + 1);
+			}
+		}
+	}
 
-    return workBitmap;
-  }
+	private bool UpdateCheck()
+	{
+		bool isUpdated = false;
 
+		for (int i = 0; i < _srcBitmap.Height + 1; i++)
+		{
+			for (int j = 0; j < _srcBitmap.Width + 1; j++)
+			{
+				if (b[i + 1, j + 1] != -1)
+				{
+					continue;
+				}
+
+				b[i + 1, j + 1] = 0;
+				isUpdated = true;
+			}
+		}
+
+		return isUpdated;
+	}
+
+	private SKBitmap DrawBitmap()
+	{
+		SKBitmap workBitmap = new(_srcBitmap.Width, _srcBitmap.Height);
+
+		for (int j = 0; j < workBitmap.Height; j++)
+		{
+			for (int i = 0; i < workBitmap.Width; i++)
+			{
+				if (b[j + 1, i + 1] == 0)
+				{
+					continue;
+				}
+
+				workBitmap.SetPixel(i, j, SKColors.Black);
+			}
+		}
+
+		return workBitmap;
+	}
+
+	/***
   public static SKBitmap? ThinBinaryImage_old(SKBitmap srcBitmap)
   {
     byte[,] src = ImageEffectService.ImageArrayFromBitmap(srcBitmap);
@@ -171,7 +202,8 @@ public class ThinningProcess(SKBitmap srcBitmap)
           }
         }
       }
-    } while (check != 0);
+		}
+    while (check != 0);
 
     for (int i = 0; i < srcBitmap.Height; i++)
     {
@@ -202,104 +234,113 @@ public class ThinningProcess(SKBitmap srcBitmap)
 
     return workBitmap;
   }
+  ***/
 
-  private int GetEdgePixels4(int x, int y)
-  {
-    const int NEIGHBORHOODS = 8;
-
-    int sum = 0;
-    for (int i = 0; i < NEIGHBORHOODS; i += 2)
-    {
-      sum += 1 - Math.Abs(b[y + py[i], x + px[i]]);
-    }
-
-    return sum;
-  }
-
-  private int GetEdgePixels8(int x, int y, byte[] pixcels)
-  {
-    const int NEIGHBORHOODS = 8;
-
-    int sum = 0;
-    for (int i = 0; i < NEIGHBORHOODS; i++)
-    {
-      sum += 1 - Math.Abs(b[y + py[i], x + px[i]]);
-      pixcels[i] = (b[y + py[i], x + px[i]] == 1) ? (byte)1 : (byte)0;
-    }
-
-    return sum;
-  }
-
-  private int GetIsolation(byte[] arroundPixels)
-  {
-    const int NEIGHBORHOODS = 8;
-
-    int sum = 0;
-    for (int i = 0; i < NEIGHBORHOODS; i++)
-    {
-      sum += arroundPixels[i];
-    }
-
-    return sum;
-  }
-
-  private void GetConnectingPixels(int x, int y, byte[] connectingPixels)
-  {
-    for (int i = 0; i < connectingPixels.GetLength(0); i++)
-    {
-      connectingPixels[i] = (Math.Abs(b[y + py[i], x + px[i]]) == 1) ? (byte)1 : (byte)0;
-    }
-  }
-
-  private int GetConnection(byte[] connectingPixels)
-  {
-    const int NEIGHBORHOODS = 8;
-    int sum = 0;
-
-    for (int i = 0; i < NEIGHBORHOODS; i += 2)
-    {
-      int a = 1 - Math.Abs(connectingPixels[i]);
-      int b = 1 - Math.Abs(connectingPixels[i + 1]);
-      int c = 1 - Math.Abs(connectingPixels[i + 2]);
-      sum += a - (a * b * c);
-    }
-
-    return sum;
-  }
-
-	private void DeleteDecision(int x, int y, ....)
+	private int GetEdgePixels4(int x, int y)
 	{
-		byte[] deleteTry = new byte[9];
+		const int NEIGHBORHOODS = 8;
 
-		for (int i = 0; i < )
+		int sum = 0;
+		for (int i = 0; i < NEIGHBORHOODS; i += 2)
+		{
+			sum += 1 - Math.Abs(b[y + py[i], x + px[i]]);
+		}
+
+		return sum;
 	}
-  private void SSearch(int x, int y)
-  {
-    byte[] arroundPixels = new byte[9];
-    byte[] connectingPixels = new byte[9];
-    
 
-    int edgePixels4 = 0; // s1
-    int edgePixels8 = 0; // s2
-    int isoletion = 0; // s3
-    int connection = 0; // n1
-    int deleteDecision = 0; // n2
+	private int GetEdgePixels8(int x, int y, byte[] pixels)
+	{
+		const int NEIGHBORHOODS = 8;
 
-    // 境界画素を確認(4近傍)
-    edgePixels4 = GetEdgePixels4(x, y);
-    // 周囲画素数を計算
-    edgePixels8 = GetEdgePixels8(x, y, arroundPixels);
-    // 孤立点かどうか
-    isoletion = GetIsolation(arroundPixels);
-    // 連結性を確認
-    GetConnectingPixels(x, y, connectingPixels);
-    // Nc8 (p0)を求める
-    connection = GetConnection(connectingPixels);
-		// 削除判定
+		int sum = 0;
+		for (int i = 0; i < NEIGHBORHOODS; i++)
+		{
+			sum += 1 - Math.Abs(b[y + py[i], x + px[i]]);
+			pixels[i] = (b[y + py[i], x + px[i]] == 1) ? (byte)1 : (byte)0;
+		}
 
-  }
+		return sum;
+	}
 
-  public static void SSearch2(int[,] b, int x, int y)
+	private void GetConnectingPixels(int x, int y, byte[] connectingPixels)
+	{
+		for (int i = 0; i < connectingPixels.GetLength(0); i++)
+		{
+			connectingPixels[i] = (Math.Abs(b[y + py[i], x + px[i]]) == 1) ? (byte)1 : (byte)0;
+		}
+	}
+
+	private int DeleteDecision(int x, int y)
+	{
+		const int NEIGHBORHOODS = 8;
+		byte[] deleteTry = new byte[9];
+		int deleteDecision;
+		int result = 0;
+
+		for (int i = 0; i < deleteTry.GetLength(0); i++)
+		{
+			deleteTry[i] = (byte)Math.Abs(b[y + py[i], x + px[i]]);
+		}
+
+		for (int i = 0; i < NEIGHBORHOODS; i++)
+		{
+			deleteDecision = 0;
+			byte bx = deleteTry[i];
+			deleteTry[i] = 0;
+
+			// Nc8(p0)を求める
+			for (int k = 0; k < NEIGHBORHOODS; k += 2)
+			{
+				int a = 1 - Math.Abs(deleteTry[k]);
+				int b = 1 - Math.Abs(deleteTry[k + 1]);
+				int c = 1 - Math.Abs(deleteTry[k + 2]);
+				deleteDecision += a - (a * b * c);
+			}
+
+			// 元に戻す
+			deleteTry[i] = bx;
+
+			if (deleteDecision == 1 || b[y + py[i], x + px[i]] != -1)
+			{
+				result++;
+			}
+		}
+
+		return result;
+	}
+
+	private void SSearch(int x, int y)
+	{
+		byte[] aroundPixels = new byte[9]; // c
+		byte[] connectingPixels = new byte[9]; // cp
+
+		// 境界画素を確認(4近傍) s1
+		int edgePixels4 = GetEdgePixels4(x, y);
+
+		// 周囲画素数を計算 s2
+		int edgePixels8 = GetEdgePixels8(x, y, aroundPixels);
+
+		// 孤立点かどうか s3
+		int isolation = GetIsolation(aroundPixels);
+
+		// 連結性を確認 cp
+		GetConnectingPixels(x, y, connectingPixels);
+
+		// Nc8 (p0)を求める n1
+		int connection = GetConnection(connectingPixels);
+
+		// 削除判定 m
+		int deleteDecision = DeleteDecision(x, y);
+
+		if (b[y, x] == 1 && edgePixels4 > 0 && edgePixels8 > 1 && isolation > 0 && connection > 0 && deleteDecision == 8)
+		{
+			b[y, x] = -1;
+		}
+	}
+
+	/***
+	public static void SSearch2(int[,] b, int x, int y)
   {
     byte[] c = new byte[9];
     byte[] cp = new byte[9];
@@ -399,4 +440,5 @@ public class ThinningProcess(SKBitmap srcBitmap)
       b[y, x] = -1;
     }
   }
+  ***/
 }
