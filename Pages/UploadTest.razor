@@ -1,0 +1,33 @@
+﻿@page "/upload"
+
+@using CharacomOnline.Service
+@inject GoogleDriveService GoogleDriveService
+
+<h3>ファイルアップロード</h3>
+
+<InputFile type="file" OnChange="OnInputFileChange" />
+<p>@message</p>
+
+
+@code
+{
+    private string message = string.Empty;
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        var fileStream = file.OpenReadStream(maxAllowedSize: 10_000_000); // 10MBまでの制限
+        var fileName = file.Name;
+        var contentType = file.ContentType;
+
+        try
+        {
+            var fileId = await GoogleDriveService.UploadFileAsync(fileStream, fileName, contentType);
+            message = $"アップロード成功！ファイルID: {fileId}";
+        }
+        catch (Exception ex)
+        {
+            message = $"エラー: {ex.Message}";
+        }
+    }
+}
