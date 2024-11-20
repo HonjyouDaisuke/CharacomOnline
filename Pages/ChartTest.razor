@@ -1,0 +1,35 @@
+﻿@page "/chart"
+@using System.Diagnostics
+
+<h3>ScatterChartPage</h3>
+<RadzenCard>
+    <ApexChart TItem="Team"
+               Title="Teams Score"
+               Width=400>
+
+        <ApexPointSeries TItem="Team"
+                         Items="teams"
+                         Name="points"
+                         SeriesType="SeriesType.Pie"
+                         XValue="@(e => e.Name)"
+                         YValue="@(e => e.Points)" />
+    </ApexChart>
+</RadzenCard>
+
+@code
+{
+    private List<Team> teams = new();
+    protected override void OnInitialized()
+    {
+        teams.Add(new Team { Name = "Barcelona", Points = 23 });
+        teams.Add(new Team { Name = "Real Madrid", Points = 12 });
+        teams.Add(new Team { Name = "Alavés", Points = 35 });
+        teams.Add(new Team { Name = "Celta Vigo", Points = 16 });
+    }
+
+    public class Team
+    {
+        public string Name { get; set; }
+        public int Points { get; set; }
+    }
+}
