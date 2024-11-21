@@ -3,33 +3,75 @@
 
 <h3>ScatterChartPage</h3>
 <RadzenCard>
-    <ApexChart TItem="Team"
-               Title="Teams Score"
-               Width=400>
+	<ApexChart TItem="Team"
+	Title="Teams Score"
+	Width=400>
 
-        <ApexPointSeries TItem="Team"
-                         Items="teams"
-                         Name="points"
-                         SeriesType="SeriesType.Pie"
-                         XValue="@(e => e.Name)"
-                         YValue="@(e => e.Points)" />
-    </ApexChart>
+		<ApexPointSeries TItem="Team"
+		Items="teams"
+		Name="points"
+		SeriesType="SeriesType.Pie"
+		XValue="@(e => e.Name)"
+		YValue="@(e => e.Points)" />
+	</ApexChart>
+	<ApexChart TItem="DataPoint" Title="Scatter Chart Example" XAxisType="XAxisType.Numeric" Height="600">
+		<ApexPointSeries 
+		TItem="DataPoint"
+		Items="dataPoints"
+		Name="Sample Data"
+		SeriesType="SeriesType.Scatter"
+		XValue="@(item => item.X)"
+		YValue="@(item => item.Y)"
+		OrderByDescending="e=>e.X" 
+		PointColor="GetColor" />
+	</ApexChart>
 </RadzenCard>
 
 @code
 {
-    private List<Team> teams = new();
-    protected override void OnInitialized()
-    {
-        teams.Add(new Team { Name = "Barcelona", Points = 23 });
-        teams.Add(new Team { Name = "Real Madrid", Points = 12 });
-        teams.Add(new Team { Name = "Alavés", Points = 35 });
-        teams.Add(new Team { Name = "Celta Vigo", Points = 16 });
-    }
+	private List<Team> teams = new();
+	private List<DataPoint> dataPoints = new();
 
-    public class Team
-    {
-        public string Name { get; set; }
-        public int Points { get; set; }
-    }
+	protected override void OnInitialized()
+	{
+		teams.Add(new Team { Name = "Barcelona", Points = 23 });
+		teams.Add(new Team { Name = "Real Madrid", Points = 12 });
+		teams.Add(new Team { Name = "Alavés", Points = 35 });
+		teams.Add(new Team { Name = "Celta Vigo", Points = 16 });
+
+		dataPoints.Add(new DataPoint { X = 1.3m, Y = 2.3m, Color = "Red" });
+		dataPoints.Add(new DataPoint { X = 2.3m, Y = 4.3m, Color = "Green" });
+		dataPoints.Add(new DataPoint { X = 1.23m, Y = 2.3m, Color = "Green" });
+		dataPoints.Add(new DataPoint { X = 2.31m, Y = 3.1m, Color = "Green" });
+		dataPoints.Add(new DataPoint { X = 5.6m, Y = 2.5m, Color = "Blue" });
+
+		@* dataPoints.Add(new DataPoint { X = 1m, Y = 2m });
+		dataPoints.Add(new DataPoint { X = 2m, Y = 3m });
+		dataPoints.Add(new DataPoint { X = 3m, Y = 4m });
+		dataPoints.Add(new DataPoint { X = 4m, Y = 1m });
+		dataPoints.Add(new DataPoint { X = 5m, Y = 2m }); *@
+
+	}
+
+	public class Team
+	{
+		public string Name { get; set; }
+		public int Points { get; set; }
+	}
+
+	private string GetColor(DataPoint data)
+	{
+		if (data.Color == "Red") return "#ff0066";
+		if (data.Color == "Green") return "#339900";
+		if (data.Color == "Blue") return "#0099ff";
+		return "#000000";
+	}
+	
+	public class DataPoint
+	{
+		public decimal X { get; set; }
+		public decimal Y { get; set; }
+		public string Color { get; set; }
+	}
+
 }
