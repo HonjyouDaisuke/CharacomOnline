@@ -8,37 +8,8 @@
 Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
-<button class="btn btn-primary" @onclick="FileUpload">Click me</button>
 
 
 @code {
-	private GoogleService _googleService;
-
-	protected override async Task OnInitializedAsync()
-	{
-		var clientId = Configuration["Google:ClientId"];
-		var clientSecret = Configuration["Google:ClientSecret"];
-
-		_googleService = new GoogleService(clientId, clientSecret);
-		await _googleService.LoginAsync();
-	}
-
-	private async Task UploadFile()
-	{
-		try
-		{
-			var filePath = "C:\\Users\\02322\\Documents\\test.csv";
-			var fileId = await _googleService.UploadFileAsync(filePath);
-			Console.WriteLine($"File uploaded successflly. file ID : {fileId}");
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Error: {ex.Message}");
-		}
-	}
-
-	private void FileUpload()
-	{
-		UploadFile();
-	}
+	
 }
