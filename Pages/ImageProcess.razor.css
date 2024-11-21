@@ -1,0 +1,12 @@
+.rz-splitter-horizontal {
+	height: auto !important;
+}
+
+.full-height-splitter {
+	height: calc(100vh - 3.5rem - 3.5rem - 3.5rem) !important;
+}
+
+.pane-content {
+	padding: 10px !important;
+	height: 100% !important;
+}

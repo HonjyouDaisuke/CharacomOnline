@@ -12,6 +12,11 @@ builder.Logging.SetMinimumLevel(LogLevel.Debug); // ログレベルを指定
 builder.Logging.AddConsole(); // コンソールに出力するための設定
 builder.Services.AddScoped<FileUploadService>();
 builder.Services.AddScoped<FileHandleService>();
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+builder.Configuration.AddJsonFile(
+  $"appsettings.{builder.Environment.EnvironmentName}.json",
+  optional: true
+);
 
 var app = builder.Build();
 
