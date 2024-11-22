@@ -6,6 +6,7 @@
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Entity
 @using Radzen.Blazor
+
 <PageTitle>Chara Images</PageTitle>
 
 <h1>画像一覧</h1>
@@ -21,12 +22,12 @@
 	<RadzenRow>
 	<RadzenColumn>
 		<RadzenCard>
-			<CharaDataGrid CharaDataView="@charaDataViewModel" SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
+			<CharaDataGrid SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
 		</RadzenCard>
 	</RadzenColumn>
 	<RadzenColumn>
 		<RadzenCard>
-			<CharaDataGrid CharaDataView="@charaDataViewModel" SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
+			<CharaDataGrid SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
 		</RadzenCard>
 	</RadzenColumn>
 	</RadzenRow>
@@ -34,9 +35,7 @@
 
 @code {
 	private CharaDataClass selectedData { get; set; } = new CharaDataClass();
-	private CharaDataViewModel charaDataViewModel = new CharaDataViewModel();
-
-
+	
 	private void OnSelectedDataChanged(CharaDataClass newSelectedData)
 	{
 		Console.WriteLine("selected Data Changed!!");

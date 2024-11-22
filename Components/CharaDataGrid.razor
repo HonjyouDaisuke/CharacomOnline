@@ -5,12 +5,13 @@
 @using Toolbelt.Blazor.FileDropZone
 @using Radzen.Blazor
 @inject FileUploadService FileUploadService
+@inject CharaDataViewModel charaDataViewModel
 
 @namespace CharacomOnline.ImageProcessing
 
 <FileDropZone class="drop-zone">
 	<InputFile hidden OnChange="OnInputFileChange" multiple />
-	<RadzenDataGrid TItem="CharaDataClass" Data="@CharaDataView.CharaDataRepository.Appraisals" RowSelect="@OnRowSelected" SelectionMode="DataGridSelectionMode.Single" AllowGrouping="true" Render="OnRender">
+	<RadzenDataGrid TItem="CharaDataClass" Data="@charaDataViewModel.CharaDataRepository.Appraisals" RowSelect="@OnRowSelected" SelectionMode="DataGridSelectionMode.Single" AllowGrouping="true" Render="OnRender">
 		<Columns>
 			<RadzenDataGridColumn Property="Id" Title="No" />
 			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
@@ -41,9 +42,7 @@
 
 @code {
 	private List<CharaDataClass> charaData = new List<CharaDataClass>();
-	[Parameter]
-	public CharaDataViewModel CharaDataView {get; set;} = new CharaDataViewModel();
-
+	
 	[Parameter]
 	public CharaDataClass SelectedData {get;set;} = new CharaDataClass();
 
@@ -96,7 +95,7 @@
 			foreach (var file in e.GetMultipleFiles(30))
 			{
 				//Console.WriteLine(file.Name);
-				await CharaDataView.DataInput(FileUploadService, file);
+				await charaDataViewModel.DataInput(FileUploadService, file);
 			}
 
 			

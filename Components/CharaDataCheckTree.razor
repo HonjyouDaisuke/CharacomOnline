@@ -1,0 +1,48 @@
+﻿@using CharacomOnline.ViewModel
+@using CharacomOnline.Entity
+
+@inject CharaDataViewModel charaDataViewModel
+
+<h3>CharaDataCheckTree</h3>
+<RadzenTree AllowCheckBoxes="true" @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 300px" Data="@charaDataViewModel.CharaDataRepository.Appraisals"
+            ItemRender="@TreeItemRender">
+    <RadzenTreeLevel TextProperty="CharaName">
+        
+    </RadzenTreeLevel>
+</RadzenTree>
+
+@code {
+    [Parameter]
+    public CharaDataViewModel CharaDataView { get; set; } = new CharaDataViewModel();
+    public 
+    
+    IEnumerable<object> checkedValues;
+
+    IEnumerable<object> CheckedValues
+    {
+        get => checkedValues;
+        set
+        {
+            checkedValues = value;
+            if (checkedValues != null)
+            {
+                //console.Log($"CheckedValues Changed {string.Join(Environment.NewLine, value.Select(GetText))}");
+            }
+        }
+    }
+
+    string GetText(object data)
+    {
+        return data.ToString();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    void TreeItemRender(TreeItemRenderEventArgs args)
+    {
+        
+    }
+}

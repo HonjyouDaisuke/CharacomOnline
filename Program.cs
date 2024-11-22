@@ -1,5 +1,6 @@
 using CharacomOnline.Data;
 using CharacomOnline.Service;
+using CharacomOnline.ViewModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,10 @@ builder.Configuration.AddJsonFile(
   $"appsettings.{builder.Environment.EnvironmentName}.json",
   optional: true
 );
+
+// DataViewModelをDIにする
+builder.Services.AddSingleton<CharaDataViewModel>();
+
 
 var app = builder.Build();
 
