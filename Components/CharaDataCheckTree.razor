@@ -4,12 +4,21 @@
 @inject CharaDataViewModel charaDataViewModel
 
 <h3>CharaDataCheckTree</h3>
-<RadzenTree AllowCheckBoxes="true" @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 300px" Data="@charaDataViewModel.CharaDataRepository.Appraisals"
-            ItemRender="@TreeItemRender">
-    <RadzenTreeLevel TextProperty="CharaName">
-        
-    </RadzenTreeLevel>
-</RadzenTree>
+<RadzenDataGrid TItem="CharaDataClass" Data="@charaDataViewModel.CharaDataRepository.Appraisals" SelectionMode="DataGridSelectionMode.Single" AllowGrouping="true">
+		<Columns>
+			<RadzenDataGridColumn>
+				<Template>
+					<RadzenCheckBox @bind-Value=@value Name="Check1" />
+				</Template>
+			</RadzenDataGridColumn>
+			<RadzenDataGridColumn>
+				<Template>
+					<RadzenImage Path="@context.ImageUrl" AlternateText="Chara Image" width="30" height="30" />
+				</Template>
+			</RadzenDataGridColumn>
+			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
+		</Columns>
+	</RadzenDataGrid>
 
 @code {
     [Parameter]
@@ -18,6 +27,8 @@
     
     IEnumerable<object> checkedValues;
 
+		private IList<CharaDataClass> selectedChara;
+		private bool value;
     IEnumerable<object> CheckedValues
     {
         get => checkedValues;
@@ -26,7 +37,7 @@
             checkedValues = value;
             if (checkedValues != null)
             {
-                //console.Log($"CheckedValues Changed {string.Join(Environment.NewLine, value.Select(GetText))}");
+                Console.WriteLine($"CheckedValues Changed {string.Join(Environment.NewLine, value.Select(GetText))}");
             }
         }
     }

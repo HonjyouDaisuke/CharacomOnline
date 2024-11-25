@@ -1,0 +1,55 @@
+@page "/tree"
+
+<RadzenTree Data="@treeData" ExpandMode="RadzenTreeExpandMode.Single" Change="@OnChange">
+	<RadzenTreeLevel TextProperty="Text" ChildrenProperty="Children">
+		<Template Context="node">
+			<div style="display: flex; align-items: center;">
+				<img src="@((RadzenTreeItem)node).ImageUrl" alt="@((RadzenTreeItem)node).Text" style="width: 24px; height: 24px; margin-right: 8px;" />
+				<span>@((RadzenTreeItem)node).Text</span>
+			</div>
+		</Template>
+	</RadzenTreeLevel>
+</RadzenTree>
+
+@code {
+	public class TreeNode
+	{
+		public string Text { get; set; }
+		public string ImageUrl { get; set; }
+		public List<TreeNode> Children { get; set; }
+	}
+	private List<TreeNode> treeData;
+	private RadzenTreeItem radzenTreeItem;
+
+	protected override void OnInitialized()
+	{
+		
+		treeData = new List<TreeNode>
+				{
+						new TreeNode
+						{
+								Text = "Root",
+								ImageUrl = "images/37cb246c13.jpg",
+								Children = new List<TreeNode>
+								{
+										new TreeNode { Text = "Child 1", ImageUrl = "images/37cb246c13.jpg"},
+										new TreeNode
+										{
+												Text = "Child 2",
+												ImageUrl = "images/37cb246c13.jpg",
+												Children = new List<TreeNode>
+												{
+														new TreeNode { Text = "Grandchild 1" , ImageUrl = "images/37cb246c13.jpg"},
+														new TreeNode { Text = "Grandchild 2" , ImageUrl = "images/37cb246c13.jpg"}
+												}
+										}
+								}
+						}
+		};
+	}
+
+    private void OnChange(object value)
+    {
+        // Handle the change event if needed
+    }
+}
