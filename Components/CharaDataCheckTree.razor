@@ -7,8 +7,8 @@
 <RadzenDataGrid TItem="CharaDataClass" Data="@charaDataViewModel.CharaDataRepository.Appraisals" SelectionMode="DataGridSelectionMode.Single" AllowGrouping="true">
 		<Columns>
 			<RadzenDataGridColumn>
-				<Template>
-					<RadzenCheckBox @bind-Value=@value Name="Check1" />
+				<Template Context="charaData">
+					<RadzenCheckBox TValue="bool" Value="@IsRowSelected(charaData)" Change="@((args) => RowSelectionChange(charaData))" Name="Check1" />
 				</Template>
 			</RadzenDataGridColumn>
 			<RadzenDataGridColumn>
@@ -21,27 +21,27 @@
 	</RadzenDataGrid>
 
 @code {
-    [Parameter]
-    public CharaDataViewModel CharaDataView { get; set; } = new CharaDataViewModel();
-    public 
+    //[Parameter]
+    //public CharaDataViewModel CharaDataView { get; set; } = new CharaDataViewModel();
     
-    IEnumerable<object> checkedValues;
+		private IList<CharaDataClass> selectedCharas = new List<CharaDataClass>();
+		
+		private bool IsRowSelected(CharaDataClass charaData)
+		{
+			return selectedCharas.Contains(charaData);
+		}
 
-		private IList<CharaDataClass> selectedChara;
-		private bool value;
-    IEnumerable<object> CheckedValues
-    {
-        get => checkedValues;
-        set
-        {
-            checkedValues = value;
-            if (checkedValues != null)
-            {
-                Console.WriteLine($"CheckedValues Changed {string.Join(Environment.NewLine, value.Select(GetText))}");
-            }
-        }
-    }
-
+		private void RowSelectionChange(CharaDataClass charaData)
+		{
+			if (selectedCharas.Contains(charaData))
+			{
+				selectedCharas.Remove(charaData);
+			}
+			else
+			{
+				selectedCharas.Add(charaData);
+			}
+		}
     string GetText(object data)
     {
         return data.ToString();
@@ -50,10 +50,5 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-    }
-
-    void TreeItemRender(TreeItemRenderEventArgs args)
-    {
-        
     }
 }
