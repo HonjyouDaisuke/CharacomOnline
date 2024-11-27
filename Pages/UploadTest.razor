@@ -1,33 +1,68 @@
 ﻿@page "/upload"
+@using Google.Apis.Auth.OAuth2
+@using Google.Apis.Drive.v3
+@using Google.Apis.Services
+@using Google.Apis.Util.Store
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IConfiguration Configuration
+@inject NavigationManager Navigation
 
-@using CharacomOnline.Service
-@inject GoogleDriveService GoogleDriveService
+<h3>Upload to Google Drive</h3>
 
-<h3>ファイルアップロード</h3>
-
-<InputFile type="file" OnChange="OnInputFileChange" />
-<p>@message</p>
-
-
-@code
+@if (!isAuthenticated)
 {
-    private string message = string.Empty;
+    <p>You are not authenticated. Please <a @onclick="BeginSignIn">sign in</a>.</p>
+}
+else
+{
+    <button @onclick="UploadFile">Upload File</button>
+}
 
-    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+@code {
+    private bool isAuthenticated;
+
+    protected override async Task OnInitializedAsync()
     {
-        var file = e.File;
-        var fileStream = file.OpenReadStream(maxAllowedSize: 10_000_000); // 10MBまでの制限
-        var fileName = file.Name;
-        var contentType = file.ContentType;
+        var user = HttpContextAccessor.HttpContext.User;
+        isAuthenticated = user.Identity.IsAuthenticated;
+    }
 
-        try
+    private void BeginSignIn()
+    {
+        Navigation.NavigateTo("signin-google", true);
+    }
+
+    private async Task UploadFile()
+    {
+        var user = HttpContextAccessor.HttpContext.User;
+        if (user.Identity.IsAuthenticated)
         {
-            var fileId = await GoogleDriveService.UploadFileAsync(fileStream, fileName, contentType);
-            message = $"アップロード成功！ファイルID: {fileId}";
-        }
-        catch (Exception ex)
-        {
-            message = $"エラー: {ex.Message}";
+            var accessToken = await HttpContextAccessor.HttpContext.GetTokenAsync("access_token");
+            var credential = GoogleCredential.FromAccessToken(accessToken);
+
+            var service = new DriveService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "Drive API .NET Quickstart",
+            });
+
+            var fileMetadata = new Google.Apis.Drive.v3.Data.File()
+            {
+                Name = "photo.jpg"
+            };
+            FilesResource.CreateMediaUpload request;
+            using (var stream = new FileStream("wwwroot/photo.jpg", FileMode.Open))
+            {
+                request = service.Files.Create(
+                    fileMetadata, stream, "image/jpeg");
+                request.Fields = "id";
+                await request.UploadAsync();
+            }
+            var file = request.ResponseBody;
+            Console.WriteLine("File ID: " + file.Id);
         }
     }
 }
