@@ -1,0 +1,78 @@
+﻿@page "/upload"
+@using CharacomOnline.Service
+@inject Supabase.Client SupabaseClient
+@inject SupabaseService SupabaseService
+
+<h3>ファイルアップロード</h3>
+
+<!-- InputFileコンポーネントを使用 -->
+<InputFile OnChange="HandleFileSelected" />
+
+<button @onclick="UploadFile">アップロード</button>
+
+
+@code {
+    private IBrowserFile selectedFile;
+
+    // ファイル選択時の処理
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    // アップロード処理
+    private async Task UploadFile()
+    {
+        if (selectedFile != null)
+        {
+            var fileBytes = new byte[selectedFile.Size];
+            await selectedFile.OpenReadStream().ReadAsync(fileBytes);
+            await SupabaseService.UploadFileAsync(fileBytes, selectedFile.Name);
+            Console.WriteLine("アップロード成功");
+        }
+        else
+        {
+            Console.WriteLine("ファイルが選択されていません");
+        }
+    }
+
+/***
+    private string statusMessage = "ファイルを選択してください";
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            if (e.FileCount > 0)
+            {
+                var browserFile = e.File; // 最初のファイルを取得
+                using var fileStream = browserFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 最大10MB
+                using var memoryStream = new MemoryStream();
+                await fileStream.CopyToAsync(memoryStream); // StreamをMemoryStreamにコピー
+                var fileBytes = memoryStream.ToArray(); // MemoryStreamをbyte[]に変換
+
+                var fileName = browserFile.Name;
+                var bucketName = "Characom";
+
+                // Supabaseストレージへのアップロード
+                var storage = SupabaseClient.Storage;
+                var bucket = storage.From(bucketName);
+                await bucket.Upload(fileBytes, fileName);
+
+                // アップロード成功メッセージ
+                statusMessage = $"アップロード成功: {fileName}";
+                Console.WriteLine($"ファイル {fileName} がアップロードされました！");
+            }
+            else
+            {
+                statusMessage = $"有効なファイルを選択してください。{e.FileCount}";
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = "エラー: " + ex.Message;
+            Console.WriteLine($"エラー: {ex.Message}");
+        }
+    }
+***/
+}
