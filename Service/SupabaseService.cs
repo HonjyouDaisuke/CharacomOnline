@@ -1,18 +1,19 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
-using SkiaSharp;
+﻿using Blazored.LocalStorage;
 using Supabase;
 
 namespace CharacomOnline.Service;
 
 public class SupabaseService
 {
-  private readonly Client _supabaseClient;
+  private readonly Supabase.Client _supabaseClient;
   private readonly AppSettings _appSettings;
+  private readonly ILocalStorageService _localStorage;
 
-  public SupabaseService(AppSettings appSettings)
+  public SupabaseService(AppSettings appSettings, ILocalStorageService localStorage)
   {
     // SupabaseのURLとanonキーを使ってクライアントを初期化
     _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+    _localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
 
     // SupabaseのURLとanonキーを使ってクライアントを初期化
     var supabaseUrl = _appSettings.SUPABASE_URL;
@@ -23,58 +24,45 @@ public class SupabaseService
       AutoConnectRealtime = false,
     };
 
-    _supabaseClient = new Client(supabaseUrl, anonKey, options);
+    _supabaseClient = new Supabase.Client(supabaseUrl, anonKey, options);
   }
 
   public string SupabaseUrl => _appSettings.SUPABASE_URL;
   public string AnonKey => _appSettings.ANON_KEY;
 
-  // 公開バケットにファイルをアップロードするメソッド
-  public async Task UploadFileAsync(IBrowserFile selectedFile, string uploadFileName)
+  //public Supabase.Client GetClient() => _supabaseClient;
+  public async Task<Supabase.Client> GetClientAsync()
   {
-    // ストリームを開く (最大サイズを 10MB に設定)
-    using var stream = selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+    var accessToken = await _localStorage.GetItemAsync<string>("access_token");
+    var refreshToken = await _localStorage.GetItemAsync<string>("refresh_token");
 
-    using var memoryStream = new MemoryStream();
-    await stream.CopyToAsync(memoryStream);
-
-    var fileBytes = memoryStream.ToArray();
-
-    var filePath = $"Images/{uploadFileName}";
-    var storage = _supabaseClient.Storage;
-    var bucket = storage.From("Characom");
-
-    try
+    if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
     {
-      await bucket.Upload(fileBytes, filePath);
-      Console.WriteLine("アップロード成功");
+      Console.WriteLine($"Access Token: {accessToken}");
+      Console.WriteLine($"Refresh Token: {refreshToken}");
+
+      try
+      {
+        //_supabaseClient.Auth.SetSession(accessToken, refreshToken);
+        var session = _supabaseClient.Auth.CurrentSession;
+        Console.WriteLine($"Session after SetSession: {session}");
+        if (session?.User != null)
+        {
+          Console.WriteLine($"User Email: {session.User.Email}");
+        }
+        else
+        {
+          Console.WriteLine("Session or User is null after SetSession.");
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error during SetSession: {ex.Message}");
+      }
+
     }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"エラー: {ex.Message}");
-    }
+
+    return _supabaseClient;
   }
 
-  // SKBitmapでファイルをダウンロードするメソッド
-  public async Task<SKBitmap?> DownloadFileAsBitmapAsync(string fileName)
-  {
-    var filePath = $"Images/{fileName}";
-    var storage = _supabaseClient.Storage;
-    var bucket = storage.From("Characom");
-
-    try
-    {
-      var fileBytes = await bucket.Download(filePath, null); // ファイルをバイト配列として取得
-      Console.WriteLine("ダウンロード成功: " + filePath);
-
-      // バイト配列からSKBitmapを生成
-      using var stream = new SKMemoryStream(fileBytes);
-      return SKBitmap.Decode(stream);
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"エラー: {ex.Message}");
-      return null; // エラー時はnullを返す
-    }
-  }
 }

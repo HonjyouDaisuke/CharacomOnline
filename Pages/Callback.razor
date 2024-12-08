@@ -1,34 +1,71 @@
-@page "/oauth2/callback"  
+@page "/callback"
+@using Blazored.LocalStorage
+@inject IJSRuntime JSRuntime
+@inject Supabase.Client SupabaseClient
+@inject ILocalStorageService localStorage
+@inject NavigationManager NavigationManager
 
-@inject NavigationManager Navigation
-
-<h3>認証中...</h3>
+<h3>ログイン処理中...</h3>
 
 @code {
-    protected override async Task OnInitializedAsync()
-    {
-        // URL からクエリパラメータ（認証コード）を取得
-        var uri = Navigation.Uri;
-        var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri);
+    private bool isRendered = false; // 初期レンダリングを追跡するフラグ
 
-        // 'code' クエリパラメータ（Google から返される認証コード）を取得
-        var code = queryParams["code"];
-        if (!string.IsNullOrEmpty(code))
-        {
-            // 認証コードを使ってアクセストークンを取得する処理
-            await GetAccessTokenFromCodeAsync(code);
-        }
-        else
-        {
-            // 認証コードがない場合はエラーメッセージを表示
-            Console.WriteLine("認証に失敗しました。");
-        }
-    }
-
-    private async Task GetAccessTokenFromCodeAsync(string code)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Google OAuth 2.0 トークンエンドポイントにリクエストを送信してアクセストークンを取得
-        // ここでアクセストークンを取得する処理を実装
-        Console.WriteLine("アクセストークンを取得しました。");
+        if (firstRender)
+        {
+            try
+            {
+                // JavaScriptでURLのハッシュ部分を取得
+                var hash = await JSRuntime.InvokeAsync<string>("eval", "window.location.hash");
+
+                // ハッシュ部分がある場合はアクセストークンを解析
+                if (!string.IsNullOrEmpty(hash))
+                {
+                    var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(hash.TrimStart('#'));
+
+                    var accessToken = queryParams["access_token"].FirstOrDefault();
+                    var refreshToken = queryParams["refresh_token"].FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
+                    {
+                        // ローカルストレージにトークンを保存
+                        await localStorage.SetItemAsync("access_token", accessToken);
+                        await localStorage.SetItemAsync("refresh_token", refreshToken);
+
+                        // Supabaseのセッションを取得
+                        var session = await SupabaseClient.Auth.GetSessionFromUrl(new Uri(NavigationManager.Uri));
+
+                        // セッションが有効なら、ホームページにリダイレクト
+                        if (session != null)
+                        {
+                            NavigationManager.NavigateTo("/");
+                        }
+                        else
+                        {
+                            NavigationManager.NavigateTo("/login");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("アクセストークンまたはリフレッシュトークンが不足しています。");
+                        NavigationManager.NavigateTo("/login");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("アクセストークンが見つかりません。");
+                    NavigationManager.NavigateTo("/login");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"認証処理中にエラーが発生しました: {ex.Message}");
+                NavigationManager.NavigateTo("/login");
+            }
+
+            // 1度レンダリングした後に再レンダリングを防ぐためフラグを設定
+            isRendered = true;
+        }
     }
 }

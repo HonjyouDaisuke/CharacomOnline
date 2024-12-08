@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -13,7 +13,14 @@
     <CodeAnalysisRuleSet />
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="DBTools\CreateTables.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DBTools\CreateTables.sql" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Blazor-ApexCharts" Version="4.0.1" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="8.1.0-preview" />
     <PackageReference Include="Radzen.Blazor" Version="5.6.4" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
@@ -21,6 +28,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Supabase" Version="1.1.1" />
+    <PackageReference Include="Supabase.Postgrest" Version="4.0.3" />
     <PackageReference Include="Toolbelt.Blazor.FileDropZone" Version="3.0.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
     <PackageReference Include="SkiaSharp" Version="3.118.0-preview.1.2" />

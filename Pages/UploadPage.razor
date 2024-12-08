@@ -1,9 +1,16 @@
 ﻿@page "/upload"
 @using CharacomOnline.Service
+@using CharacomOnline.Service.TableService
+@using Blazored.LocalStorage
 @inject Supabase.Client SupabaseClient
 @inject SupabaseService SupabaseService
 @inject AppSettings AppSettings
 @inject NotificationService NotificationService
+@inject StorageService StorageService
+@inject ImagesTableService ImagesTableService
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+
 
 <h3>ファイルアップロード</h3>
 
@@ -20,6 +27,7 @@
 
 <input id="downloadFile" type="text" @bind="@fileNameString" />
 <button @onclick="DownloadFile">ダウンロード</button>
+<p>E-Mail : @userEmail</p>
 <br />
 @if (downloadImage != null)
 {
@@ -32,7 +40,9 @@
     private IBrowserFile? selectedFile;
     private string? fileNameString;
     private string? downloadImage;
+    private string? userEmail;
 
+   
     // ファイル選択時の処理
     private void HandleFileSelected(InputFileChangeEventArgs e)
     {
@@ -45,9 +55,42 @@
         NotificationService.Notify(message);
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        // var client = await SupabaseService.GetClientAsync();
+
+        // セッション情報を再取得
+        var session = SupabaseClient.Auth.CurrentSession;
+        if (session != null && session.User != null)
+        {
+            userEmail = session.User.Email;
+        }
+        else
+        {
+            userEmail = "セッション情報がありません。ログインしてください。";
+        }
+    }
+
+    private async Task AddImageData(string fileName, long size)
+    {
+        string Message = string.Empty;
+        try
+        {
+            await ImagesTableService.AddImageFile(SupabaseClient, fileName, "Image/", size);
+            Message = "User added successfully!";
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error: {ex.Message}";
+        }
+
+        Console.WriteLine(Message);
+    }
+
     // アップロード処理
     private async Task UploadFile()
     {
+        Console.WriteLine("アップロードスタート");
         if (selectedFile == null || string.IsNullOrEmpty(selectedFile.Name))
         {
             // 通知を表示
@@ -62,11 +105,12 @@
             Console.WriteLine("ファイルが選択されていません");
             return;
         }
-        
-        var uniqueFileName = RandomStringMaker.MakeString(10) + Path.GetExtension(selectedFile.Name);
 
-        await SupabaseService.UploadFileAsync(selectedFile, uniqueFileName);
-        
+        var uniqueFileName = RandomStringMaker.MakeString(10) + Path.GetExtension(selectedFile.Name);
+        Console.WriteLine($"アップロード準備完了{uniqueFileName}");
+
+        await StorageService.UploadFileAsync(selectedFile, uniqueFileName);
+        Console.WriteLine("アップロード終了");
         // 通知を表示
         ShowNotification(new NotificationMessage
             {
@@ -77,6 +121,9 @@
             }
         ); 
         Console.WriteLine("アップロード成功");
+
+        await AddImageData(uniqueFileName, 123);
+
     }
 
     // ダウンロード処理
@@ -97,7 +144,7 @@
             return;
         }
         // SKBitmapでファイル読み込み
-        var bitmap = await SupabaseService.DownloadFileAsBitmapAsync(fileNameString);
+        var bitmap = await StorageService.DownloadFileAsBitmapAsync(fileNameString);
         if (bitmap == null) return;
 
         // downloadImageにImageStringを入れて表示

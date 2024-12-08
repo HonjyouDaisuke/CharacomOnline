@@ -1,0 +1,94 @@
+﻿@page "/login"
+@using Blazored.LocalStorage
+@inject IJSRuntime JSRuntime
+@inject ILocalStorageService localStorage
+@inject Supabase.Client SupabaseClient
+@inject NavigationManager NavigationManager
+
+
+
+@if (IsLoggedIn)
+{
+    <p>ようこそ, @UserEmail</p>
+    <button @onclick="Logout">ログアウト</button>
+}
+else
+{
+    <RadzenButton Click=@(_ => LoginWithGoogle()) >Googleでログイン</RadzenButton>
+    
+    <p>ログインしてください。</p>
+}
+
+@code {
+    private bool IsLoggedIn = false;
+    private string? UserEmail;
+
+    private async Task LoginWithGoogle()
+    {
+        try
+        {
+            var redirectUrl = "https://localhost:7241/callback";  // 認証後に戻るURL
+        
+            // Google認証用のOAuth URLを作成
+            var signinUrl = $"https://imrymolanolzitkwcnhz.supabase.co/auth/v1/authorize?provider=google&redirect_to={Uri.EscapeDataString(redirectUrl)}";
+
+            // 認証ページにリダイレクト
+            NavigationManager.NavigateTo(signinUrl, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ログインエラー: {ex.Message}");
+        }
+    }
+
+    private async Task Logout()
+    {
+        try
+        {
+            // Supabaseセッションをクリア
+            await SupabaseClient.Auth.SignOut();
+
+            // ローカルストレージのトークンを削除
+            await localStorage.RemoveItemAsync("access_token");
+            await localStorage.RemoveItemAsync("refresh_token");
+
+            // ログインページにリダイレクト
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ログアウトエラー: {ex.Message}");
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var queryParameters = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        // URL からアクセストークンを取得
+        var accessToken = queryParameters["access_token"];
+        var refreshToken = queryParameters["refresh_token"];
+        var expiresAt = queryParameters["expires_at"];
+
+        if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
+        {
+            // トークンをセッションストレージやローカルストレージに保存
+            localStorage.SetItemAsync("access_token", accessToken);
+            localStorage.SetItemAsync("refresh_token", refreshToken);
+
+            // セッションを管理するための処理を追加
+            // 例: SupabaseAuthService.SetSession(accessToken, refreshToken);
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        // セッション確認
+        var session = SupabaseClient.Auth.CurrentSession;
+        if (session != null && session.User != null)
+        {
+            IsLoggedIn = true;
+            UserEmail = session.User.Email;
+        }
+    }
+}
