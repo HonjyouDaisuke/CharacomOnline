@@ -1,8 +1,10 @@
 using Blazored.LocalStorage;
 using CharacomOnline;
 using CharacomOnline.Data;
+using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
+using CharacomOnline.ViewModel;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Radzen;
 
@@ -16,34 +18,33 @@ builder.Services.AddScoped<Radzen.ThemeService>();
 builder.Logging.SetMinimumLevel(LogLevel.Debug); // ログレベルを指定
 builder.Logging.AddConsole(); // コンソールに出力するための設定
 builder.Services.AddScoped<FileUploadService>();
-builder.Services.AddScoped<FileHandleService>();
+builder.Services.AddScoped<CharaDataTableService>();
 builder.Services.AddRadzenComponents();
 builder.Services.AddBlazoredLocalStorage();
-
 
 // JSONファイルから設定を読み込む
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile(
-  $"appsettings.{builder.Environment.EnvironmentName}.json",
-  optional: true
+	$"appsettings.{builder.Environment.EnvironmentName}.json",
+	optional: true
 );
 
 // Azure App Configurationを追加
 var appConfig = Environment.GetEnvironmentVariable("ASPNETCORE_APPCONFIG")
-                ?? builder.Configuration["APPCONFIG"]; // 環境変数が優先
+								?? builder.Configuration["APPCONFIG"]; // 環境変数が優先
 if (string.IsNullOrEmpty(appConfig))
 {
-  Console.WriteLine("Azure App Configuration connection string is missing.");
+	Console.WriteLine("Azure App Configuration connection string is missing.");
 }
 else
 {
-  Console.WriteLine("Using Azure App Configuration connection.");
-  builder.Configuration.AddAzureAppConfiguration(options =>
-  {
-    options.Connect(appConfig)
-           .Select(KeyFilter.Any, builder.Environment.EnvironmentName)
-           .Select(KeyFilter.Any);
-  });
+	Console.WriteLine("Using Azure App Configuration connection.");
+	builder.Configuration.AddAzureAppConfiguration(options =>
+	{
+		options.Connect(appConfig)
+					 .Select(KeyFilter.Any, builder.Environment.EnvironmentName)
+					 .Select(KeyFilter.Any);
+	});
 }
 
 // Supabaseの接続情報をAzure App Configurationから取得
@@ -52,33 +53,32 @@ var supabaseAnonKey = builder.Configuration["ANON_KEY"];
 
 if (string.IsNullOrEmpty(supabaseUrl) || string.IsNullOrEmpty(supabaseAnonKey))
 {
-  throw new InvalidOperationException("Supabase URL or AnonKey is missing from Azure App Configuration.");
+	throw new InvalidOperationException("Supabase URL or AnonKey is missing from Azure App Configuration.");
 }
 
 builder.Services.AddSingleton<Supabase.Client>(_ =>
 {
-  var client = new Supabase.Client(supabaseUrl, supabaseAnonKey);
-  return client;
+	var client = new Supabase.Client(supabaseUrl, supabaseAnonKey);
+	return client;
 });
-
-/**
-builder.Services.AddSingleton<Supabase.Client>(new Supabase.Client(supabaseUrl, supabaseAnonKey, new Supabase.SupabaseOptions
-{
-  AutoConnectRealtime = false,
-  AutoRefreshToken = true,
-}));
-**/
 
 builder.Services.AddScoped<SupabaseService>();
 builder.Services.AddScoped<StorageService>();
 builder.Services.AddScoped<ImagesTableService>();
+builder.Services.AddScoped<CharaDataTableService>();
+builder.Services.AddScoped<FileUploadService>();
+builder.Services.AddScoped<FileHandleService>();
+builder.Services.AddScoped<ProjectsTableService>();
+builder.Services.AddScoped<UserProjectsTableService>();
+builder.Services.AddScoped<CharaDataRepository>();
+builder.Services.AddScoped<CharaDataViewModel>();
+builder.Services.AddScoped<ProjectsViewModel>();
 
-var appSettings = builder.Configuration.Get<AppSettings>();
 
-if (appSettings is null)
-{
-  throw new InvalidOperationException("AppSettings could not be loaded. Please check your configuration.");
-}
+// builder.Services.AddScoped<ProtectedSessionStorage>();
+builder.Services.AddScoped<SessionStorageService>();
+
+var appSettings = builder.Configuration.Get<AppSettings>() ?? throw new InvalidOperationException("AppSettings could not be loaded. Please check your configuration.");
 
 builder.Services.AddSingleton(appSettings);
 
@@ -87,10 +87,10 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-  app.UseExceptionHandler("/Error");
+	app.UseExceptionHandler("/Error");
 
-  // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-  app.UseHsts();
+	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+	app.UseHsts();
 }
 
 app.UseHttpsRedirection();

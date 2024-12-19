@@ -1,3 +1,5 @@
+using SkiaSharp;
+
 namespace CharacomOnline.Entity;
 
 public class CharaDataClass
@@ -8,14 +10,14 @@ public class CharaDataClass
 
 	public string? MaterialName { get; set; }
 
-	public string? NumString { get; set; }
+	public string? TimesString { get; set; }
 
 	public string? Size { get; set; }
 
-	public string? ImageUrl { get; set; }
+	public SKBitmap? SrcImage { get; set; }
 
 	public override string ToString()
 	{
-		return $"id: {Id} CharaName: {CharaName} MaterialName: {MaterialName} numString: {NumString} size: {Size} ({ImageUrl})";
+		return $"id: {Id} CharaName: {CharaName} MaterialName: {MaterialName} numString: {TimesString} size: {Size} ";
 	}
 }

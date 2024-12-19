@@ -1,9 +1,11 @@
 @page "/callback"
 @using Blazored.LocalStorage
+@using CharacomOnline.Service
 @inject IJSRuntime JSRuntime
 @inject Supabase.Client SupabaseClient
 @inject ILocalStorageService localStorage
 @inject NavigationManager NavigationManager
+@inject SessionStorageService SessionStorage
 
 <h3>ログイン処理中...</h3>
 
@@ -40,6 +42,21 @@
                         if (session != null)
                         {
                             NavigationManager.NavigateTo("/");
+
+                            if (session.User != null && session.User.Id != null)
+                            {
+                                if (Guid.TryParse(session.User.Id, out Guid userId))
+                                {
+                                    await SessionStorage.SetUserIDAsync(userId);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("User ID が有効な GUID ではありません。");
+                                    NavigationManager.NavigateTo("/login");
+                                }
+                                // await SessionStorage.SetUserIDAsync((Guid)session.User.Id);
+                            }
+
                         }
                         else
                         {

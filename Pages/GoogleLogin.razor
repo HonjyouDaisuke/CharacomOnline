@@ -1,9 +1,11 @@
 ﻿@page "/login"
 @using Blazored.LocalStorage
+@using CharacomOnline.Service
 @inject IJSRuntime JSRuntime
 @inject ILocalStorageService localStorage
 @inject Supabase.Client SupabaseClient
 @inject NavigationManager NavigationManager
+@inject SessionStorageService SessionStorageService
 
 
 
@@ -28,7 +30,7 @@ else
         try
         {
             var redirectUrl = "https://localhost:7241/callback";  // 認証後に戻るURL
-        
+
             // Google認証用のOAuth URLを作成
             var signinUrl = $"https://imrymolanolzitkwcnhz.supabase.co/auth/v1/authorize?provider=google&redirect_to={Uri.EscapeDataString(redirectUrl)}";
 
@@ -51,6 +53,9 @@ else
             // ローカルストレージのトークンを削除
             await localStorage.RemoveItemAsync("access_token");
             await localStorage.RemoveItemAsync("refresh_token");
+
+            // SessionStorageをクリア
+            await SessionStorageService.ClearAsync();
 
             // ログインページにリダイレクト
             NavigationManager.NavigateTo("/login", forceLoad: true);

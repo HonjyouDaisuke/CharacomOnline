@@ -35,22 +35,23 @@ public class StorageService
     }
     catch (Exception ex)
     {
-      Console.WriteLine($"エラー: {ex.Message}");
+      Console.WriteLine($"エラー(storage): {ex.Message}");
     }
   }
 
   // SKBitmapでファイルをダウンロードするメソッド
-  public async Task<SKBitmap?> DownloadFileAsBitmapAsync(string fileName)
+  public async Task<SKBitmap?> DownloadFileAsBitmapAsync(string filePath, string fileName)
   {
     var supabaseClient = await _supabaseService.GetClientAsync();
-    var filePath = $"Images/{fileName}";
+    var fullPath = $"{filePath}{fileName}";
     var storage = supabaseClient.Storage;
     var bucket = storage.From("Characom");
 
     try
     {
-      var fileBytes = await bucket.Download(filePath, null); // ファイルをバイト配列として取得
-      Console.WriteLine("ダウンロード成功: " + filePath);
+      Console.WriteLine($"fullPath =[{fullPath}]");
+      var fileBytes = await bucket.Download(fullPath, null); // ファイルをバイト配列として取得
+      Console.WriteLine("ダウンロード成功: " + fullPath);
 
       // バイト配列からSKBitmapを生成
       using var stream = new SKMemoryStream(fileBytes);
@@ -58,7 +59,7 @@ public class StorageService
     }
     catch (Exception ex)
     {
-      Console.WriteLine($"エラー: {ex.Message}");
+      Console.WriteLine($"エラー（ここかも）: {ex.Message}");
       return null; // エラー時はnullを返す
     }
   }

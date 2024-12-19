@@ -1,0 +1,88 @@
+﻿@page "/projects"
+@using CharacomOnline.Service
+@using CharacomOnline.Components
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Entity
+@inject SessionStorageService SessionStorage
+@inject DialogService DialogService
+<h3>ProjectsSelect</h3>
+
+
+<RadzenButton Click=@(async ()=>
+    await OnNewButtonClick()) Icon="add_circle" Text="新規作成" ButtonStyle="ButtonStyle.Primary" />
+<RadzenText>@message</RadzenText>
+<RadzenText>@userId</RadzenText>
+
+<RadzenPanel Style="width: 100%; overflow-x: hidden;">
+    <!-- 横幅制限と折り返し対応 -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: start; gap: 16px; max-width: 100%;">
+        @foreach (var project in projects)
+        {
+            <ProjectCard Project="project" CardClick="OnCardClick" />
+        }
+    </div>
+</RadzenPanel>
+
+@code {
+    private string? message;
+    private Guid? userId;
+    private Guid? projectId;
+    [Inject] private ProjectsViewModel ProjectsViewModel { get; set; } = default!;
+
+    private List<ProjectViewData>? projects { get; set; } = new List<ProjectViewData>();
+
+    private void CheckInitialSelect(Guid? projectId)
+    {
+        if (projects == null) return;
+        foreach(ProjectViewData p in projects)
+        {
+            if (p.Id == projectId) p.IsSelected = true;
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (SessionStorage == null) return;
+        userId = await SessionStorage.GetUserIDAsync();
+        projectId = await SessionStorage.GetProjectIDAsync();
+        if (userId == null) return;
+        projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
+        if (projectId == null) return;
+        CheckInitialSelect(projectId);
+    }
+    private void OnClick(string text)
+    {
+        message = text;
+    }
+
+    private async Task OnNewButtonClick()
+    {
+        var result = await DialogService.OpenAsync<CreateProjectDialog>("プロジェクトの新規作成", new Dictionary<string, object>
+        {
+            { nameof(CreateProjectDialog.OnDialogClosed), EventCallback.Factory.Create<CreateProjectDialogResults>(this, OnDialogClosed) }
+        });
+    }
+
+    private async Task OnDialogClosed(CreateProjectDialogResults result)
+    {
+        if (result.IsCanceled) return;
+
+        var _userId = await SessionStorage.GetUserIDAsync();
+        if (_userId == null) return;
+        var projectId = await ProjectsViewModel.CreateNewProject(result.Title, result.Description, (Guid)_userId);
+        message = $"projectId = {projectId} を新規作成しました。";
+
+        StateHasChanged();
+    }
+
+    private async Task OnCardClick(ProjectViewData clickedProject)
+    {
+        if (projects == null) return;
+        foreach(ProjectViewData project in projects)
+        {
+            project.IsSelected = false;
+        }
+        clickedProject.IsSelected = true;
+        message = $"プロジェクトが選択されました。件名{clickedProject.Name} id:{clickedProject.Id}";
+        await SessionStorage.SetProjectIDAsync(clickedProject.Id);
+    }
+}

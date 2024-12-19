@@ -1,41 +1,190 @@
 @page "/charaimages"
 @using CharacomOnline.ImageProcessing
 @using Microsoft.AspNetCore.Components.Web
-@using Radzen
 @using CharacomOnline.Components
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Entity
-@using Radzen.Blazor
+@using CharacomOnline.Service
+@inject NavigationManager Navi
+@inject ProjectsViewModel ProjectViewModel
+
+@inject SessionStorageService SessionStorage
+
 <PageTitle>Chara Images</PageTitle>
 
 <h1>画像一覧</h1>
 
-<RadzenStack Orientation="Radzen.Orientation.Vertical" Gap="1rem">
-	<RadzenRow>
-	<RadzenColumn >
-		<RadzenCard>
-			<BinaryImage />
-		</RadzenCard>
-	</RadzenColumn>
-	</RadzenRow>
-	<RadzenRow>
-	<RadzenColumn>
-		<RadzenCard>
-			<CharaDataGrid CharaDataView="@charaDataViewModel" SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
-		</RadzenCard>
-	</RadzenColumn>
-	<RadzenColumn>
-		<RadzenCard>
-			<CharaDataGrid CharaDataView="@charaDataViewModel" SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged"/>
-		</RadzenCard>
-	</RadzenColumn>
-	</RadzenRow>
-</RadzenStack>
+@if (isLoading)
+{
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
+}
+else if(userId == null)
+{
+	<RadzenCard>
+		<RadzenAlert AllowClose="false" Title="ユーザ認識エラー" AlertStyle="AlertStyle.Danger" Variant="Variant.Flat">
+			<RadzenRow>ログインできていません。ログインしてください。</RadzenRow>
+			<RadzenRow>
+				<RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="() => OnNaviClick(loginUrl)">
+					ログインへ
+				</RadzenButton>
+			</RadzenRow>
+		</RadzenAlert>
+	</RadzenCard>
+}
+else if(projectId == null)
+{
+	<RadzenCard>
+		<RadzenAlert AllowClose="false" Title="プロジェクト認識エラー" AlertStyle="AlertStyle.Danger" Variant="Variant.Flat">
+			<RadzenRow>プロジェクトを選択してください。</RadzenRow>
+			<RadzenRow>
+				<RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="() => OnNaviClick(projectsUrl)">
+					プロジェクト選択へ
+				</RadzenButton>
+			</RadzenRow>
+		</RadzenAlert>
+	</RadzenCard>
+}
+else
+{
+	<RadzenStack Orientation="Radzen.Orientation.Vertical" Gap="1rem">
+		@if (isProgress)
+		{
+			<RadzenRow>
+				<RadzenColumn>
+					<RadzenCard>
+						<RadzenProgressBar @bind-Value="@progressValue" Max="@progressMax" Unit="@unitString" />
+					</RadzenCard>
+				</RadzenColumn>
+			</RadzenRow>
+		}
+		<RadzenRow>
+			<RadzenText>UserId = @userId</RadzenText>
+			<RadzenText>ProjectTitle = @ProjectViewModel.ProjectTitle</RadzenText>
+		</RadzenRow>
+		<RadzenRow>
+			<RadzenColumn>
+				<RadzenCard>
+					<CharaDataGrid 
+						SelectedData="@selectedData" 
+						UserId="@userId" ProjectId="@projectId" 
+						SelectedDataChanged="OnSelectedDataChanged" 
+						OnFilesUploaded="RefreshDataAsync"
+						OnFilesDropped="HandleFilesDroppedAsync" />
+				</RadzenCard>
+			</RadzenColumn>
+			<RadzenColumn>
+				<RadzenCard>
+					<CharaDataGrid SelectedData="@selectedData" SelectedDataChanged="OnSelectedDataChanged" />
+				</RadzenCard>
+			</RadzenColumn>
+		</RadzenRow>
+	</RadzenStack>
+}
 
 @code {
 	private CharaDataClass selectedData { get; set; } = new CharaDataClass();
-	private CharaDataViewModel charaDataViewModel = new CharaDataViewModel();
+	[Inject] private CharaDataViewModel CharaDataViewModel { get; set; } = default!;
+	private Guid? projectId;
+	private Guid? userId;
+	private bool isLoading = true;
+	private string loginUrl = "./login";
+	private string projectsUrl = "./projects";
+	private double progressValue = 0;
+	private double progressMax = 0;
+	private bool isProgress = false;
+	private string unitString = "";
 
+	private async Task CheckSessionAsync()
+	{
+		if (SessionStorage == null) return;
+		userId = await SessionStorage.GetUserIDAsync();
+		projectId = await SessionStorage.GetProjectIDAsync();
+		if (userId == null || projectId == null) return;
+		await ProjectViewModel.SetCurrentProject((Guid)projectId);
+	}
+	protected override async Task OnInitializedAsync()
+	{
+		await CheckSessionAsync();
+		if (userId == null || projectId == null){
+			isLoading = false;
+			return;
+		}
+		// await CharaDataViewModel.FetchCharaDataAsync((Guid)projectId, Guid.Empty);
+		isLoading = false;
+		await RefreshDataAsync();
+		isProgress = false;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task HandleFilesDroppedAsync(InputFileChangeEventArgs e)
+	{
+		try
+		{
+			if (projectId == null) return;
+
+			progressMax = (double)e.FileCount;
+			unitString = $" of {e.FileCount}";
+			isProgress = true;
+			await InvokeAsync(StateHasChanged);
+
+			foreach (var file in e.GetMultipleFiles(30))
+			{
+				await CharaDataViewModel.InsertCharaDataAsync(file, (Guid)projectId, Guid.Empty);
+				progressValue++;
+				await InvokeAsync(StateHasChanged);
+			}
+
+			// データ再取得
+			await RefreshDataAsync();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error: {ex.Message}");
+		}
+		
+		progressValue = 0;
+		progressMax = 0;
+		isProgress = false;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task RefreshDataAsync()
+	{
+		if (projectId == null) return;
+
+		// 初期化
+		progressValue = 0;
+		progressMax = 0;
+		isProgress = true;
+		await InvokeAsync(StateHasChanged);
+
+		// データ取得開始
+		await CharaDataViewModel.FetchCharaDataAsync(
+			(Guid)projectId,
+			Guid.Empty,
+			UpdateProgress // コールバックを渡す
+		);
+
+		// 完了
+		isProgress = false;
+		progressValue = 0;
+		progressMax = 0;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private void UpdateProgress(double current, double max)
+	{
+		progressValue = current;
+		progressMax = max;
+		InvokeAsync(StateHasChanged);
+	}
+
+	private void OnNaviClick(string goTo)
+	{
+		Navi.NavigateTo(goTo);
+	}
 
 	private void OnSelectedDataChanged(CharaDataClass newSelectedData)
 	{

@@ -34,9 +34,9 @@ public class FileUploadService
 			Id = 0,
 			CharaName = fileInfo.CharaName,
 			MaterialName = fileInfo.MaterialName,
-			NumString = fileInfo.NumString,
+			TimesString = fileInfo.TimesString,
 			Size = fileInfo.Size,
-			ImageUrl = imageUrl,
+			// ImageUrl = imageUrl,
 		};
 		return uploadData;
 	}

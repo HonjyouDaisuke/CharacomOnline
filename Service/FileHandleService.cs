@@ -9,7 +9,7 @@ public struct FileInformation
 
 	public string MaterialName { get; set; }
 
-	public string NumString { get; set; }
+	public string TimesString { get; set; }
 
 	public string Size { get; set; }
 }
@@ -29,7 +29,7 @@ public class FileHandleService
 
 		resData.CharaName = GetCharaNameFromFileName(file.Name);
 		resData.MaterialName = GetMaterialNameFromFileName(file.Name);
-		resData.NumString = GetNumStringFromFileName(file.Name);
+		resData.TimesString = GetNumStringFromFileName(file.Name);
 		resData.Size = $"{resSize.Width} x {resSize.Height}";
 		return resData;
 	}

@@ -1,0 +1,60 @@
+﻿@inject DialogService DialogService
+
+@namespace CharacomOnline.Components
+<RadzenStack Gap="1.5rem">
+    <RadzenStack Orientation="Radzen.Orientation.Vertical" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenFormField Text="プロジェクト名" Variant="Variant.Outlined" Style="width: 100%;">
+            <RadzenTextBox @bind-Value="@projectName" class="full-width" />
+        </RadzenFormField>
+        <RadzenFormField Text="プロジェクトの説明" Variant="Variant.Outlined" Style="width: 100%;">
+            <RadzenTextArea @bind-Value="@description" />
+        </RadzenFormField>
+        <RadzenRow>
+            <RadzenColumn>
+                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="async () => await OnCancel()">キャンセル</RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Primary" Click="async () => await OnCreate()">作成</RadzenButton>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+
+    [Parameter]
+    public EventCallback<CreateProjectDialogResults> OnDialogClosed { get; set; }
+
+    private string projectName = "";
+    private string description = "";
+
+    private async Task OnCreate()
+    {
+        if (OnDialogClosed.HasDelegate)
+        {
+            
+            var result = new CreateProjectDialogResults
+                {
+                    IsCanceled = false,
+                    Title = projectName,
+                    Description = description,
+                };
+            Console.WriteLine($"Title = {result.Title} Description = {result.Description}");
+            await OnDialogClosed.InvokeAsync(result);
+        }
+        DialogService.Close();
+    }
+
+    private async Task OnCancel()
+    {
+        if (OnDialogClosed.HasDelegate)
+        {
+            var result = new CreateProjectDialogResults
+                {
+                    IsCanceled = true,
+                    Title = "",
+                    Description = "",
+                };
+            await OnDialogClosed.InvokeAsync(result);
+        }
+        DialogService.Close();
+    }
+}
