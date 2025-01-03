@@ -1,0 +1,43 @@
+﻿@page "/box-callback"
+@using CharacomOnline.Service
+@inject NavigationManager Navigation
+@inject OAuthService OAuthService
+@inject TokenStorage TokenStorage
+<h3>Authenticating...</h3>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        if (!firstRender) return;
+        if (query["code"] != null)
+        {
+            var code = query["code"];
+            Console.WriteLine($"Received code: {code}");
+            try
+            {
+                // アクセストークンを取得
+                var tokenResponse = await OAuthService.GetAccessTokenAsync(code);
+                Console.WriteLine("Access Token: " + tokenResponse.AccessToken);
+
+                // 必要に応じてアクセストークンをセッションやストレージに保存
+                // localStorageやサーバー側に保存する例:
+                await TokenStorage.SaveTokenAsync(tokenResponse);
+
+                // 認証成功後のページにリダイレクト
+                Navigation.NavigateTo("/box");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error obtaining access token: " + ex.Message);
+                Navigation.NavigateTo("/auth");
+            }
+        }
+        else if (query["error"] != null)
+        {
+            Console.WriteLine("OAuth Error: " + query["error"]);
+        }
+    }
+}

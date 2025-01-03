@@ -1,4 +1,9 @@
-﻿@inject DialogService DialogService
+﻿@using CharacomOnline.Service
+@using CharacomOnline.Entity
+@inject DialogService DialogService
+@inject BoxFileService BoxFileService
+@inject SessionStorageService SessionStorage
+@inject TokenStorage TokenStorage
 
 @namespace CharacomOnline.Components
 <RadzenStack Gap="1.5rem">
@@ -9,6 +14,31 @@
         <RadzenFormField Text="プロジェクトの説明" Variant="Variant.Outlined" Style="width: 100%;">
             <RadzenTextArea @bind-Value="@description" />
         </RadzenFormField>
+        <RadzenRow>
+            <RadzenColumn>
+                <RadzenLabel Text="プロジェクトフォルダ" Component="DropDownBindValue" />
+                <RadzenDropDown Value="projectFolderId"
+                                TValue="string"
+                                Data="projectFolderCandidates"
+                                TextProperty="Name"
+                                ValueProperty="Id"
+                                Style="width: 100%;"
+                                ValueChanged="async (value) => await OnProjectFolderSelected(value)"
+                                Name="DropDownBindValue" />
+            </RadzenColumn>
+        </RadzenRow>
+        <p>@projectFolderId</p>
+        <RadzenRow>
+            <RadzenColumn>
+                <RadzenLabel Text="切出しフォルダ" Component="CharaDropDownBindValue" />
+                <RadzenDropDown @bind-Value="charaFolderId"
+                                Data="charaFolderCandidates"
+                                TextProperty="Name"
+                                ValueProperty="Id"
+                                Style="width: 100%;"
+                                Name="CharaDropDownBindValue" />
+            </RadzenColumn>
+        </RadzenRow>
         <RadzenRow>
             <RadzenColumn>
                 <RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="async () => await OnCancel()">キャンセル</RadzenButton>
@@ -22,9 +52,109 @@
 
     [Parameter]
     public EventCallback<CreateProjectDialogResults> OnDialogClosed { get; set; }
-
+    private bool isLoading = true;
     private string projectName = "";
     private string description = "";
+    private string projectFolderId = "";
+    private string charaFolderId = "";
+    private string? topFolder = "";
+
+    List<Folders> projectFolderCandidates = new ();
+    List<Folders> charaFolderCandidates = new();
+   
+    public class Folders
+    {
+        public string? Name { get; set; }
+        public string? Id { get; set; }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        // アクセストークンを取得
+        var accessToken = await TokenStorage.GetAccessTokenAsync();
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            isLoading = false;
+            throw new Exception("Access token not found. Please authenticate first.");
+        }
+
+        topFolder = await SessionStorage.GetTopFolderId();
+
+
+        if (topFolder == "")
+        {
+            isLoading = false;
+            throw new Exception("Boxの初期フォルダが読み取れませんでした");
+        }
+
+        var boxProjectFolders = await BoxFileService.GetFolderItemsAsync(topFolder, 100, 0, accessToken);
+
+        foreach(var item in boxProjectFolders)
+        {
+            if (item.Type != "folder") continue;
+            Folders newItem = new Folders{
+                Name=item.Name,
+                Id=item.Id
+            };
+
+            projectFolderCandidates.Add(newItem);
+        }
+        isLoading = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnProjectFolderSelected(object value)
+    {
+        projectFolderId = value.ToString();
+
+        if (!string.IsNullOrEmpty(projectFolderId))
+        {
+            await OnChangeProject(); // 値が設定された後に呼び出す
+        }
+    }
+
+    private async Task<string?> getFolderName(string folderId)
+    {
+        foreach(var item in projectFolderCandidates)
+        {
+            if (item.Id == folderId)
+            {
+                return item.Name;
+            }
+        }
+        return null;
+    }
+    private async Task OnChangeProject()
+    {
+        isLoading = true;
+
+        projectName = await getFolderName(projectFolderId);
+        var accessToken = await TokenStorage.GetAccessTokenAsync();
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            isLoading = false;
+            throw new Exception("Access token not found. Please authenticate first.");
+        }
+
+        Console.WriteLine($"OnChange folderId={projectFolderId}");
+        var boxCharaFolders = await BoxFileService.GetFolderItemsAsync(projectFolderId, 100, 0, accessToken);
+
+        foreach (var item in boxCharaFolders)
+        {
+            if (item.Type != "folder") continue;
+            Folders newItem = new Folders
+                {
+                    Name = item.Name,
+                    Id = item.Id
+                };
+
+            charaFolderCandidates.Add(newItem);
+        }
+        isLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
 
     private async Task OnCreate()
     {
@@ -36,6 +166,8 @@
                     IsCanceled = false,
                     Title = projectName,
                     Description = description,
+                    FolderId = projectFolderId,
+                    CharaFolderId = charaFolderId,
                 };
             Console.WriteLine($"Title = {result.Title} Description = {result.Description}");
             await OnDialogClosed.InvokeAsync(result);
@@ -52,6 +184,8 @@
                     IsCanceled = true,
                     Title = "",
                     Description = "",
+                    FolderId = "",
+                    CharaFolderId = "",
                 };
             await OnDialogClosed.InvokeAsync(result);
         }

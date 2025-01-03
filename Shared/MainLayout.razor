@@ -1,10 +1,13 @@
-﻿@inherits LayoutComponentBase
+﻿@using CharacomOnline.Components
+@inherits LayoutComponentBase
 
 <PageTitle>CharacomOnline</PageTitle>
 <RadzenComponents @rendermode="InteractiveServer" />
 <RadzenLayout>
 	<MainHeader @bind-SidebarExpanded="parentSidebarExpanded" />
 	<NavMenu @bind-SidebarExpanded="parentSidebarExpanded" />
+	<!-- NotificationManagerを配置 -->
+	<NotificationManager />
 	<RadzenBody>
 		<div class="rz-p-4">
 			@Body

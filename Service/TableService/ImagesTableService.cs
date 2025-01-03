@@ -7,7 +7,7 @@ public class ImagesTableService(Client supabaseClient)
 {
 	private readonly Client _supabaseClient = supabaseClient;
 
-	public async Task<Guid?> AddImageFile(string fileName, string filePath, long fileSize)
+	public async Task<Guid?> AddImageFile(string fileName, string filePath, long fileSize, string thumbnail)
 	{
 		Guid newId = Guid.NewGuid();
 		var imagesItem = new ImagesTable
@@ -16,6 +16,7 @@ public class ImagesTableService(Client supabaseClient)
 			FileName = fileName,
 			FilePath = filePath,
 			FileSize = fileSize,
+			Thumbnail = thumbnail,
 		};
 
 		// データベースに挿入

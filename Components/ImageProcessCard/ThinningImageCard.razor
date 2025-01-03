@@ -1,0 +1,45 @@
+﻿@using CharacomOnline.Service
+@using CharacomOnline.ImageProcessing
+@using SkiaSharp
+@namespace CharacomOnline.Components.ImageProcessCard
+
+<RadzenCard>
+    @if (binaryImageData != null)
+    {
+        <img src="@binaryImageData" alt="Binary Image" width="@Width" height="@Height" />
+    }
+    <h4>@msg</h4>
+</RadzenCard>
+
+@code {
+    private string? binaryImageData;
+    [Parameter]
+    public string Width { get; set; }
+
+    [Parameter]
+    public string Height { get; set; }
+
+    [Parameter]
+    public SKBitmap SrcBitmap { get; set; }
+
+    private string msg = "";
+    protected override async Task OnParametersSetAsync()
+    {
+        msg = $"srcbimp = null? => {SrcBitmap == null}";
+        Console.WriteLine("スタート前");
+        if (SrcBitmap == null) return; 
+        Console.WriteLine("ソースを準備");
+        var srcBitmap = ImageEffectService.ResizeBitmap(SrcBitmap, 160,160);
+        Console.WriteLine("インスタンス準備");
+        var binaryBmp = ImageEffectService.GetBinaryBitmap(srcBitmap);
+        ThinningProcess thinningProcess = new ThinningProcess(binaryBmp);
+        Console.WriteLine("開始します");
+        var thinBmp = await thinningProcess.ThinBinaryImageAsync();
+        Console.WriteLine("終了です。");
+        binaryImageData = ImageEffectService.GetBinaryImageData(thinBmp);
+        Console.WriteLine("画像文字列に変換しました。");
+        msg = $"srcbimp = null? => {SrcBitmap.IsNull} {binaryImageData}";
+        Console.WriteLine("パラメータチェンジを告げます。");
+        //await InvokeAsync(StateHasChanged);
+    }
+}

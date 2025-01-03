@@ -27,17 +27,19 @@
 		Data="@CharaDataViewModel._charaDataRepository.Appraisals" 
 		RowSelect="@OnRowSelected" 
 		SelectionMode="DataGridSelectionMode.Single" 
-		AllowGrouping="true" 
+		PagerPosition="PagerPosition.TopAndBottom"
+		AllowPaging="true"
+		AllowGrouping="true"
 		Render="OnRender">
 		<Columns>
 			<RadzenDataGridColumn Property="Id" Title="No" />
 			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
 			<RadzenDataGridColumn Property="MaterialName" Title="資料名" />
-			<RadzenDataGridColumn Property="TimesString" Title="回数" />
+			<RadzenDataGridColumn Property="Times" Title="回数" />
 			<RadzenDataGridColumn Property="Size" Title="サイズ" />
 			<RadzenDataGridColumn Title="イメージ">
 				<Template>
-					<ThumbnailImage SKBitmapImage="@context.SrcImage" />
+					<img src="@context.Thumbnail" alt="@context.CharaName" width="50" height="50" />
 				</Template>
 			</RadzenDataGridColumn>
 		</Columns>

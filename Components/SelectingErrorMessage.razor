@@ -1,0 +1,31 @@
+﻿<RadzenCard>
+	<RadzenAlert AllowClose="false" Title="@ErrorMessageTitle" AlertStyle="AlertStyle.Danger" Variant="Variant.Flat">
+		<RadzenRow>@ErrorMessage</RadzenRow>
+		<RadzenRow>
+			<RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="() => OnLinkClicked()">
+				@LinkMsg
+			</RadzenButton>
+		</RadzenRow>
+	</RadzenAlert>
+</RadzenCard>
+
+@code {
+	[Parameter]
+	public string? ErrorMessageTitle { get; set; }
+	[Parameter]
+	public string? ErrorMessage { get; set; }
+	[Parameter]
+	public string? LinkMsg { get; set; }
+
+	[Parameter]
+	public EventCallback LinkClick { get; set; }
+
+	private async Task OnLinkClicked()
+	{
+		//親に通知
+		if (LinkClick.HasDelegate)
+		{
+			await LinkClick.InvokeAsync();
+		}
+	}
+}

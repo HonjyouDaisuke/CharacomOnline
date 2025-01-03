@@ -1,6 +1,8 @@
 ﻿namespace CharacomOnline.Entity;
+
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
+using System;
 
 [Table("projects")] // テーブル名
 public class ProjectsTable : BaseModel
@@ -13,4 +15,10 @@ public class ProjectsTable : BaseModel
 
   [Column("description")]
   public string Description { get; set; }
+
+  [Column("folder_id")]
+  public string FolderId { get; set; }
+
+  [Column("chara_folder_id")]
+  public string CharaFolderId { get; set; }
 }

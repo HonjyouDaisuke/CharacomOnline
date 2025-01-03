@@ -17,4 +17,7 @@ public class ImagesTable : BaseModel
 
 	[Column("file_size")]
 	public long FileSize { get; set; }
+
+	[Column("thumbnail")]
+	public string? Thumbnail { get; set; }
 }

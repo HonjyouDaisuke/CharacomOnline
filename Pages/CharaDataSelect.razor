@@ -1,0 +1,65 @@
+﻿@page "/chara-data-select"
+
+<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
+    <RadzenSplitterPane Size="30%" Resizable="true">
+        <RadzenStack Orientation="Radzen.Orientation.Horizontal">
+            <RadzenCard>
+                <RadzenText>標準字体エリア</RadzenText>
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenText>画像エリア</RadzenText>
+            </RadzenCard>
+            <RadzenCard>
+                <RadzenText>筆順画像エリア</RadzenText>
+            </RadzenCard>
+        </RadzenStack>
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="70%" Resizable="true">
+        <RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
+            <RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
+                <h3>ボタン祭り</h3>
+                <div class="responsive-grid-container">
+                    @foreach (var charaName in CharaData)
+                    {
+                        <RadzenToggleButton Text="@charaName"></RadzenToggleButton>
+                    }
+                </div>
+            </RadzenSplitterPane>
+            <RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
+                <h3>画像エリア</h3>
+            </RadzenSplitterPane>
+        </RadzenSplitter>
+    </RadzenSplitterPane>
+</RadzenSplitter>
+
+<style>
+    .full-height-splitter {
+        height: calc(100vh - 3.5rem - 3.5rem - 3.5rem); /* 縦方向の高さを画面全体に設定 */
+    }
+
+    .pane-content {
+        padding: 10px;
+        height: 100%;
+    }
+
+    .responsive-grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 柔軟な列数 */
+        gap: 10px; /* ボタン間のスペース */
+        padding: 5px;
+        max-height: calc(100% - 40px); /* ヘッダー分の高さ調整 */
+        overflow-y: auto; /* 縦スクロールを有効化 */
+    }
+
+    .responsive-grid-container .rz-button {
+        width: 100%; /* ボタンをセルの幅に合わせる */
+    }
+</style>
+@code {
+    private List<string> CharaData = new List<string>
+    {
+        "せ","れ","晴","山","富","6","続","理","畠","2","妹","は","し","部","節","と",
+        "9","4","時","遺","ば","魚","こ","す","市","が","回","県","産","い","3","日",
+        "９","お","生","島","和","吉","全","子","の","撤","財","相","か","2","ご","5",
+    };
+}

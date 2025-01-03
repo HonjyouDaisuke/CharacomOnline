@@ -83,7 +83,7 @@
         string Message = string.Empty;
         try
         {
-            await ImagesTableService.AddImageFile(fileName, "Images/", size);
+            await ImagesTableService.AddImageFile(fileName, "Images/", size, "");
             Message = "User added successfully!";
         }
         catch (Exception ex)

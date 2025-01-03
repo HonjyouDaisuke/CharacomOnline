@@ -1,8 +1,28 @@
+@using CharacomOnline.Service
+
+@inject SessionStorageService SessionStorage
+
 <RadzenHeader>
-	<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-		<RadzenSidebarToggle Click="@ChangeExpand" />
-		<RadzenLabel Text="Characom Imapger Pro Online" />
-	</RadzenStack>
+	<RadzenRow AlignItems="AlignItems.Center" Gap="1">
+		<RadzenColumn>
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Gap="2px">
+				<RadzenSidebarToggle Click="@ChangeExpand" />
+				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.H5">Characom Imapger Pro Online</RadzenText>
+			</RadzenStack>
+		</RadzenColumn>
+		<RadzenColumn >
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End" Style="padding-right: 1rem;">
+			@if (userPictureUrl == null || userPictureUrl == string.Empty)
+			{
+				<RadzenIcon Icon="account_circle" style="font-size: 2rem;"/>
+			}
+			else
+			{
+				<RadzenImage Path="@userPictureUrl" class="rz-gravatar" AlternateText="UserName" />
+			}
+			</RadzenStack>
+		</RadzenColumn>
+	</RadzenRow>
 </RadzenHeader>
 
 @code {
@@ -13,6 +33,13 @@
 	[Parameter]
 	public EventCallback<bool> SidebarExpandedChanged { get; set; }
 
+	private string? userPictureUrl;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		userPictureUrl = await SessionStorage.GetUserPicture();
+		await InvokeAsync(StateHasChanged);
+	}
 	private async Task ChangeExpand()
 	{
 		bool newValue = !SidebarExpanded;

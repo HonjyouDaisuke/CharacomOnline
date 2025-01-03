@@ -1,0 +1,30 @@
+﻿@using CharacomOnline.Service
+@using CharacomOnline.Entity
+@inject DialogService DialogService
+@inject BoxFileService BoxFileService
+@inject SessionStorageService SessionStorage
+@inject TokenStorage TokenStorage
+
+@namespace CharacomOnline.Components
+<RadzenStack Orientation="Radzen.Orientation.Vertical">
+    <RadzenText>@parameters.Message</RadzenText>
+    <div class="rz-m-12">
+        <RadzenProgressBar Value=@parameters.Value Max=@parameters.MaxValue Unit=@parameters.Unit Mode="ProgressBarMode.Determinate" Style="width: 100%; height: 20px;" />
+    </div>
+    <RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="async () => await HandleCancel()">キャンセル</RadzenButton>
+</RadzenStack>
+
+@code {
+    [Parameter] public ProgressDialogParameters parameters { get; set; }
+    
+    private async Task HandleCancel()
+    {
+        if (parameters.OnCancel.HasDelegate)
+        {
+            await parameters.OnCancel.InvokeAsync();
+        }
+        
+        DialogService.Close();
+        return;
+    }
+}

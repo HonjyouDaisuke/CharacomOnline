@@ -1,11 +1,14 @@
 @page "/callback"
 @using Blazored.LocalStorage
 @using CharacomOnline.Service
+@using CharacomOnline.Service.TableService
 @inject IJSRuntime JSRuntime
 @inject Supabase.Client SupabaseClient
 @inject ILocalStorageService localStorage
 @inject NavigationManager NavigationManager
 @inject SessionStorageService SessionStorage
+@inject SupabaseService SupabaseService
+@inject GlobalSettingTableService GlobalSettingTableService
 
 <h3>ログイン処理中...</h3>
 
@@ -16,73 +19,90 @@
     {
         if (firstRender)
         {
-            try
-            {
-                // JavaScriptでURLのハッシュ部分を取得
-                var hash = await JSRuntime.InvokeAsync<string>("eval", "window.location.hash");
-
-                // ハッシュ部分がある場合はアクセストークンを解析
-                if (!string.IsNullOrEmpty(hash))
-                {
-                    var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(hash.TrimStart('#'));
-
-                    var accessToken = queryParams["access_token"].FirstOrDefault();
-                    var refreshToken = queryParams["refresh_token"].FirstOrDefault();
-
-                    if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
-                    {
-                        // ローカルストレージにトークンを保存
-                        await localStorage.SetItemAsync("access_token", accessToken);
-                        await localStorage.SetItemAsync("refresh_token", refreshToken);
-
-                        // Supabaseのセッションを取得
-                        var session = await SupabaseClient.Auth.GetSessionFromUrl(new Uri(NavigationManager.Uri));
-
-                        // セッションが有効なら、ホームページにリダイレクト
-                        if (session != null)
-                        {
-                            NavigationManager.NavigateTo("/");
-
-                            if (session.User != null && session.User.Id != null)
-                            {
-                                if (Guid.TryParse(session.User.Id, out Guid userId))
-                                {
-                                    await SessionStorage.SetUserIDAsync(userId);
-                                }
-                                else
-                                {
-                                    Console.WriteLine("User ID が有効な GUID ではありません。");
-                                    NavigationManager.NavigateTo("/login");
-                                }
-                                // await SessionStorage.SetUserIDAsync((Guid)session.User.Id);
-                            }
-
-                        }
-                        else
-                        {
-                            NavigationManager.NavigateTo("/login");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("アクセストークンまたはリフレッシュトークンが不足しています。");
-                        NavigationManager.NavigateTo("/login");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("アクセストークンが見つかりません。");
-                    NavigationManager.NavigateTo("/login");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"認証処理中にエラーが発生しました: {ex.Message}");
-                NavigationManager.NavigateTo("/login");
-            }
-
-            // 1度レンダリングした後に再レンダリングを防ぐためフラグを設定
+            await HandleLoginCallback();
             isRendered = true;
+        }
+    }
+
+    private async Task HandleLoginCallback()
+    {
+        try
+        {
+            // JavaScriptでURLのハッシュ部分を取得
+            var hash = await JSRuntime.InvokeAsync<string>("eval", "window.location.hash");
+
+            if (string.IsNullOrEmpty(hash))
+            {
+                Console.WriteLine("アクセストークンが見つかりません。");
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(hash.TrimStart('#'));
+            var accessToken = queryParams["access_token"].FirstOrDefault();
+            var refreshToken = queryParams["refresh_token"].FirstOrDefault();
+
+            if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
+            {
+                Console.WriteLine("アクセストークンまたはリフレッシュトークンが不足しています。");
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            // トークンをローカルストレージに保存
+            await localStorage.SetItemAsync("access_token", accessToken);
+            await localStorage.SetItemAsync("refresh_token", refreshToken);
+
+            // Supabaseのセッションを取得
+            var session = await SupabaseClient.Auth.GetSessionFromUrl(new Uri(NavigationManager.Uri));
+
+            if (session == null || session.User == null || string.IsNullOrEmpty(session.User.Id))
+            {
+                Console.WriteLine("セッションが有効ではありません。");
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            // セッションデータを保存
+            if (Guid.TryParse(session.User.Id, out Guid userId))
+            {
+                await SessionStorage.SetUserIDAsync(userId);
+            }
+            else
+            {
+                Console.WriteLine("User ID が有効な GUID ではありません。");
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            var pictureUrl = session.User.UserMetadata?["picture"]?.ToString();
+            await SessionStorage.SetUserPicture(pictureUrl);
+
+            //var userId = SupabaseClient.Auth.CurrentUser?.Id;
+            if (userId == null)
+            {
+                Console.WriteLine("認証されていません。");
+            }
+            else
+            {
+                Console.WriteLine($"認証済みユーザーID: {userId}");
+            }
+
+            // GlobalSettingの取得と保存
+            var globalSetting = await GlobalSettingTableService.FetchGlobalSettings();
+            if (globalSetting != null)
+            {
+                await SessionStorage.SetTopFolderId(globalSetting.TopFolderId);
+                await SessionStorage.SetStandardFolderId(globalSetting.StandardFolderId);
+                await SessionStorage.SetStrokeFolderId(globalSetting.StrokeFolderId);
+            }
+
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"認証処理中にエラーが発生しました: {ex.Message}");
+            NavigationManager.NavigateTo("/login");
         }
     }
 }

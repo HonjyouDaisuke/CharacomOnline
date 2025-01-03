@@ -7,7 +7,7 @@
 @using CharacomOnline.Service
 @inject NavigationManager Navi
 @inject ProjectsViewModel ProjectViewModel
-
+@inject IConfiguration Configuration
 @inject SessionStorageService SessionStorage
 
 <PageTitle>Chara Images</PageTitle>
@@ -22,29 +22,19 @@
 }
 else if(userId == null)
 {
-	<RadzenCard>
-		<RadzenAlert AllowClose="false" Title="ユーザ認識エラー" AlertStyle="AlertStyle.Danger" Variant="Variant.Flat">
-			<RadzenRow>ログインできていません。ログインしてください。</RadzenRow>
-			<RadzenRow>
-				<RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="() => OnNaviClick(loginUrl)">
-					ログインへ
-				</RadzenButton>
-			</RadzenRow>
-		</RadzenAlert>
-	</RadzenCard>
+	<SelectingErrorMessage 
+		ErrorMessageTitle="ユーザ認証エラー" 
+		ErrorMessage="ログインできていません。ログインしてください" 
+		LinkMsg="ログインへ" 
+		LinkClick=" () => OnNaviClick(loginUrl)" />
 }
 else if(projectId == null)
 {
-	<RadzenCard>
-		<RadzenAlert AllowClose="false" Title="プロジェクト認識エラー" AlertStyle="AlertStyle.Danger" Variant="Variant.Flat">
-			<RadzenRow>プロジェクトを選択してください。</RadzenRow>
-			<RadzenRow>
-				<RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="() => OnNaviClick(projectsUrl)">
-					プロジェクト選択へ
-				</RadzenButton>
-			</RadzenRow>
-		</RadzenAlert>
-	</RadzenCard>
+	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
+						   ErrorMessage="プロジェクトを選択してください。"
+						   LinkMsg="プロジェクト選択へ"
+						   LinkClick=" () => OnNaviClick(projectsUrl)" />
+
 }
 else
 {
@@ -104,6 +94,7 @@ else
 		if (userId == null || projectId == null) return;
 		await ProjectViewModel.SetCurrentProject((Guid)projectId);
 	}
+
 	protected override async Task OnInitializedAsync()
 	{
 		await CheckSessionAsync();
@@ -131,7 +122,7 @@ else
 
 			foreach (var file in e.GetMultipleFiles(30))
 			{
-				await CharaDataViewModel.InsertCharaDataAsync(file, (Guid)projectId, Guid.Empty);
+				await CharaDataViewModel.InsertCharaDataAsync(file.Name, (Guid)projectId, "");
 				progressValue++;
 				await InvokeAsync(StateHasChanged);
 			}
@@ -143,34 +134,27 @@ else
 		{
 			Console.WriteLine($"Error: {ex.Message}");
 		}
+		finally
+		{
+			progressValue = 0;
+			progressMax = 0;
+			isProgress = false;
+			await InvokeAsync(StateHasChanged);
+		}
 		
-		progressValue = 0;
-		progressMax = 0;
-		isProgress = false;
-		await InvokeAsync(StateHasChanged);
 	}
 
 	private async Task RefreshDataAsync()
 	{
 		if (projectId == null) return;
-
-		// 初期化
-		progressValue = 0;
-		progressMax = 0;
-		isProgress = true;
+		isLoading = true;
 		await InvokeAsync(StateHasChanged);
-
 		// データ取得開始
 		await CharaDataViewModel.FetchCharaDataAsync(
 			(Guid)projectId,
-			Guid.Empty,
-			UpdateProgress // コールバックを渡す
+			Guid.Empty
 		);
-
-		// 完了
-		isProgress = false;
-		progressValue = 0;
-		progressMax = 0;
+		isLoading = false;
 		await InvokeAsync(StateHasChanged);
 	}
 
