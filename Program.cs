@@ -46,10 +46,11 @@ else
            .Select(KeyFilter.Any);
   });
 }
-
 // Supabaseの接続情報をAzure App Configurationから取得
 var supabaseUrl = builder.Configuration["SUPABASE_URL"];
 var supabaseAnonKey = builder.Configuration["ANON_KEY"];
+var boxClientId = builder.Configuration["BOX_CLIENT_ID"];
+var boxClientSecret = builder.Configuration["BOX_CLIENT_SECRET"];
 
 if (string.IsNullOrEmpty(supabaseUrl) || string.IsNullOrEmpty(supabaseAnonKey))
 {
@@ -76,13 +77,18 @@ builder.Services.AddScoped<CharaDataViewModel>();
 builder.Services.AddScoped<ImageProcessRepository>();
 builder.Services.AddScoped<ImageProcessViewModel>();
 builder.Services.AddScoped<ProjectsViewModel>();
+builder.Services.AddScoped<ProjectsRepository>();
 builder.Services.AddScoped<GlobalSettingTableService>();
 builder.Services.AddScoped<GlobalSettingRepository>();
 builder.Services.AddScoped<GlobalSettingViewModel>();
 builder.Services.AddScoped<StandardTableService>();
 builder.Services.AddScoped<StrokeTableService>();
+builder.Services.AddScoped<SelectingItemsRepository>();
 builder.Services.AddScoped<TokenStorage>();
 builder.Services.AddScoped<BoxFileService>();
+builder.Services.AddScoped<UsersTableService>();
+builder.Services.AddScoped<UsersViewModel>();
+builder.Services.AddScoped<UserRepository>();
 
 // builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<SessionStorageService>();
@@ -92,11 +98,17 @@ builder.Services.AddHttpClient<OAuthService>(client =>
 {
   client.BaseAddress = new Uri("https://api.box.com/oauth2/");
 });
+
+if (string.IsNullOrEmpty(boxClientId) || string.IsNullOrEmpty(boxClientSecret))
+{
+  throw new InvalidOperationException("boxClientId or boxClientSecret is missing from Azure App Configuration.");
+}
+
 builder.Services.AddSingleton(sp =>
     new OAuthService(
         sp.GetRequiredService<HttpClient>(),
-        "xt52jorsw8fzbit06h1rbciwl96cywe1",
-        "BQiaeKEhaNY0yn33R4oiEAyyWtswcYCT"
+        boxClientId,
+        boxClientSecret
     )
 );
 
@@ -122,29 +134,6 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
-/**
-app.Use(async (context, next) =>
-{
-	// Supabaseクライアントを取得
-	var supabaseClient = context.RequestServices.GetRequiredService<Supabase.Client>();
-
-	// Supabaseのセッションを確認
-	var session = supabaseClient.Auth.CurrentSession;
-	if ((session == null || string.IsNullOrEmpty(session.AccessToken)) &&
-			!context.Request.Path.StartsWithSegments("/login") && // ログインページは除外
-			!context.Request.Path.StartsWithSegments("/callback")) // callbackページは除外
-	{
-		// 未認証の場合、ログインページへリダイレクト
-		context.Response.Redirect("/login");
-		return;
-	}
-
-	// 次のミドルウェアを呼び出す
-	await next();
-});
-**/
-
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

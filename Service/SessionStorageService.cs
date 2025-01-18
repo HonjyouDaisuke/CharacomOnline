@@ -14,6 +14,7 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
   public async Task<Guid?> GetUserIDAsync()
   {
     var result = await _sessionStorage.GetAsync<Guid>("UserID");
+    //Console.WriteLine($"SessionStorage UserId = {result.Value}");
     return result.Success ? result.Value : null;
   }
 
@@ -40,9 +41,9 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
     return result.Success ? result.Value : null;
   }
 
-  public async Task SetTopFolderId(string foldeId)
+  public async Task SetTopFolderId(string folderId)
   {
-    await _sessionStorage.SetAsync("TopFolderID", foldeId);
+    await _sessionStorage.SetAsync("TopFolderID", folderId);
   }
 
   public async Task<string?> GetTopFolderId()
@@ -51,9 +52,9 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
     return result.Success ? result.Value : null;
   }
 
-  public async Task SetStandardFolderId(string foldeId)
+  public async Task SetStandardFolderId(string folderId)
   {
-    await _sessionStorage.SetAsync("StandardFolderID", foldeId);
+    await _sessionStorage.SetAsync("StandardFolderID", folderId);
   }
 
   public async Task<string?> GetStandardFolderId()
@@ -62,9 +63,9 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
     return result.Success ? result.Value : null;
   }
 
-  public async Task SetStrokeFolderId(string foldeId)
+  public async Task SetStrokeFolderId(string folderId)
   {
-    await _sessionStorage.SetAsync("StrokeFolderID", foldeId);
+    await _sessionStorage.SetAsync("StrokeFolderID", folderId);
   }
 
   public async Task<string?> GetStrokeFolderId()
@@ -94,5 +95,10 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
     var projectId = await GetProjectIDAsync();
     if (projectId == null) return false;
     return true;
+  }
+
+  public async Task<bool> IsLoginAsync()
+  {
+    return await GetUserIDAsync() != null;
   }
 }

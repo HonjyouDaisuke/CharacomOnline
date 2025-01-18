@@ -16,10 +16,10 @@ public class ProjectsTableService(Client supabaseClient)
       return null;
     }
 
-    Guid newUuid = Guid.NewGuid();
+    Guid newGuid = Guid.NewGuid();
     var newProject = new ProjectsTable
     {
-      Id = newUuid,
+      Id = newGuid,
       Title = title,
       Description = description,
       FolderId = folderId,
@@ -69,7 +69,7 @@ public class ProjectsTableService(Client supabaseClient)
       return null; // エラー時は null を返す
     }
   }
-  public async Task<List<ProjectViewData>> FetchProjectsFromUserIdAsync(Guid userId)
+  public async Task<List<ProjectViewData>?> FetchProjectsFromUserIdAsync(Guid userId)
   {
     List<ProjectViewData>? projectViewData = new List<ProjectViewData>();
 
@@ -96,11 +96,15 @@ public class ProjectsTableService(Client supabaseClient)
       Console.WriteLine("Error: No content returned");
     }
 
-    foreach (ProjectViewData p in projectViewData)
+    if (projectViewData != null)
     {
-      Console.Write($"id: {p.Id} title:{p.Name} desc:{p.Description} users:{p.Users} ");
+      foreach (ProjectViewData p in projectViewData)
+      {
+        Console.Write($"id: {p.Id} title:{p.Name} desc:{p.Description} users:{p.Users} ");
+      }
+      Console.Write(projectViewData.ToString());
     }
-    Console.Write(projectViewData.ToString());
+
     return projectViewData;
   }
 }

@@ -40,7 +40,6 @@ else
                 <SrcImageCard Width="160" Height="160" IsLoading="@isSrcLoading" ImageData="@imageProcessViewModel.imageProcessRepository.AppraisalsSrcImageData" />
                 <SrcImageCard Width="160" Height="160" IsLoading="@isSrcLoading" ImageData="@imageProcessViewModel.imageProcessRepository.AppraisalsThinImageData" />
             </RadzenStack>
-            <h3>@message</h3>
         </RadzenSplitterPane>
         <RadzenSplitterPane Size="60%" MinSize="20%" Resizable="true">
             <RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
@@ -67,53 +66,16 @@ else
         height: 100%;
     }
 </style>
-<!--
-<RadzenSplitter class="full-height-splitter">
-    <RadzenSplitterPane Size="20%" MinSize="20%" Resizable="true">
-        <div style="padding: 10px; background-color: #f5f5f5; height: 100%;">
-            <h3>Left Panel</h3>
-            <p>Content for the left panel goes here.</p>
-        </div>
-    </RadzenSplitterPane>
-    <RadzenSplitterPane Size="60%" MinSize="20%" Resizable="true">
-        <RadzenSplitter Orientation="Radzen.Orientation.Vertical">
-            <RadzenSplitterPane Size="50%" MinSize="10%" Resizable="true">
-                <div style="padding: 10px; background-color: #eaeaea; height: 100%;">
-                    <h3>Center - Top</h3>
-                    <p>Content for the top section of the center panel goes here.</p>
-                </div>
-            </RadzenSplitterPane>
-            <RadzenSplitterPane Size="50%" MinSize="10%" Resizable="true">
-                <div style="padding: 10px; background-color: #cccccc; height: 100%;">
-                    <h3>Center - Bottom</h3>
-                    <p>Content for the bottom section of the center panel goes here.</p>
-                </div>
-            </RadzenSplitterPane>
-        </RadzenSplitter>
-    </RadzenSplitterPane>
-    <RadzenSplitterPane Size="320%" MinSize="20%" Resizable="true">
-        <div style="padding: 10px; background-color: #dddddd; height: 100%;">
-            <h3>Right Panel</h3>
-            <p>Content for the right panel goes here.</p>
-        </div>
-    </RadzenSplitterPane>
-</RadzenSplitter>
--->
 
 @code {
     private List<CharaDataClass> selectedData { get; set; } = new List<CharaDataClass>();
     [Inject] private CharaDataViewModel CharaDataViewModel { get; set; } = default!;
     [Inject] private ImageProcessViewModel imageProcessViewModel { get; set; } = default!;
     private bool isLoading = true;
-    private bool isLogedin = false;
-    private bool isSelectedProject = false;
     private Guid? userId;
     private Guid? projectId;
     private string loginUrl = "./login";
     private string projectsUrl = "./projects";
-    private string? binaryImageData;
-    private SKBitmap srcBitmap;
-    private string message = "";
     private bool isSrcLoading = false;
 
     protected override async Task OnInitializedAsync()

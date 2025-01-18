@@ -1,0 +1,133 @@
+﻿@using CharacomOnline.Entity
+@using CharacomOnline.Service
+
+@if(IsLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenCard @onclick="HandleClick" Style="@CharaData?.GetCardStyle()">
+        <RadzenStack AlignItems="AlignItems.Center" Orientation="Radzen.Orientation.Vertical" >
+            @if (string.IsNullOrEmpty(ImageData))
+            {
+                <RadzenImage Path="images/no_image.png" height="@Height" width="@Width" />
+            }
+            else
+            {
+                <img src="@ImageData" alt="Downloaded Image" height="@Height" width="@Width" />
+            }
+        
+            @if (!string.IsNullOrEmpty(Id))
+            {
+                <p>@Id</p>
+            }
+        </RadzenStack>
+    </RadzenCard>
+}
+
+@code {
+    [Inject]
+    public DialogService DialogService { get; set; } = default!;
+
+    [Parameter]
+    public CharaDataClass? CharaData { get; set; }
+
+    /**
+    [Parameter]
+    public string? SelectStyle { get; set; }
+
+    [Parameter]
+    public string? ImageData { get; set; }
+
+    [Parameter]
+    public string? SrcImageData { get; set; }
+
+    **/
+
+    [Parameter]
+    public string? Height{ get; set; }
+
+    [Parameter]
+    public string? Width { get; set; }
+
+    /**
+    [Parameter]
+    public string? Id { get; set; }
+    **/
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback<CharaDataClass> CardClick { get; set; }
+
+    private bool _isDoubleClick = false;
+    private int _clickDelay = 300; // シングルクリックと判定する時間 (ms)
+    private Timer? _clickTimer;
+    private string? SelectStyle;
+    public string? ImageData;
+    public string? SrcImageData;
+    public string? Id;
+
+    protected override void OnInitialized()
+    {
+        if (CharaData != null)
+        {
+            SelectStyle = CharaData.GetCardStyle();
+            ImageData = CharaData.Thumbnail;
+            SrcImageData = ImageEffectService.GetBinaryImageData(CharaData.SrcImage);
+            Id = CharaData.FileId;
+        }
+
+    }
+
+    private void HandleClick()
+    {
+        if (_clickTimer != null)
+        {
+            _clickTimer.Dispose();
+            _clickTimer = null;
+            _isDoubleClick = true;
+            OnDblClick(); // ダブルクリックイベントを発火
+        }
+        else
+        {
+            _isDoubleClick = false;
+            _clickTimer = new Timer(_ =>
+            {
+                if (!_isDoubleClick)
+                {
+                    OnClick(); // シングルクリックイベントを発火
+                }
+                _clickTimer?.Dispose();
+                _clickTimer = null;
+            }, null, _clickDelay, Timeout.Infinite);
+        }
+    }
+
+    private async Task OnClick()
+    {
+        Console.WriteLine("クリックイベント: 子コンポーネント");
+        if (CardClick.HasDelegate && CharaData != null)
+        {
+            Console.WriteLine($"InvokeAsync: fileId={CharaData.FileId}");
+            await CardClick.InvokeAsync(CharaData);
+        }
+        else
+        {
+            Console.WriteLine("CardClick未設定またはCharaDataがNull");
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnDblClick()
+    {
+        Console.WriteLine("ダブルクリックです。");
+        DialogService.Open<SrcImageDialog>("原画像", new Dictionary<string, object>
+        {
+            {"SrcImageData", SrcImageData}
+        });
+    }
+}

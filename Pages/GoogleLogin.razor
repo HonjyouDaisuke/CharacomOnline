@@ -25,17 +25,17 @@ else
     private bool IsLoggedIn = false;
     private string? UserEmail;
 
-    private async Task LoginWithGoogle()
+    private void LoginWithGoogle()
     {
         try
         {
             var redirectUrl = "https://localhost:7241/callback";  // 認証後に戻るURL
 
             // Google認証用のOAuth URLを作成
-            var signinUrl = $"https://imrymolanolzitkwcnhz.supabase.co/auth/v1/authorize?provider=google&redirect_to={Uri.EscapeDataString(redirectUrl)}";
+            var signingUrl = $"https://imrymolanolzitkwcnhz.supabase.co/auth/v1/authorize?provider=google&redirect_to={Uri.EscapeDataString(redirectUrl)}";
 
             // 認証ページにリダイレクト
-            NavigationManager.NavigateTo(signinUrl, forceLoad: true);
+            NavigationManager.NavigateTo(signingUrl, forceLoad: true);
         }
         catch (Exception ex)
         {
@@ -88,12 +88,15 @@ else
     }
     protected override async Task OnInitializedAsync()
     {
-        // セッション確認
-        var session = SupabaseClient.Auth.CurrentSession;
-        if (session != null && session.User != null)
+        await Task.Run(() =>
         {
-            IsLoggedIn = true;
-            UserEmail = session.User.Email;
-        }
+            // セッション確認
+            var session = SupabaseClient.Auth.CurrentSession;
+            if (session != null && session.User != null)
+            {
+                IsLoggedIn = true;
+                UserEmail = session.User.Email;
+            }
+        });
     }
 }

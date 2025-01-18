@@ -92,7 +92,7 @@ else
 		userId = await SessionStorage.GetUserIDAsync();
 		projectId = await SessionStorage.GetProjectIDAsync();
 		if (userId == null || projectId == null) return;
-		await ProjectViewModel.SetCurrentProject((Guid)projectId);
+		await ProjectViewModel.SetCurrentProject((Guid)projectId, "");
 	}
 
 	protected override async Task OnInitializedAsync()

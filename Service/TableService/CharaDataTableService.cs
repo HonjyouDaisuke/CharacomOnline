@@ -1,6 +1,9 @@
 ﻿using CharacomOnline.Entity;
+using CharacomOnline.ImageProcessing;
+using CharacomOnline.Repositories;
 using Supabase;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -16,10 +19,13 @@ public class CharaDataRecode
   public string? Thumbnail { get; set; }   // "thumbnail"
 }
 
-public class CharaDataTableService(Client supabaseClient, StorageService storageService)
+public class CharaDataTableService(Client supabaseClient, StorageService storageService, SelectingItemsRepository selectingItemsRepository, BoxFileService boxFileService, CharaDataRepository charaDataRepository)
 {
   private readonly Client _supabaseClient = supabaseClient;
   private readonly StorageService _storageService = storageService;
+  private readonly SelectingItemsRepository _selectingItemsRepository = selectingItemsRepository;
+  private readonly BoxFileService _boxFileService = boxFileService;
+  private readonly CharaDataRepository _charaDataRepository = charaDataRepository;
 
   public List<CharaDataRecode>? DeserializeJson(string json)
   {
@@ -38,7 +44,6 @@ public class CharaDataTableService(Client supabaseClient, StorageService storage
     var response = await _supabaseClient.Rpc("get_chara_data_from_project_id", new { project_id_input = projectId, model_id_input = modelId });
     List<CharaDataClass>? resultCharaData = new List<CharaDataClass>();
 
-    Guid? charaDataId = null;
     if (string.IsNullOrEmpty(response.Content)) return null;
     try
     {
@@ -47,11 +52,13 @@ public class CharaDataTableService(Client supabaseClient, StorageService storage
 
 
       int total = content.Count;
+
       var tasks = content.Select(async (item, index) =>
       {
+        if (item.FilePath == null) return null;
+        if (item.FileName == null) return null;
         CharaDataClass cdc = new CharaDataClass
         {
-          Id = index + 1,
           CharaName = item.CharaName,
           MaterialName = item.MaterialName,
           TimesName = item.Times,
@@ -63,7 +70,8 @@ public class CharaDataTableService(Client supabaseClient, StorageService storage
       });
 
       // 全タスクを実行して結果を収集
-      resultCharaData = (await Task.WhenAll(tasks)).ToList();
+      CharaDataClass?[] charaDataClasses = (await Task.WhenAll(tasks));
+      resultCharaData = charaDataClasses.ToList();
     }
     catch (JsonException ex)
     {
@@ -85,14 +93,15 @@ public class CharaDataTableService(Client supabaseClient, StorageService storage
     return response;
   }
 
+
   public async Task<Guid?> CreateCharaData(Guid projectId, string fileId, FileInformation fileInfo)
   {
     if (await IsCharaDataExists(projectId, fileId)) return null;
-    Guid newUuid = Guid.NewGuid();
+    Guid newGuid = Guid.NewGuid();
 
     var newCharaData = new CharaDataTable
     {
-      Id = newUuid,
+      Id = newGuid,
       ProjectId = projectId,
       FileId = fileId.ToString(),
       MaterialName = fileInfo.MaterialName,
@@ -119,5 +128,184 @@ public class CharaDataTableService(Client supabaseClient, StorageService storage
     return null;
   }
 
+  public class CharaName
+  {
+    [JsonPropertyName("chara_name")]
+    public string? Name { get; set; }
+  }
+
+  public class MaterialName
+  {
+    [JsonPropertyName("material_name")]
+    public string? Name { set; get; }
+  }
+
+  public async Task InitCharactersDataAsync(Guid projectId)
+  {
+    // Supabase から RPC を呼び出す
+    Console.WriteLine($"start fetch ProjectId:{projectId}");
+    var response = await _supabaseClient.Rpc("get_unique_chara_names", new { p_project_id = projectId });
+    Console.WriteLine(response.Content);
+
+    // レスポンスの Content は string 型なので、JSON としてデシリアライズ
+    if (!string.IsNullOrEmpty(response.Content))
+    {
+      try
+      {
+        // JSON を List<string> に変換
+        var charas = JsonSerializer.Deserialize<List<CharaName>>(response.Content);
+        if (charas == null) return;
+
+        _selectingItemsRepository.ClearCharacters();
+        foreach (var item in charas)
+        {
+          if (item.Name == null) continue;
+          _selectingItemsRepository.AddCharacters(item.Name);
+        }
+      }
+      catch (JsonException ex)
+      {
+        // デシリアライズエラー処理
+        Console.WriteLine("JSON Parsing Error: " + ex.Message);
+      }
+    }
+    else
+    {
+      // エラーハンドリング（必要に応じて）
+      Console.WriteLine("Error: No content returned");
+    }
+
+
+  }
+
+  public async Task InitMaterialsData(Guid projectId)
+  {
+    // Supabase から RPC を呼び出す
+    var response = await _supabaseClient.Rpc("get_unique_material_names", new { p_project_id = projectId });
+    Console.WriteLine(response.Content);
+    // レスポンスの Content は string 型なので、JSON としてデシリアライズ
+    if (!string.IsNullOrEmpty(response.Content))
+    {
+      try
+      {
+        // JSON を List<string> に変換
+        var materials = JsonSerializer.Deserialize<List<MaterialName>>(response.Content);
+
+        if (materials == null) return;
+
+        _selectingItemsRepository.ClearMaterials();
+        foreach (var item in materials)
+        {
+          if (item.Name == null) continue;
+          _selectingItemsRepository.AddMaterials(item.Name);
+        }
+      }
+      catch (JsonException ex)
+      {
+        // デシリアライズエラー処理
+        Console.WriteLine("JSON Parsing Error: " + ex.Message);
+      }
+    }
+    else
+    {
+      // エラーハンドリング（必要に応じて）
+      Console.WriteLine("Error: No content returned");
+    }
+  }
+
+  public async Task GetCharaListAsync(Guid projectId, string charaName, string materialName, string accessToken, Action<int>? onProgress = null)
+  {
+    // Supabase から RPC を呼び出す
+    Console.WriteLine($"start fetch ProjectId:{projectId}");
+    var response = await _supabaseClient.Rpc("get_chara_data_by_project_and_name", new
+    {
+      input_project_id = projectId,
+      input_chara_name = charaName,
+      input_material_name = materialName,
+    });
+
+    Console.WriteLine(response.Content);
+
+    if (!string.IsNullOrEmpty(response.Content))
+    {
+      try
+      {
+        // JSON を List に変換
+        var charas = JsonSerializer.Deserialize<List<CharaImageListClass>>(response.Content);
+        if (charas == null) return;
+
+        await _charaDataRepository.ClearViewCharaDataAsync();
+
+        int totalTasks = charas.Count;
+        int progress = 0;
+
+        Console.WriteLine($"個数は: {totalTasks}");
+
+        foreach (var item in charas)
+        {
+          if (item.Id == null || item.FileId == null) continue;
+
+          Console.WriteLine($"CharaData = {item.ToString()}");
+
+          // 存在確認をデータベースから行い、確認後に挿入処理
+          var exists = await _charaDataRepository.IsViewCharaDataExistsAsync((Guid)item.Id);
+          if (exists)
+          {
+            Console.WriteLine($"データは既に存在しています: {item.Id}");
+            continue;
+          }
+
+          // 新しいデータを挿入する処理
+          await ProcessCharaDataAsync(item, charaName, materialName, accessToken);
+
+          progress++;
+          onProgress?.Invoke((progress * 100) / totalTasks);
+        }
+      }
+      catch (JsonException ex)
+      {
+        // デシリアライズエラー処理
+        Console.WriteLine("JSON Parsing Error: " + ex.Message);
+      }
+    }
+    else
+    {
+      // レスポンスエラー処理
+      Console.WriteLine("Error: No content returned");
+    }
+  }
+
+  private async Task ProcessCharaDataAsync(CharaImageListClass item, string charaName, string materialName, string accessToken)
+  {
+    // 必要なデータを準備
+    CharaDataClass newItem = new()
+    {
+      Id = (Guid)item.Id,
+      FileId = item.FileId,
+      CharaName = charaName,
+      MaterialName = materialName,
+      SrcImage = await _boxFileService.DownloadFileAsSKBitmapAsync(item.FileId, accessToken)
+    };
+
+    // サムネイルと細線画像を生成
+    newItem.Thumbnail = ImageEffectService.GetBinaryImageData(ImageEffectService.ResizeBitmap(newItem.SrcImage, 50, 50));
+    var resizeBmp = ImageEffectService.ResizeBitmap(newItem.SrcImage, 160, 160);
+    var binary = ImageEffectService.GetBinaryBitmap(resizeBmp);
+    var thinning = new ThinningProcess(binary);
+    newItem.ThinImage = await thinning.ThinBinaryImageAsync();
+
+    // データが存在するか再度確認
+    bool exists = await _charaDataRepository.IsViewCharaDataExistsAsync(newItem.Id);
+    if (exists)
+    {
+      Console.WriteLine($"データは既に存在します: {newItem.Id}");
+      return;
+    }
+
+    // データをリポジトリに追加
+    await _charaDataRepository.AddViewCharaDataAsync(newItem);
+
+    Console.WriteLine($"データを挿入しました: {newItem.Id}");
+  }
 
 }

@@ -68,7 +68,6 @@
 	private string Google = "google";
 	private string FaceBook = "facebook";
 	private string Twitter = "twitter";
-	private string msg = "message...";
 	private string? email;
 	private string? password;
 
@@ -80,11 +79,11 @@
 			var redirectUrl = "https://localhost:7241/callback";  // 認証後に戻るURL
 
 			// GitHub認証用のOAuth URLを作成
-			var signinUrl = $"https://imrymolanolzitkwcnhz.supabase.co/auth/v1/authorize?provider={provider}&redirect_to={Uri.EscapeDataString(redirectUrl)}";
+			var signingUrl = $"https://imrymolanolzitkwcnhz.supabase.co/auth/v1/authorize?provider={provider}&redirect_to={Uri.EscapeDataString(redirectUrl)}";
 
-			Console.WriteLine($"LetsGo : {signinUrl}");
+			Console.WriteLine($"LetsGo : {signingUrl}");
 			// 認証ページにリダイレクト
-			NavigationManager.NavigateTo(signinUrl, forceLoad: true);
+			NavigationManager.NavigateTo(signingUrl, forceLoad: true);
 		}
 		catch (Exception ex)
 		{
@@ -103,6 +102,8 @@
 		Console.WriteLine("LoginStart...");
 		try
 		{
+			if (string.IsNullOrEmpty(email)) return;
+			if (string.IsNullOrEmpty(password)) return;
 			var response = await SupabaseClient.Auth.SignIn(email, password);
 			if (response == null) return;
 			if (response.User == null) return;
@@ -110,7 +111,7 @@
 		}
 		catch(Exception ex)
 		{
-			Console.WriteLine($"Erorr: {ex.Message}");
+			Console.WriteLine($"Error: {ex.Message}");
 		}
 	}
 }

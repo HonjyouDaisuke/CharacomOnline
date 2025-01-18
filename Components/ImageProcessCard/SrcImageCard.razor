@@ -31,7 +31,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        msg = $"isLoading : {IsLoading} ImageData=NULL =>{ImageData == null} ImageData:[{ImageData}]";
+        await Task.Run(() =>
+        {
+            msg = $"isLoading : {IsLoading} ImageData=NULL =>{ImageData == null} ImageData:[{ImageData}]";
+        });
     }
 
 }

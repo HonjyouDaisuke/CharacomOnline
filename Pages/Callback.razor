@@ -1,26 +1,22 @@
 @page "/callback"
 @using Blazored.LocalStorage
 @using CharacomOnline.Service
-@using CharacomOnline.Service.TableService
+@using CharacomOnline.ViewModel
 @inject IJSRuntime JSRuntime
 @inject Supabase.Client SupabaseClient
 @inject ILocalStorageService localStorage
 @inject NavigationManager NavigationManager
 @inject SessionStorageService SessionStorage
-@inject SupabaseService SupabaseService
-@inject GlobalSettingTableService GlobalSettingTableService
+@inject UsersViewModel UserViewModel
 
 <h3>ログイン処理中...</h3>
 
 @code {
-    private bool isRendered = false; // 初期レンダリングを追跡するフラグ
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await HandleLoginCallback();
-            isRendered = true;
         }
     }
 
@@ -28,41 +24,22 @@
     {
         try
         {
-            // JavaScriptでURLのハッシュ部分を取得
-            var hash = await JSRuntime.InvokeAsync<string>("eval", "window.location.hash");
+            Console.WriteLine("ログインコールバック処理を開始します...");
 
-            if (string.IsNullOrEmpty(hash))
+            // Supabase SDK でセッションを取得
+            var session = await SupabaseClient.Auth.GetSessionFromUrl(new Uri(NavigationManager.Uri));
+
+            if (session == null || session.User == null)
             {
-                Console.WriteLine("アクセストークンが見つかりません。");
-                NavigationManager.NavigateTo("/login");
-                return;
-            }
-
-            var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(hash.TrimStart('#'));
-            var accessToken = queryParams["access_token"].FirstOrDefault();
-            var refreshToken = queryParams["refresh_token"].FirstOrDefault();
-
-            if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
-            {
-                Console.WriteLine("アクセストークンまたはリフレッシュトークンが不足しています。");
+                Console.WriteLine("セッションが取得できませんでした。");
                 NavigationManager.NavigateTo("/login");
                 return;
             }
 
             // トークンをローカルストレージに保存
-            await localStorage.SetItemAsync("access_token", accessToken);
-            await localStorage.SetItemAsync("refresh_token", refreshToken);
-
-            // Supabaseのセッションを取得
-            var session = await SupabaseClient.Auth.GetSessionFromUrl(new Uri(NavigationManager.Uri));
-
-            if (session == null || session.User == null || string.IsNullOrEmpty(session.User.Id))
-            {
-                Console.WriteLine("セッションが有効ではありません。");
-                NavigationManager.NavigateTo("/login");
-                return;
-            }
-
+            await localStorage.SetItemAsync("access_token", session.AccessToken);
+            await localStorage.SetItemAsync("refresh_token", session.RefreshToken);
+            Console.WriteLine($"sessionUserId : {session.User.Id}");
             // セッションデータを保存
             if (Guid.TryParse(session.User.Id, out Guid userId))
             {
@@ -75,28 +52,10 @@
                 return;
             }
 
-            var pictureUrl = session.User.UserMetadata?["picture"]?.ToString();
-            await SessionStorage.SetUserPicture(pictureUrl);
+            await UserViewModel.SetCurrentUser(userId);
 
-            //var userId = SupabaseClient.Auth.CurrentUser?.Id;
-            if (userId == null)
-            {
-                Console.WriteLine("認証されていません。");
-            }
-            else
-            {
-                Console.WriteLine($"認証済みユーザーID: {userId}");
-            }
-
-            // GlobalSettingの取得と保存
-            var globalSetting = await GlobalSettingTableService.FetchGlobalSettings();
-            if (globalSetting != null)
-            {
-                await SessionStorage.SetTopFolderId(globalSetting.TopFolderId);
-                await SessionStorage.SetStandardFolderId(globalSetting.StandardFolderId);
-                await SessionStorage.SetStrokeFolderId(globalSetting.StrokeFolderId);
-            }
-
+            Console.WriteLine($"ログイン成功: {session.User.Email}");
+            Console.WriteLine($"ユーザの権限：{UserViewModel.GetCurrentUserRole()}");
             NavigationManager.NavigateTo("/");
         }
         catch (Exception ex)

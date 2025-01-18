@@ -60,7 +60,7 @@ public class StorageService
     catch (Exception ex)
     {
       Console.WriteLine($"エラー（ここかも）: {ex.Message}");
-      return null; // エラー時はnullを返す
+      return null; // エラー時は nullを返す
     }
   }
 }

@@ -1,40 +1,77 @@
 ﻿@page "/chara-data-select"
+@using CharacomOnline.Entity
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Service
+@using CharacomOnline.Components
+@inject CharaDataViewModel CharaDataViewModel
+@inject SessionStorageService SessionStorage
+@inject NavigationManager Navi
+@inject TokenStorage TokenStorage
 
+@if (isLoading)
+{
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
+}
+else if(userId == null)
+{
+	<SelectingErrorMessage 
+		ErrorMessageTitle="ユーザ認証エラー" 
+		ErrorMessage="ログインできていません。ログインしてください" 
+		LinkMsg="ログインへ" 
+		LinkClick=" () => OnNaviClick(loginUrl)" />
+}
+else if(projectId == null)
+{
+	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
+						   ErrorMessage="プロジェクトを選択してください。"
+						   LinkMsg="プロジェクト選択へ"
+						   LinkClick=" () => OnNaviClick(projectsUrl)" />
+
+}
+else
+{
 <RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
     <RadzenSplitterPane Size="30%" Resizable="true">
-        <RadzenStack Orientation="Radzen.Orientation.Horizontal">
-            <RadzenCard>
-                <RadzenText>標準字体エリア</RadzenText>
-            </RadzenCard>
-            <RadzenCard>
-                <RadzenText>画像エリア</RadzenText>
-            </RadzenCard>
-            <RadzenCard>
-                <RadzenText>筆順画像エリア</RadzenText>
-            </RadzenCard>
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
+            <CharaImageCard ImageData="@standardImage" Height="160" Width="160" IsLoading="@stdLoading"/>
+            <CharaImageCard IsLoading="@isThinLoading" ImageData="@ImageEffectService.GetBinaryImageData(CharaDataViewModel.OverlayBmp)" Height="160" Width="160"  />
+            <CharaImageCard ImageData="@strokeImage" Height="160" Width="160" IsLoading="@strokeLoading"/>
         </RadzenStack>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="70%" Resizable="true">
         <RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
             <RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
-                <h3>ボタン祭り</h3>
-                <div class="responsive-grid-container">
-                    @foreach (var charaName in CharaData)
-                    {
-                        <RadzenToggleButton Text="@charaName"></RadzenToggleButton>
-                    }
-                </div>
+                <CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" OnCharacterSelected="OnCharaSelected" />
             </RadzenSplitterPane>
             <RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
-                <h3>画像エリア</h3>
-            </RadzenSplitterPane>
+                <RadzenStack style="height: 100%;">
+                    <RadzenSelectBar TValue="string" Value="@selectedMaterial" Change="@OnMaterialChanged">
+                        <Items>
+                            @foreach (var materialName in CharaDataViewModel._selectingItemsRepository.Materials)
+                            {
+                                <RadzenSelectBarItem Text="@materialName" Value="@materialName" />
+                            }
+                        </Items>
+                    </RadzenSelectBar>
+                        @if (string.IsNullOrEmpty(selectedMaterial) || string.IsNullOrEmpty(selectedChara))
+                        {
+                            <RadzenText>資料を上のボックスから選び、文字を左のボタンで選択してください。</RadzenText>
+                        }
+                        else
+                        {
+                            <CharaImageList Chara="@selectedChara" Material="@selectedMaterial" ProjectId="@projectId" CardClick="@OnSelectChange" AccessToken="@accessToken" />
+                        }
+                    </RadzenStack>
+                </RadzenSplitterPane>
         </RadzenSplitter>
     </RadzenSplitterPane>
 </RadzenSplitter>
-
+}
 <style>
     .full-height-splitter {
-        height: calc(100vh - 3.5rem - 3.5rem - 3.5rem); /* 縦方向の高さを画面全体に設定 */
+        height: calc(100vh - 3.5rem - 3.5rem - 3.5rem - 5px); /* 縦方向の高さを画面全体に設定 */
     }
 
     .pane-content {
@@ -42,24 +79,121 @@
         height: 100%;
     }
 
-    .responsive-grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 柔軟な列数 */
-        gap: 10px; /* ボタン間のスペース */
-        padding: 5px;
-        max-height: calc(100% - 40px); /* ヘッダー分の高さ調整 */
-        overflow-y: auto; /* 縦スクロールを有効化 */
-    }
-
-    .responsive-grid-container .rz-button {
-        width: 100%; /* ボタンをセルの幅に合わせる */
-    }
 </style>
 @code {
-    private List<string> CharaData = new List<string>
+    private bool isLoading = true;
+    private Guid? userId;
+    private Guid? projectId;
+    private string loginUrl = "./login";
+    private string projectsUrl = "./projects";
+    private string selectedChara = "";
+    private string selectedMaterial = "";
+    private string? accessToken = "";
+    private string? standardImage;
+    private string? strokeImage;
+    private bool isThinLoading = false;
+
+    private bool stdLoading = false;
+    private bool strokeLoading = false;
+
+    private void OnNaviClick(string goTo)
     {
-        "せ","れ","晴","山","富","6","続","理","畠","2","妹","は","し","部","節","と",
-        "9","4","時","遺","ば","魚","こ","す","市","が","回","県","産","い","3","日",
-        "９","お","生","島","和","吉","全","子","の","撤","財","相","か","2","ご","5",
-    };
+        Navi.NavigateTo(goTo);
+    }
+
+    protected override void OnInitialized()
+    {
+        isLoading = true;
+    }
+
+    private async Task OnSelectChange(CharaDataClass selectItem)
+    {
+        Console.WriteLine("作成中");
+        isThinLoading = true;
+        await InvokeAsync(StateHasChanged);
+        await CharaDataViewModel.MakeOverlayBitmapAsync();
+        isThinLoading = false;
+        await InvokeAsync(StateHasChanged);
+        Console.WriteLine("作成完了");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            if (!await SessionStorage.IsLoggedInAsync())
+            {
+                isLoading = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            userId = await SessionStorage.GetUserIDAsync();
+
+            if (!await SessionStorage.IsSelectedProjectAsync())
+            {
+                isLoading = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            projectId = await SessionStorage.GetProjectIDAsync();
+
+            if (projectId != null)
+            {
+                await CharaDataViewModel.InitCharactersData((Guid)projectId);
+                await CharaDataViewModel.InitMaterialsData((Guid)projectId);
+            }
+
+            // アクセストークンを取得
+            accessToken = await TokenStorage.GetAccessTokenAsync();
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                Navi.NavigateTo("/auth");
+                return;
+                // throw new Exception("Access token not found. Please authenticate first.");
+            }
+
+            Console.WriteLine($"文字個数:{CharaDataViewModel._selectingItemsRepository.Characters.Count}");
+            //foreach(var item in CharaDataViewModel._selectingItemsRepository.Characters)
+            //{
+            //    Console.WriteLine(item);
+            //}
+
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (JSDisconnectedException)
+        {
+            Console.WriteLine("JavaScript interop failed due to disconnected circuit.");
+        }
+    }
+
+    private async Task OnCharaSelected(string? _selectedChara)
+    {
+        if (_selectedChara == null) return;
+        if (accessToken == null) return;
+        selectedChara = _selectedChara;
+        stdLoading = true;
+        strokeLoading = true;
+        await InvokeAsync(StateHasChanged);
+        await CharaDataViewModel.GetStandardData(accessToken, selectedChara);
+        standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
+        stdLoading = false;
+        await InvokeAsync(StateHasChanged);
+        await CharaDataViewModel.GetStrokeData(accessToken, selectedChara);
+        strokeImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StrokeBmp);
+        strokeLoading = false;
+        CharaDataViewModel.OverlayBmp = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnMaterialChanged(string newValue)
+    {
+        selectedMaterial = newValue;
+        CharaDataViewModel.OverlayBmp = null;
+        StateHasChanged(); // UI を手動で更新
+    }
 }

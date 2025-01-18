@@ -12,11 +12,11 @@ public class ProjectViewData : BaseModel
 
   [Column("title")]
   [JsonPropertyName("title")]
-  public string Name { get; set; }
+  public string? Name { get; set; }
 
   [Column("description")]
   [JsonPropertyName("description")]
-  public string Description { get; set; }
+  public string? Description { get; set; }
 
   [Column("user_count")]
   [JsonPropertyName("user_count")]
@@ -24,7 +24,7 @@ public class ProjectViewData : BaseModel
 
   [Column("chara_count")]
   [JsonPropertyName("chara_count")]
-  public int Charactors { get; set; }
+  public int Characters { get; set; }
 
   public bool IsSelected { get; set; } = false;
 

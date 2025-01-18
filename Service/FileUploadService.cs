@@ -31,7 +31,7 @@ public class FileUploadService
     fileInfo = await _fileHandleService.GetDataInfo(file);
     CharaDataClass uploadData = new()
     {
-      Id = 0,
+      //Id = 0,
       CharaName = fileInfo.CharaName,
       MaterialName = fileInfo.MaterialName,
       TimesName = fileInfo.TimesName,

@@ -71,5 +71,24 @@ public class StandardTableService(Client supabaseClient)
       return new List<StandardMaster>();  // 例外が発生した場合も空のリストを返す
     }
   }
+
+  public async Task<string?> GetFileIdAsync(string charaName)
+  {
+    try
+    {
+      var standardResponse = await _supabaseClient
+            .From<StandardMaster>()
+            .Select("file_id")
+            .Filter("chara_name", Supabase.Postgrest.Constants.Operator.Equals, charaName)
+            .Get();
+
+      return standardResponse.Models.FirstOrDefault()?.FileId;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"例外が発生しました(standard master): {ex.Message}");
+      return null;
+    }
+  }
 }
 

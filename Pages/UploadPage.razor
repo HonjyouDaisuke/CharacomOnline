@@ -31,17 +31,12 @@
 <p>E-Mail : @userEmail</p>
 <p>session User Id : @userId</p>
 <br />
-@if (downloadImage != null)
-{
-    <img src="@downloadImage" alt="Downloaded Image" />
-    <p> aaa </p>
-}
+
 
 
 @code {
     private IBrowserFile? selectedFile;
     private string? fileNameString;
-    private string? downloadImage;
     private string? userEmail;
     private string? userId;
 

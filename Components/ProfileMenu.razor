@@ -1,0 +1,108 @@
+﻿@using Blazored.LocalStorage
+@using CharacomOnline.Enums
+@using CharacomOnline.ViewModel
+@inject Supabase.Client SupabaseClient
+@inject NavigationManager NavigationManager
+
+<RadzenProfileMenu Click="@(args => HandleLogout(args))">
+	<Template>
+		@if (UserPicture == null || UserPicture == string.Empty)
+		{
+			<RadzenIcon Icon="account_circle" style="font-size: 2rem;" />
+		}
+		else
+		{
+			<RadzenImage Path="@UserPicture" class="rz-gravatar" AlternateText="UserName" />
+		}
+	</Template>
+	
+	<ChildContent>
+		<div style="padding: 20px;">
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal">
+				@if (UserPicture == null || UserPicture == string.Empty)
+				{
+					<RadzenIcon Icon="account_circle" style="font-size: 5rem;" />
+				}
+				else
+				{
+					<RadzenImage Path="@UserPicture" class="rz-gravatar" Style="width: 50px; height: 50px;" AlternateText="UserName" />
+				}
+				<RadzenText TextStyle="TextStyle.H6">@UserName</RadzenText>
+			</RadzenStack>
+			<hr style="margin: 5px 0;" />
+			<RadzenProfileMenuItem Text="@menuEditProfile" Value="@menuEditProfile" Path="menu" Icon="account_box" />
+			<RadzenProfileMenuItem Text="@menuSelectProject" Value="@menuSelectProject" Path="/projects" Icon="book" />
+			@if (ProjectName == null)
+			{
+				<RadzenProfileMenuItem Text="プロジェクトが選択されていません。" Value="@menuSelectProject" Path="/projects" Icon="highlight_off" class="custom-icon-error" />
+			}
+			else
+			{
+				<RadzenProfileMenuItem Text="@ProjectName" Value="@menuSelectProject" Path="/projects" Icon="check_circle" class="custom-icon-success" />
+			}
+			<hr style="margin: 5px 0;" />
+			@if (IsDBLogin)
+			{
+				<RadzenProfileMenuItem Text="@menuDBLogout" Value="@menuDBLogout" Icon="check_circle" class="custom-icon-success" />
+			}
+			else
+			{
+				<RadzenProfileMenuItem Text="@menuDBLogin" Value="@menuDBLogin" Path="/login" Icon="highlight_off" class="custom-icon-error" />
+			}
+
+			@if (IsBoxLogin)
+			{
+				<RadzenProfileMenuItem Text="@menuBoxLogout" Value="@menuBoxLogout" Path="dialog" Icon="check_circle" class="custom-icon-success" />
+			}
+			else
+			{
+				<RadzenProfileMenuItem Text="@menuBoxLogin" Value="@menuBoxLogin" Path="/auth" Icon="highlight_off" class="custom-icon-error" />
+			}
+			<hr style="margin: 5px 0;" />
+			<RadzenProfileMenuItem Text="@menuExit" Value="@menuExit" Icon="exit_to_app" />
+		</div>
+	</ChildContent>
+</RadzenProfileMenu>
+<style>
+	.custom-icon-success i {
+		color: forestgreen !important;
+	}
+
+	.custom-icon-error i {
+		color: orangered !important;
+	}
+</style>
+@code {
+	[Parameter]
+	public string? UserPicture { get; set; }
+
+	[Parameter]
+	public string? UserName { get; set; }
+
+	[Parameter]
+	public bool IsDBLogin { get; set; }
+
+	[Parameter]
+	public bool IsBoxLogin { get; set; }
+
+	[Parameter]
+	public string? ProjectName { get; set; }
+
+	[Parameter]
+	public EventCallback<ProfileMenuItemType> Logout { get; set; }
+
+	private string menuExit = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.Exit);
+	private string menuDBLogin = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.DBLogin);
+	private string menuBoxLogin = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.BoxLogin);
+	private string menuEditProfile = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.EditProfile);
+	private string menuDBLogout = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.DBLogout);
+	private string menuBoxLogout = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.BoxLogout);
+	private string menuSelectProject = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.SelectProject);
+	
+
+	private void HandleLogout(RadzenProfileMenuItem menu)
+	{
+		Console.WriteLine($"logout.... {menu.Value}");
+		Logout.InvokeAsync(ProfileMenuItemTypeHelper.GetEnum(menu.Value));
+	}
+}

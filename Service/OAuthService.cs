@@ -8,6 +8,7 @@ public class OAuthService
   private readonly HttpClient _httpClient;
   private readonly string _clientId;
   private readonly string _clientSecret;
+  private bool _isLogin = false;
 
   public OAuthService(HttpClient httpClient, string clientId, string clientSecret)
   {
@@ -16,6 +17,10 @@ public class OAuthService
     _clientSecret = clientSecret;
   }
 
+  public string GetBoxClientId()
+  {
+    return _clientId;
+  }
   // 1. 初回のアクセストークン取得
   public async Task<OAuthTokenResponse> GetAccessTokenAsync(string code)
   {
@@ -42,6 +47,7 @@ public class OAuthService
 
       if (tokenResponse != null)
       {
+        _isLogin = true;
         return tokenResponse;
       }
 
@@ -56,6 +62,7 @@ public class OAuthService
     }
   }
 
+  public bool IsLogin() { return _isLogin; }
 
   // 2. アクセストークンのリフレッシュ
   public async Task<OAuthTokenResponse> RefreshAccessTokenAsync(string refreshToken)
