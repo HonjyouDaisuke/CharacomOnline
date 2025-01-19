@@ -1,14 +1,18 @@
 ﻿@using Blazored.LocalStorage
+@using CharacomOnline.Entity
 @using CharacomOnline.Enums
+@using CharacomOnline.Service
 @using CharacomOnline.ViewModel
 @inject Supabase.Client SupabaseClient
 @inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject UsersViewModel UsersViewModel
 
-<RadzenProfileMenu Click="@(args => HandleLogout(args))">
+<RadzenProfileMenu Click="@(args => HandleMenu(args))">
 	<Template>
 		@if (UserPicture == null || UserPicture == string.Empty)
 		{
-			<RadzenIcon Icon="account_circle" style="font-size: 2rem;" />
+			<RadzenIcon Icon="account_circle" style="font-size: 1rem;" />
 		}
 		else
 		{
@@ -21,7 +25,7 @@
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal">
 				@if (UserPicture == null || UserPicture == string.Empty)
 				{
-					<RadzenIcon Icon="account_circle" style="font-size: 5rem;" />
+					<RadzenIcon Icon="account_circle" style="font-size: 2rem;" />
 				}
 				else
 				{
@@ -30,7 +34,7 @@
 				<RadzenText TextStyle="TextStyle.H6">@UserName</RadzenText>
 			</RadzenStack>
 			<hr style="margin: 5px 0;" />
-			<RadzenProfileMenuItem Text="@menuEditProfile" Value="@menuEditProfile" Path="menu" Icon="account_box" />
+			<RadzenProfileMenuItem Text="@menuEditProfile" Value="@menuEditProfile" Icon="account_box" />
 			<RadzenProfileMenuItem Text="@menuSelectProject" Value="@menuSelectProject" Path="/projects" Icon="book" />
 			@if (ProjectName == null)
 			{
@@ -98,11 +102,53 @@
 	private string menuDBLogout = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.DBLogout);
 	private string menuBoxLogout = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.BoxLogout);
 	private string menuSelectProject = ProfileMenuItemTypeHelper.GetString(ProfileMenuItemType.SelectProject);
-	
 
-	private void HandleLogout(RadzenProfileMenuItem menu)
+	private async Task HandleMenu(RadzenProfileMenuItem menu)
 	{
-		Console.WriteLine($"logout.... {menu.Value}");
-		Logout.InvokeAsync(ProfileMenuItemTypeHelper.GetEnum(menu.Value));
+		var menuItemType = ProfileMenuItemTypeHelper.GetEnum(menu.Value);
+		Console.WriteLine($"プロフィールメニュー {menu.Value}");
+		switch(menuItemType)
+		{
+			case ProfileMenuItemType.EditProfile :
+				UsersTable? usersTable = UsersViewModel.GetUsersTable();
+				if (usersTable == null) break;
+				var result = await DialogService.OpenAsync<EditUserProfileDialog>("ユーザ情報の編集", new Dictionary<string, object>
+                {
+					{ "User", usersTable }
+				});
+
+				if (result is UsersTable updateUser)
+				{
+					Console.WriteLine($"updateUser = {updateUser.ToString()}");
+					await UsersViewModel.UpdateUserAsync(updateUser);
+				}
+				else
+				{
+					Console.WriteLine($"キャンセルされました");
+				}
+				break;
+
+			case ProfileMenuItemType.DBLogout :
+				Console.WriteLine($"logout.... {menu.Value}");
+				await Logout.InvokeAsync(ProfileMenuItemTypeHelper.GetEnum(menu.Value));
+				break;
+
+			case ProfileMenuItemType.Exit:
+				Console.WriteLine($"logout.... {menu.Value}");
+				await Logout.InvokeAsync(ProfileMenuItemTypeHelper.GetEnum(menu.Value));
+				break;
+		}
+		//Console.WriteLine($"logout.... {menu.Value}");
+		//await Logout.InvokeAsync(ProfileMenuItemTypeHelper.GetEnum(menu.Value));
 	}
+
+	/**
+	private async Task OnDialogClosed(UsersTable result)
+	{
+		Console.WriteLine($"ダイアログがクローズされました。.... ");
+		if (result == null) return;
+		Console.WriteLine($"user = {result.ToString()}");
+
+	}
+	**/
 }

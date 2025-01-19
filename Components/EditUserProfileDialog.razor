@@ -1,0 +1,38 @@
+﻿@using CharacomOnline.Service
+@using CharacomOnline.Entity
+@inject DialogService DialogService
+
+@namespace CharacomOnline.Components
+
+<RadzenStack Orientation="Radzen.Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+	@if (string.IsNullOrEmpty(User?.PictureUrl))
+	{
+		<RadzenIcon Icon="account_circle" style="font-size: 2rem;" />
+	}
+	else
+	{
+		<RadzenImage Path="@User?.PictureUrl" class="rz-gravatar" AlternateText="UserName" />
+	}
+	<RadzenTextBox @bind-Value="User.Name" Name="UserName" />
+	<RadzenStack Orientation="Radzen.Orientation.Horizontal">
+		<RadzenButton Text="キャンセル" Click="OnCancelClick" />
+		<RadzenButton Text="OK" Click="OnOKClick" />
+	</RadzenStack>
+	
+</RadzenStack>
+
+@code {
+	[Parameter]
+	public UsersTable User { get; set; } = new();
+
+	private void OnOKClick()
+	{
+		DialogService.Close(User);
+	}
+
+	private void OnCancelClick()
+	{
+		DialogService.Close(null);
+	}
+
+}

@@ -37,4 +37,16 @@ public class UsersViewModel
 	{
 		return userRepository.CurrentUser().Name;
 	}
+
+	public UsersTable? GetUsersTable()
+	{
+		return userRepository.CurrentUser();
+	}
+
+	public async Task UpdateUserAsync(UsersTable user)
+	{
+		if (user == null) return;
+		userRepository.SetCurrentUser(user);
+		await usersTableService.UpdateUserAsync(user);
+	}
 }

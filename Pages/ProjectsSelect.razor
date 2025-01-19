@@ -68,9 +68,9 @@
         userId = await SessionStorage.GetUserIDAsync();
         projectId = await SessionStorage.GetProjectIDAsync();
         if (userId == null) return;
+        isStandard = isStandardUser();
         projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
         if (projectId == null) return;
-        isStandard = isStandardUser();
         CheckInitialSelect(projectId);
     }
 
