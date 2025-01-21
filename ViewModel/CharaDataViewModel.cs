@@ -6,42 +6,92 @@ using SkiaSharp;
 
 namespace CharacomOnline.ViewModel;
 
-public class CharaDataViewModel(StorageService storageService, CharaDataRepository charaDataRepository, SelectingItemsRepository selectingItemsRepository, BoxFileService boxFileService, StandardTableService standardTableService, StrokeTableService strokeTableService, ImagesTableService imagesTableService, CharaDataTableService charaDataTableService)
+public class CharaDataViewModel(
+  StorageService storageService,
+  CharaDataRepository charaDataRepository,
+  SelectingItemsRepository selectingItemsRepository,
+  BoxFileService boxFileService,
+  StandardTableService standardTableService,
+  StrokeTableService strokeTableService,
+  ImagesTableService imagesTableService,
+  CharaDataTableService charaDataTableService
+)
 {
-  public readonly CharaDataRepository _charaDataRepository = charaDataRepository ?? throw new ArgumentNullException(nameof(charaDataRepository));
-  private readonly StorageService _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
-  private readonly ImagesTableService _imagesTableService = imagesTableService ?? throw new ArgumentNullException(nameof(imagesTableService));
-  private readonly CharaDataTableService _charaDataTableService = charaDataTableService ?? throw new ArgumentNullException(nameof(charaDataTableService));
-  private readonly StandardTableService _standardTableService = standardTableService ?? throw new ArgumentNullException(nameof(standardTableService));
-  public readonly SelectingItemsRepository _selectingItemsRepository = selectingItemsRepository ?? throw new ArgumentNullException(nameof(selectingItemsRepository));
-  private readonly StrokeTableService _strokeTableService = strokeTableService ?? throw new ArgumentNullException(nameof(strokeTableService));
-  private readonly BoxFileService _boxFileService = boxFileService ?? throw new ArgumentNullException(nameof(boxFileService));
+  public readonly CharaDataRepository _charaDataRepository =
+    charaDataRepository ?? throw new ArgumentNullException(nameof(charaDataRepository));
+  private readonly StorageService _storageService =
+    storageService ?? throw new ArgumentNullException(nameof(storageService));
+  private readonly ImagesTableService _imagesTableService =
+    imagesTableService ?? throw new ArgumentNullException(nameof(imagesTableService));
+  private readonly CharaDataTableService _charaDataTableService =
+    charaDataTableService ?? throw new ArgumentNullException(nameof(charaDataTableService));
+  private readonly StandardTableService _standardTableService =
+    standardTableService ?? throw new ArgumentNullException(nameof(standardTableService));
+  public readonly SelectingItemsRepository _selectingItemsRepository =
+    selectingItemsRepository ?? throw new ArgumentNullException(nameof(selectingItemsRepository));
+  private readonly StrokeTableService _strokeTableService =
+    strokeTableService ?? throw new ArgumentNullException(nameof(strokeTableService));
+  private readonly BoxFileService _boxFileService =
+    boxFileService ?? throw new ArgumentNullException(nameof(boxFileService));
   public event Action<int>? ProgressChanged;
   public SKBitmap? OverlayBmp { get; set; }
+
+  public string currentChara = "";
+  public string currentMaterial = "";
 
   public async Task MakeOverlayBitmapAsync()
   {
     await Task.Run(() =>
     {
       OverlayBmp = new SKBitmap(160, 160);
-      if (OverlayBmp == null) return;
+      if (OverlayBmp == null)
+        return;
       OverlayBmp = ImageEffectService.WhiteFilledBitmap(OverlayBmp);
       foreach (var item in _charaDataRepository.viewCharaData)
       {
-        if (!item.IsSelected) continue;
+        if (!item.IsSelected)
+          continue;
         Console.WriteLine($"overLay‚É’Ç‰Á:{item.FileId}");
-        if (OverlayBmp == null) continue;
-        if (item.ThinImage == null) continue;
+        if (OverlayBmp == null)
+          continue;
+        if (item.ThinImage == null)
+          continue;
         OverlayBmp = ImageEffectService.OverlayBinaryImages(OverlayBmp, item.ThinImage);
       }
-      if (OverlayBmp == null) return;
+      if (OverlayBmp == null)
+        return;
       OverlayBmp = ImageEffectService.ColorChangeBitmap(OverlayBmp, SKColors.Blue);
 
-      if (charaDataRepository.StandardThinBmp == null) return;
-      var Standard = ImageEffectService.ColorChangeBitmap(charaDataRepository.StandardThinBmp, SKColors.Red);
+      if (charaDataRepository.StandardThinBmp == null)
+        return;
+      var Standard = ImageEffectService.ColorChangeBitmap(
+        charaDataRepository.StandardThinBmp,
+        SKColors.Red
+      );
       OverlayBmp = ImageEffectService.OverlayBinaryImages(OverlayBmp, Standard);
     });
+  }
 
+  public bool SelectChara(string chara)
+  {
+    if (chara == currentChara)
+    {
+      return false;
+    }
+
+    currentChara = chara;
+    return true;
+  }
+
+  public bool SelectMaterial(string material)
+  {
+    if (material == currentMaterial)
+    {
+      return false;
+    }
+
+    currentMaterial = material;
+    return true;
   }
 
   public async Task<Guid?> InsertCharaDataAsync(string fileName, Guid projectId, string fileId)
@@ -60,13 +110,21 @@ public class CharaDataViewModel(StorageService storageService, CharaDataReposito
     var uniqueFileName = RandomStringMaker.MakeString(10) + Path.GetExtension(file.Name);
     await _storageService.UploadFileAsync(file, uniqueFileName);
     var bmp = await ImageEffectService.LoadImageFileAsync(file);
-    if (bmp == null) return null;
+    if (bmp == null)
+      return null;
     var thumbnailBmp = ImageEffectService.ResizeBitmap(bmp, 50, 50);
-    if (thumbnailBmp == null) return null;
+    if (thumbnailBmp == null)
+      return null;
     var thumbnailBmpString = ImageEffectService.GetBinaryImageData(thumbnailBmp);
-    if (thumbnailBmpString == null) return null;
+    if (thumbnailBmpString == null)
+      return null;
     // CharaImageî•ñ‚ðDB‚É•Û‘¶
-    var imageId = await _imagesTableService.AddImageFile(uniqueFileName, "Images/", file.Size, thumbnailBmpString);
+    var imageId = await _imagesTableService.AddImageFile(
+      uniqueFileName,
+      "Images/",
+      file.Size,
+      thumbnailBmpString
+    );
 
     return imageId;
   }
@@ -88,14 +146,21 @@ public class CharaDataViewModel(StorageService storageService, CharaDataReposito
     await _charaDataTableService.InitMaterialsData(projectId);
   }
 
-  public async Task AddViewCharaData(string accessToken, Guid projectId, string charaName, string materialName)
+  public async Task GetViewCharaDataAsync(string accessToken, Guid projectId)
   {
-    await _charaDataTableService.GetCharaListAsync(projectId, charaName, materialName, accessToken, (progress) =>
-    {
-      ProgressChanged?.Invoke(progress);
-      Console.WriteLine($"progress:{progress}");
-    });
-
+    if (string.IsNullOrEmpty(currentChara) || string.IsNullOrEmpty(currentMaterial))
+      return;
+    await _charaDataTableService.GetCharaListAsync(
+      projectId,
+      currentChara,
+      currentMaterial,
+      accessToken,
+      (progress) =>
+      {
+        ProgressChanged?.Invoke(progress);
+        Console.WriteLine($"progress:{progress}");
+      }
+    );
   }
 
   public async Task ClearViewCharaData()
@@ -113,7 +178,8 @@ public class CharaDataViewModel(StorageService storageService, CharaDataReposito
       return;
     }
     var bmp = await _boxFileService.DownloadFileAsSKBitmapAsync(fileId, accessToken);
-    if (bmp == null) return;
+    if (bmp == null)
+      return;
     _charaDataRepository.AddStandardBmp(bmp);
   }
 
@@ -127,8 +193,8 @@ public class CharaDataViewModel(StorageService storageService, CharaDataReposito
       return;
     }
     var bmp = await _boxFileService.DownloadFileAsSKBitmapAsync(fileId, accessToken);
-    if (bmp == null) return;
+    if (bmp == null)
+      return;
     _charaDataRepository.AddStrokeBmp(bmp);
-
   }
 }
