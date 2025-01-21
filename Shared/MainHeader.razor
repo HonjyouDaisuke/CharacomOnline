@@ -1,8 +1,33 @@
+@using CharacomOnline.Service
+@using CharacomOnline.Components
+@using CharacomOnline.Enums
+@using CharacomOnline.ViewModel
+@using Radzen.Blazor.Rendering
+@using Blazored.LocalStorage
+
+@inject ILocalStorageService localStorage
+@inject SessionStorageService SessionStorage
+@inject OAuthService OAuthService
+@inject Supabase.Client SupabaseClient
+@inject NavigationManager NavigationManager
+@inject ProjectsViewModel ProjectsViewModel
+@inject UsersViewModel UsersViewModel
+
+
 <RadzenHeader>
-	<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-		<RadzenSidebarToggle Click="@ChangeExpand" />
-		<RadzenLabel Text="Characom Imapger Pro Online" />
-	</RadzenStack>
+	<RadzenRow AlignItems="AlignItems.Center" Gap="1">
+		<RadzenColumn>
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Gap="2px">
+				<RadzenSidebarToggle Click="@ChangeExpand" />
+				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.H5">Characom Imapger Pro Online</RadzenText>
+			</RadzenStack>
+		</RadzenColumn>
+		<RadzenColumn >
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End" Style="padding-right: 1rem;">
+				<ProfileMenu UserPicture="@userPictureUrl" UserName="@userName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName"/>
+			</RadzenStack>
+		</RadzenColumn>
+	</RadzenRow>
 </RadzenHeader>
 
 @code {
@@ -13,9 +38,58 @@
 	[Parameter]
 	public EventCallback<bool> SidebarExpandedChanged { get; set; }
 
+	private string? userPictureUrl;
+	private string? userName;
+	private bool isBoxLogin = false;
+	private bool isDBLogin = false;
+	private Guid? currentProjectId;
+	private string? currentProjectName;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		//if (!firstRender) return;
+		//Console.WriteLine($"avater= {userPictureUrl}");
+		userPictureUrl = UsersViewModel.GetUserPicture();
+		userName = UsersViewModel.GetUserName();
+		isBoxLogin = OAuthService.IsLogin();
+		isDBLogin = await SessionStorage.IsLoginAsync();
+		currentProjectId = ProjectsViewModel.GetCurrentProjectId();
+		currentProjectName = ProjectsViewModel.GetCurrentProjectName();
+		await InvokeAsync(StateHasChanged);
+
+	}
+
 	private async Task ChangeExpand()
 	{
 		bool newValue = !SidebarExpanded;
 		await SidebarExpandedChanged.InvokeAsync(newValue);  // 親に新しい値を送信
+	}
+
+	private async Task Logout(ProfileMenuItemType menu)
+	{
+		Console.WriteLine($"Logout {menu}");
+		if (menu == ProfileMenuItemType.DBLogout || menu == ProfileMenuItemType.Exit)
+		{
+			try
+			{
+				// Supabaseセッションをクリア
+				await SupabaseClient.Auth.SignOut();
+
+				// ローカルストレージのトークンを削除
+				await localStorage.RemoveItemAsync("access_token");
+				await localStorage.RemoveItemAsync("refresh_token");
+
+				// SessionStorageをクリア
+				await SessionStorage.ClearAsync();
+
+				// ログインページにリダイレクト
+				NavigationManager.NavigateTo("/login", forceLoad: true);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"ログアウトエラー: {ex.Message}");
+			}
+		}
+		
 	}
 }

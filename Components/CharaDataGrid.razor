@@ -1,25 +1,45 @@
 @using CharacomOnline.Service
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Entity
+@using CharacomOnline.Repositories
 @using Microsoft.AspNetCore.Components.Forms
 @using Toolbelt.Blazor.FileDropZone
 @using Radzen.Blazor
 @inject FileUploadService FileUploadService
+@inject CharaDataViewModel CharaDataViewModel
 
-@namespace CharacomOnline.ImageProcessing
-
+@namespace CharacomOnline.Components
+<p>ProjectId : @ProjectId</p>
+@if (isProgress)
+{
+	<RadzenRow>
+		<RadzenColumn>
+			<RadzenCard>			
+				<RadzenProgressBar @bind-Value="@progressValue" Max="@progressMax" Unit="@unitString"/>
+			</RadzenCard>
+		</RadzenColumn>
+	</RadzenRow>
+}
 <FileDropZone class="drop-zone">
 	<InputFile hidden OnChange="OnInputFileChange" multiple />
-	<RadzenDataGrid TItem="CharaDataClass" Data="@CharaDataView.CharaDataRepository.Appraisals" RowSelect="@OnRowSelected" SelectionMode="DataGridSelectionMode.Single" AllowGrouping="true" Render="OnRender">
+	<RadzenDataGrid 
+		TItem="CharaDataClass" 
+		Data="@CharaDataViewModel._charaDataRepository.Appraisals" 
+		RowSelect="@OnRowSelected" 
+		SelectionMode="DataGridSelectionMode.Single" 
+		PagerPosition="PagerPosition.TopAndBottom"
+		AllowPaging="true"
+		AllowGrouping="true"
+		Render="OnRender">
 		<Columns>
 			<RadzenDataGridColumn Property="Id" Title="No" />
 			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
 			<RadzenDataGridColumn Property="MaterialName" Title="資料名" />
-			<RadzenDataGridColumn Property="NumString" Title="回数" />
+			<RadzenDataGridColumn Property="Times" Title="回数" />
 			<RadzenDataGridColumn Property="Size" Title="サイズ" />
 			<RadzenDataGridColumn Title="イメージ">
 				<Template>
-					<RadzenImage Path="@context.ImageUrl" alt="Chara Image" width="50" height="50" />
+					<img src="@context.Thumbnail" alt="@context.CharaName" width="50" height="50" />
 				</Template>
 			</RadzenDataGridColumn>
 		</Columns>
@@ -42,13 +62,25 @@
 @code {
 	private List<CharaDataClass> charaData = new List<CharaDataClass>();
 	[Parameter]
-	public CharaDataViewModel CharaDataView {get; set;} = new CharaDataViewModel();
-
-	[Parameter]
 	public CharaDataClass SelectedData {get;set;} = new CharaDataClass();
 
 	[Parameter]
+	public Guid? UserId { get; set; }
+
+	[Parameter]
+	public Guid? ProjectId { get; set; }
+
+	[Parameter]
 	public EventCallback<CharaDataClass> SelectedDataChanged { get; set; }
+	[Parameter]
+	public EventCallback OnFilesUploaded { get; set; }
+	[Parameter]
+	public EventCallback<InputFileChangeEventArgs> OnFilesDropped { get; set; }
+
+	private double progressValue = 0;
+	private double progressMax = 0;
+	private bool isProgress = false;
+	private string unitString = "";
 
 	private async void OnRowSelected(CharaDataClass selectedData)
 	{
@@ -56,29 +88,6 @@
 		Console.WriteLine(selectedData.ToString());
 		await SelectedDataChanged.InvokeAsync(selectedData);
 	}
-	private CharaDataClass dataMake()
-	{
-		CharaDataClass charaData = new CharaDataClass();
-		charaData.CharaName = "a";
-		charaData.MaterialName = "b";
-		charaData.Id = 1;
-		charaData.NumString = "5";
-		charaData.Size = "10 x 10";
-		charaData.ImageUrl = "";
-		return charaData;
-	}
-
-	/**
-	protected override async Task OnInitializedAsync()
-	{
-		await base.OnInitializedAsync();
-		for (int i = 0; i < 10; i++)
-		{
-			CharaDataView.charaDataRepository.addAppraisals(dataMake());
-		}
-		
-	}
-	**/
 
 	void OnRender(DataGridRenderEventArgs<CharaDataClass> args)
 	{
@@ -88,23 +97,9 @@
 			StateHasChanged();
 		}
 	}
-
-	private async void  OnInputFileChange(InputFileChangeEventArgs e)
+	
+	private async void OnInputFileChange(InputFileChangeEventArgs e)
 	{
-		try
-		{
-			foreach (var file in e.GetMultipleFiles(30))
-			{
-				//Console.WriteLine(file.Name);
-				await CharaDataView.DataInput(FileUploadService, file);
-			}
-
-			
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Error: {ex.Message}");
-		}
-		StateHasChanged();
+		await OnFilesDropped.InvokeAsync(e);
 	}
 }

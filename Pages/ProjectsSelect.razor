@@ -1,0 +1,219 @@
+﻿@page "/projects"
+@using CharacomOnline.Service
+@using CharacomOnline.Components
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Entity
+@inject SessionStorageService SessionStorage
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+@inject BoxFileService BoxFileService
+@inject TokenStorage TokenStorage
+@inject UsersViewModel UsersViewModel
+
+<h3>ProjectsSelect</h3>
+
+@if (isStandard)
+{
+    <RadzenButton Click=@(async ()=>
+              await OnNewButtonClick()) Icon="add_circle" Text="新規作成" ButtonStyle="ButtonStyle.Primary" />
+
+}
+<RadzenText>@message</RadzenText>
+<RadzenText>@userId</RadzenText>
+
+<RadzenPanel Style="width: 100%; overflow-x: hidden;">
+    <!-- 横幅制限と折り返し対応 -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: start; gap: 16px; max-width: 100%;">
+        @if(projects != null)
+        {
+            @foreach (var project in projects)
+            {
+                <ProjectCard Project="project" CardClick="OnCardClick" />
+            }
+        }
+    </div>
+</RadzenPanel>
+
+@code {
+    private string? message;
+    private Guid? userId;
+    private Guid? projectId;
+    private bool isStandard;
+    private CancellationTokenSource? _cts = null;
+    [Inject] private ProjectsViewModel ProjectsViewModel { get; set; } = default!;
+    [Inject] private CharaDataViewModel CharaDataViewModel { get; set; } = default!;
+
+    private List<ProjectViewData>? projects { get; set; } = new List<ProjectViewData>();
+
+    private void CheckInitialSelect(Guid? projectId)
+    {
+        if (projects == null) return;
+        foreach(ProjectViewData p in projects)
+        {
+            if (p.Id == projectId) p.IsSelected = true;
+        }
+    }
+
+    private bool isStandardUser()
+    {
+        string? userRole = UsersViewModel.GetCurrentUserRole();
+        if (userRole == null) return false;
+        if (userRole == "guest") return false;
+        return true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (SessionStorage == null) return;
+        userId = await SessionStorage.GetUserIDAsync();
+        projectId = await SessionStorage.GetProjectIDAsync();
+        if (userId == null) return;
+        isStandard = isStandardUser();
+        projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
+        if (projectId == null) return;
+        CheckInitialSelect(projectId);
+    }
+
+    private void OnClick(string text)
+    {
+        message = text;
+    }
+
+    private async Task OnNewButtonClick()
+    {
+        var result = await DialogService.OpenAsync<CreateProjectDialog>("プロジェクトの新規作成", new Dictionary<string, object>
+        {
+            { nameof(CreateProjectDialog.OnDialogClosed), EventCallback.Factory.Create<CreateProjectDialogResults>(this, OnDialogClosed) }
+        });
+    }
+
+    private void ShowError(string title, string msg)
+    {
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = title,
+                Detail = msg,
+                Duration = 2000
+            }
+        );
+    }
+
+    private async Task OnDialogClosed(CreateProjectDialogResults result)
+    {
+        if (result.IsCanceled) return;
+
+        if (result.Title == "" || result.Title == null)
+        {
+            ShowError("タイトル名エラー", "タイトル名が空欄です。タイトルは必須項目です。");
+            return;
+        }
+
+        if (await ProjectsViewModel.IsProjectTitleExists(result.Title))
+        {
+            ShowError("プロジェクト重複エラー", $"プロジェクト名「{result.Title}」は既に存在しています。");
+            return;
+        }
+
+        if (result.FolderId == "" || result.FolderId == null)
+        {
+            ShowError("プロジェクトフォルダエラー", $"プロジェクトフォルダが選択されていません。");
+            return;
+        }
+
+        if (result.CharaFolderId == "" || result.CharaFolderId == null)
+        {
+            ShowError("切出しフォルダエラー", $"切出しフォルダが選択されていません。");
+            return;
+        }
+        var _userId = await SessionStorage.GetUserIDAsync();
+        if (_userId == null) return;
+        var projectId = await ProjectsViewModel.CreateNewProject(result.Title, result.Description, (Guid)_userId, result.FolderId, result.CharaFolderId);
+        message = $"projectId = {projectId} を新規作成しました。";
+
+        await InstallCharaDataAsync((Guid)projectId, result.Title, result.CharaFolderId);
+        await ProjectsViewModel.SetCurrentProject((Guid)projectId, result.Title);
+
+        StateHasChanged();
+    }
+
+    private async Task OnCardClick(ProjectViewData clickedProject)
+    {
+        if (projects == null) return;
+        foreach(ProjectViewData project in projects)
+        {
+            project.IsSelected = false;
+        }
+        clickedProject.IsSelected = true;
+        message = $"プロジェクトが選択されました。件名{clickedProject.Name} id:{clickedProject.Id}";
+        await SessionStorage.SetProjectIDAsync(clickedProject.Id);
+        await ProjectsViewModel.SetCurrentProject(clickedProject.Id, clickedProject.Name);
+
+    }
+
+    private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId)
+    {
+        _cts = new CancellationTokenSource();
+
+        // ファイルを確認
+        var accessToken = await TokenStorage.GetAccessTokenAsync();
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            throw new Exception("Access token not found. Please authenticate first.");
+        }
+        var files = await BoxFileService.GetFolderFileCountAsync(charaFolderId, accessToken);
+        int offset = 0;
+        int limit = 100;
+        var param = new ProgressDialogParameters
+            {
+                Message = $"プロジェクト名：{projectName} <br>ファイル数：{10}個",
+                Value = 0,
+                MaxValue = files,
+                Unit = $" / {files}",
+                OnCancel = EventCallback.Factory.Create(this, CancelOperation),
+                Token = _cts.Token,
+            };
+
+        DialogService.Open<ProgressDialog>("プロジェクトにデータをインストールします", new Dictionary<string, object>
+        {
+            {"parameters", param}
+        });
+
+        await InvokeAsync(StateHasChanged);
+
+        while (true)
+        {
+            var fileList = await BoxFileService.GetFolderItemsAsync(charaFolderId, limit, offset, accessToken);
+            if (fileList == null || fileList.Count == 0) break;
+
+            foreach (var item in fileList)
+            {
+                // キャンセルされている場合は例外をスロー
+                _cts.Token.ThrowIfCancellationRequested();
+                param.Value++;
+                DialogService.Refresh();
+                await InvokeAsync(StateHasChanged);
+
+                if (item.Type != "file") continue;
+                if (item.Name == "") continue;
+                var extension = FileNameService.GetExtension(item.Name);
+                if (extension != ".jpeg" && extension != ".jpg") continue;
+
+                var charaId = await CharaDataViewModel.InsertCharaDataAsync(item.Name, projectId, item.Id);
+                Console.WriteLine($"installing... No.{(int)param.Value} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}");
+                DialogService.Refresh();
+                await InvokeAsync(StateHasChanged);
+            }
+
+            if (param.Value > files) break;
+            offset += limit;
+        }
+        DialogService.Close();
+    }
+
+
+    private void CancelOperation()
+    {
+        _cts?.Cancel();
+    }
+}

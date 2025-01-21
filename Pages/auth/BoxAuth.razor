@@ -1,0 +1,24 @@
+﻿@page "/auth"
+@using CharacomOnline.Service
+@inject NavigationManager Navigation
+@inject OAuthService OAuthService
+
+<RadzenStack AlignItems="AlignItems.Center">
+    <RadzenImage Path="images/box_logo.png" AlignItems="AlignItems.Center" class="rz-mx-auto rz-my-12" />
+    <RadzenText style="width: 500px;" TextStyle="TextStyle.Body2">Characom Imager Pro Onlineでは、外部ストレージ「box」を使用します。利用する場合はログインしてください</RadzenText>
+    <RadzenButton Click="RedirectToBoxLogin" AlignItems="AlignItems.Center" style="width: 200px;" Text="boxにログイン" ButtonStyle="ButtonStyle.Primary" />
+</RadzenStack>
+
+@code {
+    private void RedirectToBoxLogin()
+    {
+        var clientId = OAuthService.GetBoxClientId();
+        var redirectUri = "https://localhost:7241/box-callback";
+
+        // Boxの認証URL
+        var authUrl = $"https://account.box.com/api/oauth2/authorize?response_type=code&client_id={clientId}&redirect_uri={redirectUri}";
+
+        // ユーザーをBoxの認証ページにリダイレクト
+        Navigation.NavigateTo(authUrl, forceLoad: true);
+    }
+}

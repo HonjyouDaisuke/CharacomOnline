@@ -1,0 +1,14 @@
+﻿@using CharacomOnline.Service
+
+<img src="@BitmapToBase64Url(SKBitmapImage)" alt="Chara Image" width="50" height="50" />
+
+@code {
+    [Parameter]
+    public SKBitmap? SKBitmapImage { get; set; }
+
+    private string? BitmapToBase64Url(SKBitmap? bitmap)
+    {
+        if (bitmap == null) return string.Empty;
+        return ImageEffectService.GetBinaryImageData(bitmap);
+    }
+}

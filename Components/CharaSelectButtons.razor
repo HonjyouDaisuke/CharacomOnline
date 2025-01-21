@@ -1,0 +1,58 @@
+﻿<div class="responsive-grid-container">
+    @foreach (var charaName in Characters)
+    {
+        <RadzenToggleButton Text="@charaName"
+                            Value="@(IsSelected(charaName))"
+                            Change="@(args => OnToggleChanged(charaName))">
+        </RadzenToggleButton>
+    }
+</div>
+
+<style>
+    .responsive-grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 柔軟な列数 */
+        gap: 10px; /* ボタン間のスペース */
+        padding: 5px;
+        max-height: 100%;
+        overflow-y: auto; /* 縦スクロールを有効化 */
+    }
+
+    .responsive-grid-container .rz-button {
+        width: 100%; /* ボタンをセルの幅に合わせる */
+    }
+</style>
+
+@code {
+    [Parameter]
+    public List<string> Characters { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<string?> OnCharacterSelected { get; set; }
+
+    private string? selectedChara;
+
+    private bool IsSelected(string charaName)
+    {
+        return charaName == selectedChara;
+    }
+
+    private async Task OnToggleChanged(string charaName)
+    {
+        // 新しい選択状態をセット
+        if (selectedChara == charaName)
+        {
+            selectedChara = null; // 同じボタンを押すと選択解除
+        }
+        else
+        {
+            selectedChara = charaName;
+        }
+
+        // 親コンポーネントに選択状態を通知
+        await OnCharacterSelected.InvokeAsync(selectedChara);
+
+        // 状態更新
+        StateHasChanged();
+    }
+}

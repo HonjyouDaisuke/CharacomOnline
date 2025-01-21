@@ -1,34 +1,67 @@
-@page "/oauth2/callback"  
+@page "/callback"
+@using Blazored.LocalStorage
+@using CharacomOnline.Service
+@using CharacomOnline.ViewModel
+@inject IJSRuntime JSRuntime
+@inject Supabase.Client SupabaseClient
+@inject ILocalStorageService localStorage
+@inject NavigationManager NavigationManager
+@inject SessionStorageService SessionStorage
+@inject UsersViewModel UserViewModel
 
-@inject NavigationManager Navigation
-
-<h3>認証中...</h3>
+<h3>ログイン処理中...</h3>
 
 @code {
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // URL からクエリパラメータ（認証コード）を取得
-        var uri = Navigation.Uri;
-        var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri);
-
-        // 'code' クエリパラメータ（Google から返される認証コード）を取得
-        var code = queryParams["code"];
-        if (!string.IsNullOrEmpty(code))
+        if (firstRender)
         {
-            // 認証コードを使ってアクセストークンを取得する処理
-            await GetAccessTokenFromCodeAsync(code);
-        }
-        else
-        {
-            // 認証コードがない場合はエラーメッセージを表示
-            Console.WriteLine("認証に失敗しました。");
+            await HandleLoginCallback();
         }
     }
 
-    private async Task GetAccessTokenFromCodeAsync(string code)
+    private async Task HandleLoginCallback()
     {
-        // Google OAuth 2.0 トークンエンドポイントにリクエストを送信してアクセストークンを取得
-        // ここでアクセストークンを取得する処理を実装
-        Console.WriteLine("アクセストークンを取得しました。");
+        try
+        {
+            Console.WriteLine("ログインコールバック処理を開始します...");
+
+            // Supabase SDK でセッションを取得
+            var session = await SupabaseClient.Auth.GetSessionFromUrl(new Uri(NavigationManager.Uri));
+
+            if (session == null || session.User == null)
+            {
+                Console.WriteLine("セッションが取得できませんでした。");
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            // トークンをローカルストレージに保存
+            await localStorage.SetItemAsync("access_token", session.AccessToken);
+            await localStorage.SetItemAsync("refresh_token", session.RefreshToken);
+            Console.WriteLine($"sessionUserId : {session.User.Id}");
+            // セッションデータを保存
+            if (Guid.TryParse(session.User.Id, out Guid userId))
+            {
+                await SessionStorage.SetUserIDAsync(userId);
+            }
+            else
+            {
+                Console.WriteLine("User ID が有効な GUID ではありません。");
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            await UserViewModel.SetCurrentUser(userId);
+
+            Console.WriteLine($"ログイン成功: {session.User.Email}");
+            Console.WriteLine($"ユーザの権限：{UserViewModel.GetCurrentUserRole()}");
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"認証処理中にエラーが発生しました: {ex.Message}");
+            NavigationManager.NavigateTo("/login");
+        }
     }
 }

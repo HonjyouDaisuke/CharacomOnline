@@ -1,0 +1,10 @@
+﻿@inject NotificationService NotificationService
+
+<RadzenNotification />
+
+@code {
+    void ShowNotification(NotificationMessage message)
+    {
+        NotificationService.Notify(message);
+    }
+}

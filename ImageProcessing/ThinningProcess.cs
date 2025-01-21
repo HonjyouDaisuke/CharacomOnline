@@ -1,4 +1,3 @@
-using System.Security.Cryptography.Xml;
 using CharacomOnline.Service;
 using SkiaSharp;
 
@@ -28,15 +27,18 @@ public class ThinningProcess(SKBitmap srcBitmap)
   /// <returns>細線化後の画像(SKBitmap)</returns>
   public SKBitmap ThinBinaryImage()
   {
+    Console.WriteLine("NullCheck開始");
     if (srcArray == null)
     {
       return _srcBitmap;
     }
 
+    Console.WriteLine("Clone作成");
     CloneToWorkArray();
 
     do
     {
+      Console.WriteLine("細線化プロセス");
       ProcessThinning();
     } while (UpdateCheck());
 
