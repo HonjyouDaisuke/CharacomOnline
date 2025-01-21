@@ -13,6 +13,7 @@
 	{
 		<RadzenImage Path="@User?.PictureUrl" class="rz-gravatar" AlternateText="UserName" />
 	}
+
 	<RadzenTextBox @bind-Value="User.Name" Name="UserName" />
 	<RadzenStack Orientation="Radzen.Orientation.Horizontal">
 		<RadzenButton Text="キャンセル" Click="OnCancelClick" />

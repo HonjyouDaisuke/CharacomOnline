@@ -35,6 +35,6 @@ public class ImageProcessViewModel(ImageProcessRepository imageProcessData)
       Console.WriteLine("終了です。");
       imageProcessRepository.AddAppraisalData(item, item.SrcImage, thinBmp);
     }
-    await imageProcessRepository.CreateAppraisalImageAsync();
+    //await imageProcessRepository.CreateAppraisalImageAsync();
   }
 }

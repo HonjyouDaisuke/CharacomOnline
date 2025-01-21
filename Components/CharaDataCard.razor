@@ -9,7 +9,7 @@
 }
 else
 {
-    <RadzenCard @onclick="HandleClick" Style="@CharaData?.GetCardStyle()">
+    <RadzenCard @onclick="HandleClick" Style="@CharaData.GetCardStyle()">
         <RadzenStack AlignItems="AlignItems.Center" Orientation="Radzen.Orientation.Vertical" >
             @if (string.IsNullOrEmpty(ImageData))
             {
@@ -35,28 +35,12 @@ else
     [Parameter]
     public CharaDataClass? CharaData { get; set; }
 
-    /**
-    [Parameter]
-    public string? SelectStyle { get; set; }
-
-    [Parameter]
-    public string? ImageData { get; set; }
-
-    [Parameter]
-    public string? SrcImageData { get; set; }
-
-    **/
-
     [Parameter]
     public string? Height{ get; set; }
 
     [Parameter]
     public string? Width { get; set; }
 
-    /**
-    [Parameter]
-    public string? Id { get; set; }
-    **/
     [Parameter]
     public bool IsLoading { get; set; }
 
@@ -127,7 +111,7 @@ else
         Console.WriteLine("ダブルクリックです。");
         DialogService.Open<SrcImageDialog>("原画像", new Dictionary<string, object>
         {
-            {"SrcImageData", SrcImageData}
+            {"SrcImageData", SrcImageData!}
         });
     }
 }

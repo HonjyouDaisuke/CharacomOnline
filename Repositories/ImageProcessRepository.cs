@@ -29,20 +29,4 @@ public class ImageProcessRepository
     Appraisals.Add(newItem);
     AppraisalCharaData.Add(item);
   }
-
-  public async Task CreateAppraisalImageAsync()
-  {
-    SKBitmap src = new SKBitmap(160, 160);
-    src = ImageEffectService.WhiteFilledBitmap(src);
-    SKBitmap thin = new SKBitmap(160, 160);
-    thin = ImageEffectService.WhiteFilledBitmap(thin);
-
-    foreach (var item in Appraisals)
-    {
-      src = ImageEffectService.OverlayBinaryImages(src, item.SrcBitmap);
-      thin = ImageEffectService.OverlayBinaryImages(thin, item.ThinningBitmap);
-    }
-    AppraisalsSrcImageData = ImageEffectService.GetBinaryImageData(src);
-    AppraisalsThinImageData = ImageEffectService.GetBinaryImageData(thin);
-  }
 }
