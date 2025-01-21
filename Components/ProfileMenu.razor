@@ -7,6 +7,7 @@
 @inject NavigationManager NavigationManager
 @inject DialogService DialogService
 @inject UsersViewModel UsersViewModel
+@inject AppState AppState
 
 <RadzenProfileMenu Click="@(args => HandleMenu(args))">
 	<Template>
@@ -23,26 +24,26 @@
 	<ChildContent>
 		<div style="padding: 20px;">
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal">
-				@if (UserPicture == null || UserPicture == string.Empty)
+				@if (string.IsNullOrEmpty(AppState.UserName) || string.IsNullOrEmpty(AppState.UserPictureUrl))
 				{
 					<RadzenIcon Icon="account_circle" style="font-size: 2rem;" />
 				}
 				else
 				{
-					<RadzenImage Path="@UserPicture" class="rz-gravatar" Style="width: 50px; height: 50px;" AlternateText="UserName" />
+					<RadzenImage Path="@AppState.UserPictureUrl" class="rz-gravatar" Style="width: 50px; height: 50px;" AlternateText="@AppState.UserName" />
 				}
-				<RadzenText TextStyle="TextStyle.H6">@UserName</RadzenText>
+				<RadzenText TextStyle="TextStyle.H6">@AppState.UserName</RadzenText>
 			</RadzenStack>
 			<hr style="margin: 5px 0;" />
 			<RadzenProfileMenuItem Text="@menuEditProfile" Value="@menuEditProfile" Icon="account_box" />
 			<RadzenProfileMenuItem Text="@menuSelectProject" Value="@menuSelectProject" Path="/projects" Icon="book" />
-			@if (ProjectName == null)
+			@if (AppState.CurrentProjectName == null)
 			{
 				<RadzenProfileMenuItem Text="プロジェクトが選択されていません。" Value="@menuSelectProject" Path="/projects" Icon="highlight_off" class="custom-icon-error" />
 			}
 			else
 			{
-				<RadzenProfileMenuItem Text="@ProjectName" Value="@menuSelectProject" Path="/projects" Icon="check_circle" class="custom-icon-success" />
+				<RadzenProfileMenuItem Text="@AppState.CurrentProjectName" Value="@menuSelectProject" Path="/projects" Icon="check_circle" class="custom-icon-success" />
 			}
 			<hr style="margin: 5px 0;" />
 			@if (IsDBLogin)
