@@ -1,9 +1,9 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using CharacomOnline.Entity;
+﻿using CharacomOnline.Entity;
 using CharacomOnline.ImageProcessing;
 using CharacomOnline.Repositories;
 using Supabase;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -88,7 +88,7 @@ public class CharaDataTableService(
       );
 
       // 全タスクを実行して結果を収集
-      CharaDataClass?[] charaDataClasses = (await Task.WhenAll(tasks));
+      CharaDataClass[] charaDataClasses = (await Task.WhenAll(tasks));
       resultCharaData = charaDataClasses.ToList();
     }
     catch (JsonException ex)
@@ -246,6 +246,7 @@ public class CharaDataTableService(
     string charaName,
     string materialName,
     string accessToken,
+    CancellationToken token,
     Action<int>? onProgress = null
   )
   {
@@ -285,6 +286,7 @@ public class CharaDataTableService(
           if (item.Id == null || item.FileId == null)
             continue;
 
+          token.ThrowIfCancellationRequested();
           Console.WriteLine($"FileId = {item.FileId} を始めます");
 
           // 存在確認をデータベースから行い、確認後に挿入処理
@@ -325,6 +327,9 @@ public class CharaDataTableService(
     string accessToken
   )
   {
+    if (item.Id == null) return;
+    if (item.FileId == null) return;
+
     // 必要なデータを準備
     CharaDataClass newItem =
       new()
@@ -335,6 +340,8 @@ public class CharaDataTableService(
         MaterialName = materialName,
         SrcImage = await _boxFileService.DownloadFileAsSKBitmapAsync(item.FileId, accessToken),
       };
+
+    if (newItem.SrcImage == null) return;
 
     // サムネイルと細線画像を生成
     newItem.Thumbnail = ImageEffectService.GetBinaryImageData(

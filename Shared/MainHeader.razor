@@ -12,6 +12,7 @@
 @inject NavigationManager NavigationManager
 @inject ProjectsViewModel ProjectsViewModel
 @inject UsersViewModel UsersViewModel
+@inject AppState AppState
 
 
 <RadzenHeader>
@@ -22,9 +23,14 @@
 				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.H5">Characom Imapger Pro Online</RadzenText>
 			</RadzenStack>
 		</RadzenColumn>
+		<RadzenColumn>
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.Subtitle1">@AppState.CurrentProjectName</RadzenText>
+			</RadzenStack>
+		</RadzenColumn>
 		<RadzenColumn >
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End" Style="padding-right: 1rem;">
-				<ProfileMenu UserPicture="@userPictureUrl" UserName="@userName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName"/>
+				<ProfileMenu UserPicture="@AppState.UserPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName"/>
 			</RadzenStack>
 		</RadzenColumn>
 	</RadzenRow>
@@ -90,6 +96,21 @@
 				Console.WriteLine($"ログアウトエラー: {ex.Message}");
 			}
 		}
-		
+	}
+
+	protected override void OnInitialized()
+	{
+		AppState.PropertyChanged += async (_, e) =>
+		{
+			if (e.PropertyName == nameof(AppState.CurrentProjectName) || e.PropertyName == nameof(AppState.UserName))
+			{
+				await InvokeAsync(StateHasChanged);
+			}
+		};
+	}
+
+	public void Dispose()
+	{
+		AppState.PropertyChanged -= async (_, e) => await InvokeAsync(StateHasChanged);
 	}
 }

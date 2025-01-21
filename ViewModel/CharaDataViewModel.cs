@@ -146,7 +146,7 @@ public class CharaDataViewModel(
     await _charaDataTableService.InitMaterialsData(projectId);
   }
 
-  public async Task GetViewCharaDataAsync(string accessToken, Guid projectId)
+  public async Task GetViewCharaDataAsync(string accessToken, Guid projectId, CancellationToken token)
   {
     if (string.IsNullOrEmpty(currentChara) || string.IsNullOrEmpty(currentMaterial))
       return;
@@ -155,6 +155,7 @@ public class CharaDataViewModel(
       currentChara,
       currentMaterial,
       accessToken,
+      token,
       (progress) =>
       {
         ProgressChanged?.Invoke(progress);

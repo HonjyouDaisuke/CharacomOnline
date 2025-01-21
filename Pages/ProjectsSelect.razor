@@ -9,6 +9,7 @@
 @inject BoxFileService BoxFileService
 @inject TokenStorage TokenStorage
 @inject UsersViewModel UsersViewModel
+@inject AppState AppState
 
 <h3>ProjectsSelect</h3>
 
@@ -133,7 +134,8 @@
 
         await InstallCharaDataAsync((Guid)projectId, result.Title, result.CharaFolderId);
         await ProjectsViewModel.SetCurrentProject((Guid)projectId, result.Title);
-
+        AppState.CurrentProjectId = projectId;
+        AppState.CurrentProjectName = result.Title;
         StateHasChanged();
     }
 
@@ -148,7 +150,9 @@
         message = $"プロジェクトが選択されました。件名{clickedProject.Name} id:{clickedProject.Id}";
         await SessionStorage.SetProjectIDAsync(clickedProject.Id);
         await ProjectsViewModel.SetCurrentProject(clickedProject.Id, clickedProject.Name);
-
+        AppState.CurrentProjectId = clickedProject.Id;
+        AppState.CurrentProjectName = clickedProject.Name;
+        
     }
 
     private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId)

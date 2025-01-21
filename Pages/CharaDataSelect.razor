@@ -7,266 +7,280 @@
 @inject SessionStorageService SessionStorage
 @inject NavigationManager Navi
 @inject TokenStorage TokenStorage
+@inject NotificationService NotificationService
 @inject DialogService DialogService
 
 @if (isLoading)
 {
-	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
-		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-	</RadzenStack>
+    <RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </RadzenStack>
 }
-else if(userId == null)
+else if (userId == null)
 {
-	<SelectingErrorMessage 
-	ErrorMessageTitle="ユーザ認証エラー" 
-	ErrorMessage="ログインできていません。ログインしてください" 
-	LinkMsg="ログインへ" 
-	LinkClick=" () => OnNaviClick(loginUrl)" />
+    <SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
+                           ErrorMessage="ログインできていません。ログインしてください"
+                           LinkMsg="ログインへ"
+                           LinkClick=" () => OnNaviClick(loginUrl)" />
 }
-else if(projectId == null)
+else if (projectId == null)
 {
-	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
-	ErrorMessage="プロジェクトを選択してください。"
-	LinkMsg="プロジェクト選択へ"
-	LinkClick=" () => OnNaviClick(projectsUrl)" />
+    <SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
+                           ErrorMessage="プロジェクトを選択してください。"
+                           LinkMsg="プロジェクト選択へ"
+                           LinkClick=" () => OnNaviClick(projectsUrl)" />
 
 }
 else
 {
-	<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
-		<RadzenSplitterPane Size="30%" Resizable="true">
-			<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
-				<CharaImageCard ImageData="@standardImage" Height="160" Width="160" IsLoading="@stdLoading"/>
-				<CharaImageCard IsLoading="@isThinLoading" ImageData="@ImageEffectService.GetBinaryImageData(CharaDataViewModel.OverlayBmp)" Height="160" Width="160"  />
-				<CharaImageCard ImageData="@strokeImage" Height="160" Width="160" IsLoading="@strokeLoading"/>
-			</RadzenStack>
-		</RadzenSplitterPane>
-		<RadzenSplitterPane Size="70%" Resizable="true">
-			<RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
-				<RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
-					<CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" OnCharacterSelected="OnCharaSelected" />
-				</RadzenSplitterPane>
-				<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
-					<RadzenStack style="height: 100%;">
-						<RadzenSelectBar TValue="string" Value="@selectedMaterial" Change="@OnMaterialChanged">
-							<Items>
-								@foreach (var materialName in CharaDataViewModel._selectingItemsRepository.Materials)
-								{
-									<RadzenSelectBarItem Text="@materialName" Value="@materialName" />
-								}
-							</Items>
-						</RadzenSelectBar>
-						@if (string.IsNullOrEmpty(selectedMaterial) || string.IsNullOrEmpty(selectedChara))
-						{
-							<RadzenText>資料を上のボックスから選び、文字を左のボタンで選択してください。</RadzenText>
-						}
-						else
-						{
-							<CharaImageList IsLoading="@isCharaLoading" Chara="@selectedChara" Material="@selectedMaterial" ProjectId="@projectId" CardClick="@OnSelectChange" AccessToken="@accessToken" />
-						}
-					</RadzenStack>
-				</RadzenSplitterPane>
-			</RadzenSplitter>
-		</RadzenSplitterPane>
-	</RadzenSplitter>
+    <RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
+        <RadzenSplitterPane Size="35%" Resizable="true">
+            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
+                <CharaImageCard ImageData="@standardImage" Height="160" Width="160" IsLoading="@stdLoading" />
+                <CharaImageCard IsLoading="@isThinLoading" ImageData="@ImageEffectService.GetBinaryImageData(CharaDataViewModel.OverlayBmp)" Height="160" Width="160" />
+                <CharaImageCard ImageData="@strokeImage" Height="160" Width="160" IsLoading="@strokeLoading" />
+            </RadzenStack>
+        </RadzenSplitterPane>
+        <RadzenSplitterPane Size="65%" Resizable="true">
+            <RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
+                <RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
+                    <CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" OnCharacterSelected="OnCharaSelected" />
+                </RadzenSplitterPane>
+                <RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
+                    <RadzenStack style="height: 100%;">
+                        <RadzenSelectBar TValue="string" Value="@selectedMaterial" Change="@OnMaterialChanged">
+                            <Items>
+                                @foreach (var materialName in CharaDataViewModel._selectingItemsRepository.Materials)
+                                {
+                                    <RadzenSelectBarItem Text="@materialName" Value="@materialName" />
+                                }
+                            </Items>
+                        </RadzenSelectBar>
+                        @if (string.IsNullOrEmpty(selectedMaterial) || string.IsNullOrEmpty(selectedChara))
+                        {
+                            <RadzenText>資料を上のボックスから選び、文字を左のボタンで選択してください。</RadzenText>
+                        }
+                        else
+                        {
+                            <CharaImageList IsLoading="@isCharaLoading" Chara="@selectedChara" Material="@selectedMaterial" ProjectId="@projectId" CardClick="@OnSelectChange" AccessToken="@accessToken" />
+                        }
+                    </RadzenStack>
+                </RadzenSplitterPane>
+            </RadzenSplitter>
+        </RadzenSplitterPane>
+    </RadzenSplitter>
 }
 <style>
-	.full-height-splitter {
-	height: calc(100vh - 3.5rem - 3.5rem - 3.5rem - 5px); /* 縦方向の高さを画面全体に設定 */
-	}
+    .full-height-splitter {
+        height: calc(100vh - 3.5rem - 3.5rem - 3.5rem - 5px); /* 縦方向の高さを画面全体に設定 */
+    }
 
-	.pane-content {
-	padding: 10px;
-	height: 100%;
-	}
+    .pane-content {
+        padding: 10px;
+        height: 100%;
+    }
 
 </style>
 @code {
-	private bool isLoading = true;
-	private Guid? userId;
-	private Guid? projectId;
-	private string loginUrl = "./login";
-	private string projectsUrl = "./projects";
-	private string selectedChara = "";
-	private string selectedMaterial = "";
-	private string? accessToken = "";
-	private string? standardImage;
-	private string? strokeImage;
-	private bool isThinLoading = false;
+    private bool isLoading = true;
+    private Guid? userId;
+    private Guid? projectId;
+    private string loginUrl = "./login";
+    private string projectsUrl = "./projects";
+    private string selectedChara = "";
+    private string selectedMaterial = "";
+    private string? accessToken = "";
+    private string? standardImage;
+    private string? strokeImage;
+    private bool isThinLoading = false;
 
-	private bool stdLoading = false;
-	private bool strokeLoading = false;
-	private bool isCharaLoading = false;
-	private CancellationTokenSource _cts = new CancellationTokenSource();
+    private bool stdLoading = false;
+    private bool strokeLoading = false;
+    private bool isCharaLoading = false;
+    private CancellationTokenSource _cts = new CancellationTokenSource();
 
-	private int progress = 0;
+    private ProgressDialogParameters _progressDialogParameters = new ();
 
-	private ProgressDialogParameters _progressDialogParameters;
-
-	private void OnNaviClick(string goTo)
-	{
-		Navi.NavigateTo(goTo);
-	}
-
-	protected override void OnInitialized()
-	{
-		isLoading = true;
-	}
-
-	private async Task OnSelectChange(CharaDataClass selectItem)
-	{
-		Console.WriteLine("作成中");
-		isThinLoading = true;
-		await InvokeAsync(StateHasChanged);
-		await CharaDataViewModel.MakeOverlayBitmapAsync();
-		isThinLoading = false;
-		await InvokeAsync(StateHasChanged);
-		Console.WriteLine("作成完了");
-	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (!firstRender) return;
-
-		try
-		{
-			if (!await SessionStorage.IsLoggedInAsync())
-			{
-				isLoading = false;
-				await InvokeAsync(StateHasChanged);
-				return;
-			}
-
-			userId = await SessionStorage.GetUserIDAsync();
-
-			if (!await SessionStorage.IsSelectedProjectAsync())
-			{
-				isLoading = false;
-				await InvokeAsync(StateHasChanged);
-				return;
-			}
-
-			projectId = await SessionStorage.GetProjectIDAsync();
-
-			if (projectId != null)
-			{
-				await CharaDataViewModel.InitCharactersData((Guid)projectId);
-				await CharaDataViewModel.InitMaterialsData((Guid)projectId);
-			}
-
-			// アクセストークンを取得
-			accessToken = await TokenStorage.GetAccessTokenAsync();
-			if (string.IsNullOrEmpty(accessToken))
-			{
-				Navi.NavigateTo("/auth");
-				return;
-				// throw new Exception("Access token not found. Please authenticate first.");
-			}
-
-			Console.WriteLine($"文字個数:{CharaDataViewModel._selectingItemsRepository.Characters.Count}");
-			//foreach(var item in CharaDataViewModel._selectingItemsRepository.Characters)
-			//{
-			//    Console.WriteLine(item);
-			//}
-
-			isLoading = false;
-			await InvokeAsync(StateHasChanged);
-		}
-		catch (JSDisconnectedException)
-		{
-			Console.WriteLine("JavaScript interop failed due to disconnected circuit.");
-		}
-	}
-
-	private async Task OnCharaSelected(string? _selectedChara)
-	{
-		if (_selectedChara == null) return;
-		if (accessToken == null) return;
-		selectedChara = _selectedChara;
-		stdLoading = true;
-		strokeLoading = true;
-		await InvokeAsync(StateHasChanged);
-		await CharaDataViewModel.GetStandardData(accessToken, selectedChara);
-		standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
-		stdLoading = false;
-		await InvokeAsync(StateHasChanged);
-		await CharaDataViewModel.GetStrokeData(accessToken, selectedChara);
-		strokeImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StrokeBmp);
-		strokeLoading = false;
-		await InvokeAsync(StateHasChanged);
-
-		if (!CharaDataViewModel.SelectChara(selectedChara)) return;
-
-		isCharaLoading = true;
-
-		await InvokeAsync(StateHasChanged);
-		await RefreshCharaList();
-		/**		
-								await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId);
-
-								CharaDataViewModel.OverlayBmp = null;
-
-								isCharaLoading = false;
-								await InvokeAsync(StateHasChanged);
-	**/
-	}
-
-	private void CancelOperation()
-	{
-		_cts?.Cancel();
-	}
-	private async Task OnMaterialChanged(string newValue)
-	{
-		CharaDataViewModel.ClearViewCharaData();
-		selectedMaterial = newValue;
-		if (!CharaDataViewModel.SelectMaterial(selectedMaterial)) return;
-
-		isCharaLoading = true;
-		await RefreshCharaList();
-		/**
-								await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId);
-
-								CharaDataViewModel.OverlayBmp = null;
-								isCharaLoading = false;
-								StateHasChanged(); // UI を手動で更新
-	**/
-	}
-
-	private async Task RefreshCharaList() 
-	{
-		CharaDataViewModel.ProgressChanged += OnProgressChanged;
-		_progressDialogParameters = new ProgressDialogParameters
-		{
-				Message = $"文字「{CharaDataViewModel.currentChara}」を読み込んでいます。。。",
-				Value = 0,
-				MaxValue = 100,
-				Unit = " %",
-				OnCancel = EventCallback.Factory.Create(this, CancelOperation),
-				Token = _cts.Token,
-		};
-		DialogService.Open<ProgressDialog>("データをダウンロードします", new Dictionary<string, object>
+    private void OnNaviClick(string goTo)
     {
-      {"parameters", _progressDialogParameters}
-    });
+        Navi.NavigateTo(goTo);
+    }
 
-		await InvokeAsync(StateHasChanged);
+    protected override void OnInitialized()
+    {
+        isLoading = true;
+    }
 
-		await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId);
+    private async Task OnSelectChange(CharaDataClass selectItem)
+    {
+        Console.WriteLine("作成中");
+        isThinLoading = true;
+        await InvokeAsync(StateHasChanged);
+        await CharaDataViewModel.MakeOverlayBitmapAsync();
+        isThinLoading = false;
+        await InvokeAsync(StateHasChanged);
+        Console.WriteLine("作成完了");
+    }
 
-		CharaDataViewModel.OverlayBmp = null;
-		isCharaLoading = false;
-		StateHasChanged(); // UI を手動で更新
-		CharaDataViewModel.ProgressChanged -= OnProgressChanged;
-		DialogService.Close();
-	}
-	private void OnProgressChanged(int value)
-	{
-		if (_progressDialogParameters == null) return;
-		_progressDialogParameters.Value = value;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
 
-		Console.WriteLine($"Page Progress : {value}");
+        try
+        {
+            if (!await SessionStorage.IsLoggedInAsync())
+            {
+                isLoading = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
 
-		// ダイアログを手動でリフレッシュ
-		DialogService.Refresh();
-	}
+            userId = await SessionStorage.GetUserIDAsync();
+
+            if (!await SessionStorage.IsSelectedProjectAsync())
+            {
+                isLoading = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            projectId = await SessionStorage.GetProjectIDAsync();
+
+            if (projectId != null)
+            {
+                await CharaDataViewModel.InitCharactersData((Guid)projectId);
+                await CharaDataViewModel.InitMaterialsData((Guid)projectId);
+            }
+
+            // アクセストークンを取得
+            accessToken = await TokenStorage.GetAccessTokenAsync();
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                Navi.NavigateTo("/auth");
+                return;
+                // throw new Exception("Access token not found. Please authenticate first.");
+            }
+
+            Console.WriteLine($"文字個数:{CharaDataViewModel._selectingItemsRepository.Characters.Count}");
+
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (JSDisconnectedException)
+        {
+            Console.WriteLine("JavaScript interop failed due to disconnected circuit.");
+        }
+    }
+
+    private async Task OnCharaSelected(string? _selectedChara)
+    {
+        if (_selectedChara == null) return;
+        if (accessToken == null) return;
+        selectedChara = _selectedChara;
+        stdLoading = true;
+        strokeLoading = true;
+        await InvokeAsync(StateHasChanged);
+        await CharaDataViewModel.GetStandardData(accessToken, selectedChara);
+        standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
+        stdLoading = false;
+        await InvokeAsync(StateHasChanged);
+        await CharaDataViewModel.GetStrokeData(accessToken, selectedChara);
+        strokeImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StrokeBmp);
+        strokeLoading = false;
+        await InvokeAsync(StateHasChanged);
+
+        if (!CharaDataViewModel.SelectChara(selectedChara)) return;
+
+        isCharaLoading = true;
+
+        await InvokeAsync(StateHasChanged);
+        await RefreshCharaList();
+
+    }
+
+    private void CancelOperation()
+    {
+        Console.WriteLine("キャンセルしました");
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+    }
+    private async Task OnMaterialChanged(string newValue)
+    {
+        CharaDataViewModel.ClearViewCharaData();
+        selectedMaterial = newValue;
+        if (!CharaDataViewModel.SelectMaterial(selectedMaterial)) return;
+
+        isCharaLoading = true;
+        await RefreshCharaList();
+    }
+
+    private async Task RefreshCharaList()
+    {
+        if (string.IsNullOrEmpty(accessToken)) return;
+        if (projectId == null) return;
+        _cts = new CancellationTokenSource();
+        CharaDataViewModel.ProgressChanged += OnProgressChanged;
+        _progressDialogParameters = new ProgressDialogParameters
+            {
+                Message = $"文字「{CharaDataViewModel.currentChara}」を読み込んでいます。。。",
+                Value = 0,
+                MaxValue = 100,
+                Unit = " %",
+                OnCancel = EventCallback.Factory.Create(this, CancelOperation),
+                Token = _cts.Token,
+            };
+        DialogService.Open<ProgressDialog>("データをダウンロードします", new Dictionary<string, object>
+            {
+              {"parameters", _progressDialogParameters}
+            });
+
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("キャンセルされました");
+            // 通知を表示
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "ダウンロード キャンセル",
+                    Detail = $"個別文字のダウンロードをキャンセルしました。",
+                    Duration = 2000
+                }
+            );
+        }
+        finally
+        {
+            CharaDataViewModel.OverlayBmp = null;
+            isCharaLoading = false;
+            StateHasChanged(); // UI を手動で更新
+            CharaDataViewModel.ProgressChanged -= OnProgressChanged;
+            DialogService.Close();
+            _cts.Dispose();
+            // 通知を表示
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "ダウンロード完了",
+                    Detail = $"個別文字「{CharaDataViewModel.currentChara}」をダウンロードしました。",
+                    Duration = 2000
+                }
+            );
+        }
+    }
+    private void OnProgressChanged(int value)
+    {
+        if (_progressDialogParameters == null) return;
+        _progressDialogParameters.Value = value;
+
+        Console.WriteLine($"Page Progress : {value}");
+
+        // ダイアログを手動でリフレッシュ
+        DialogService.Refresh();
+    }
 }

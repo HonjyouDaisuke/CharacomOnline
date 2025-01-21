@@ -8,6 +8,7 @@
 @inject NavigationManager NavigationManager
 @inject SessionStorageService SessionStorage
 @inject UsersViewModel UserViewModel
+@inject AppState AppState
 
 <h3>ログイン処理中...</h3>
 
@@ -56,6 +57,9 @@
 
             Console.WriteLine($"ログイン成功: {session.User.Email}");
             Console.WriteLine($"ユーザの権限：{UserViewModel.GetCurrentUserRole()}");
+            AppState.UserName = UserViewModel.GetUserName();
+            AppState.UserPictureUrl = UserViewModel.GetUserPicture();
+            AppState.UserRole = UserViewModel.GetCurrentUserRole();
             NavigationManager.NavigateTo("/");
         }
         catch (Exception ex)

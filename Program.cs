@@ -64,6 +64,7 @@ builder.Services.AddSingleton<Supabase.Client>(_ =>
 });
 
 builder.Services.AddScoped<SupabaseService>();
+builder.Services.AddScoped<AppState>();
 builder.Services.AddScoped<StorageService>();
 builder.Services.AddScoped<ImagesTableService>();
 builder.Services.AddScoped<NotificationService>();
