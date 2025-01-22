@@ -121,7 +121,7 @@
 				if (result is UsersTable updateUser)
 				{
 					Console.WriteLine($"updateUser = {updateUser.ToString()}");
-					await UsersViewModel.UpdateUserAsync(updateUser);
+					await UsersViewModel.UpdateCurrentUserAsync(updateUser);
 				}
 				else
 				{

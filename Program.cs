@@ -1,6 +1,5 @@
 using Blazored.LocalStorage;
 using CharacomOnline;
-using CharacomOnline.Data;
 using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
@@ -13,7 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddScoped<Radzen.ThemeService>();
 builder.Logging.SetMinimumLevel(LogLevel.Debug); // ログレベルを指定
 builder.Logging.AddConsole(); // コンソールに出力するための設定
@@ -30,8 +28,8 @@ builder.Configuration.AddJsonFile(
 );
 
 // Azure App Configurationを追加
-var appConfig = Environment.GetEnvironmentVariable("ASPNETCORE_APPCONFIG")
-                ?? builder.Configuration["APPCONFIG"]; // 環境変数が優先
+var appConfig =
+  Environment.GetEnvironmentVariable("ASPNETCORE_APPCONFIG") ?? builder.Configuration["APPCONFIG"]; // 環境変数が優先
 if (string.IsNullOrEmpty(appConfig))
 {
   Console.WriteLine("Azure App Configuration connection string is missing.");
@@ -41,11 +39,13 @@ else
   Console.WriteLine("Using Azure App Configuration connection.");
   builder.Configuration.AddAzureAppConfiguration(options =>
   {
-    options.Connect(appConfig)
-           .Select(KeyFilter.Any, builder.Environment.EnvironmentName)
-           .Select(KeyFilter.Any);
+    options
+      .Connect(appConfig)
+      .Select(KeyFilter.Any, builder.Environment.EnvironmentName)
+      .Select(KeyFilter.Any);
   });
 }
+
 // Supabaseの接続情報をAzure App Configurationから取得
 var supabaseUrl = builder.Configuration["SUPABASE_URL"];
 var supabaseAnonKey = builder.Configuration["ANON_KEY"];
@@ -54,7 +54,9 @@ var boxClientSecret = builder.Configuration["BOX_CLIENT_SECRET"];
 
 if (string.IsNullOrEmpty(supabaseUrl) || string.IsNullOrEmpty(supabaseAnonKey))
 {
-  throw new InvalidOperationException("Supabase URL or AnonKey is missing from Azure App Configuration.");
+  throw new InvalidOperationException(
+    "Supabase URL or AnonKey is missing from Azure App Configuration."
+  );
 }
 
 builder.Services.AddSingleton<Supabase.Client>(_ =>
@@ -102,18 +104,22 @@ builder.Services.AddHttpClient<OAuthService>(client =>
 
 if (string.IsNullOrEmpty(boxClientId) || string.IsNullOrEmpty(boxClientSecret))
 {
-  throw new InvalidOperationException("boxClientId or boxClientSecret is missing from Azure App Configuration.");
+  throw new InvalidOperationException(
+    "boxClientId or boxClientSecret is missing from Azure App Configuration."
+  );
 }
 
-builder.Services.AddSingleton(sp =>
-    new OAuthService(
-        sp.GetRequiredService<HttpClient>(),
-        boxClientId,
-        boxClientSecret
-    )
-);
+builder.Services.AddSingleton(sp => new OAuthService(
+  sp.GetRequiredService<HttpClient>(),
+  boxClientId,
+  boxClientSecret
+));
 
-var appSettings = builder.Configuration.Get<AppSettings>() ?? throw new InvalidOperationException("AppSettings could not be loaded. Please check your configuration.");
+var appSettings =
+  builder.Configuration.Get<AppSettings>()
+  ?? throw new InvalidOperationException(
+    "AppSettings could not be loaded. Please check your configuration."
+  );
 
 builder.Services.AddSingleton(appSettings);
 

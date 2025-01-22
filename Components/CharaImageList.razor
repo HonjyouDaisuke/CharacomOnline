@@ -76,9 +76,6 @@ else
         clickedCard.IsSelected = !clickedCard.IsSelected;
         await InvokeAsync(StateHasChanged);
         await CardClick.InvokeAsync(clickedCard);
-        //Console.WriteLine($"親コンポーネントで受信: fileId={clickedCard.FileId}, selected={clickedCard.IsSelected}");
-        //await CharaDataViewModel.MakeOverlayBitmap();
-        //await InvokeAsync(StateHasChanged);
     }
 
     private void OnProgressChanged(int value)
@@ -93,38 +90,6 @@ else
         });
     }
 
-		/**
-    protected override async Task OnParametersSetAsync()
-    {
-        // パラメータが変更された際に再処理
-        if (string.IsNullOrEmpty(Chara) || string.IsNullOrEmpty(Material) || ProjectId == null)
-        {
-            return;
-        }
-
-        if (prevChara == Chara && prevMaterial == Material) return;
-
-        isLoading = true;
-        await InvokeAsync(StateHasChanged);
-
-        isLoading = false;
-
-        isProgressShow = true;
-        await InvokeAsync(StateHasChanged); // UIを更新
-
-        CharaDataViewModel.ProgressChanged += OnProgressChanged;
-
-        // データをロード
-        await CharaDataViewModel.AddViewCharaData(AccessToken, (Guid)ProjectId, Chara, Material);
-        prevChara = Chara;
-        prevMaterial = Material;
-        Dispose();
-
-        isProgressShow = false;
-        progress = 0;
-        await InvokeAsync(StateHasChanged); // UIを更新
-    }
-		**/
     public void Dispose()
     {
         Console.WriteLine("Disposing CharaImageList component.");

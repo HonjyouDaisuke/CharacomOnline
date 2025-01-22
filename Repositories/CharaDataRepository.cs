@@ -1,18 +1,17 @@
+using System.Collections.ObjectModel;
 using CharacomOnline.Entity;
 using CharacomOnline.ImageProcessing;
 using CharacomOnline.Service;
 using SkiaSharp;
-using System.Collections.ObjectModel;
 
 namespace CharacomOnline.Repositories;
 
 public class CharaDataRepository
 {
-  private readonly List<CharaDataClass> targets = new();
   public List<CharaDataClass> viewCharaData = new();
   private readonly object _viewCharaDataLock = new();
   public ObservableCollection<CharaDataClass> Appraisals { get; set; } =
-      new ObservableCollection<CharaDataClass>();
+    new ObservableCollection<CharaDataClass>();
   public SKBitmap? StandardBmp { get; set; }
   public SKBitmap? StandardThinBmp { get; set; }
   public SKBitmap? StrokeBmp { get; set; }
@@ -30,7 +29,8 @@ public class CharaDataRepository
 
   public async Task AddViewCharaDataAsync(CharaDataClass newItem)
   {
-    if (newItem == null) return;
+    if (newItem == null)
+      return;
 
     await Task.Run(() =>
     {
@@ -51,16 +51,18 @@ public class CharaDataRepository
 
   public async Task AddAppraisalsAsync(List<CharaDataClass>? data)
   {
-    if (data == null) return;
+    if (data == null)
+      return;
 
     await Task.Run(() =>
     {
       foreach (var item in data)
       {
-        if (item == null) continue;
+        if (item == null)
+          continue;
         lock (Appraisals)
         {
-          Appraisals.Add(item); // ƒXƒŒƒbƒhƒZ[ƒt‚É‘€ì
+          Appraisals.Add(item); // ï¿½Xï¿½ï¿½ï¿½bï¿½hï¿½Zï¿½[ï¿½tï¿½É‘ï¿½ï¿½ï¿½
         }
       }
     });
@@ -74,7 +76,8 @@ public class CharaDataRepository
   public void AddStandardBmp(SKBitmap? standardBmp)
   {
     StandardBmp = standardBmp;
-    if (StandardBmp == null) return;
+    if (StandardBmp == null)
+      return;
     var resized = ImageEffectService.ResizeBitmap(StandardBmp, 160, 160);
     var binary = ImageEffectService.GetBinaryBitmap(resized);
     ThinningProcess thin = new ThinningProcess(binary);

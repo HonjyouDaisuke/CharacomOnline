@@ -1,0 +1,49 @@
+@using CharacomOnline.Entity
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Enums
+@inject UsersViewModel UsersViewModel
+@namespace CharacomOnline.Components
+
+<RadzenDataGrid 
+TItem="UsersTable" 
+Data="@Users" 
+RowSelect="@OnRowSelected" 
+SelectionMode="DataGridSelectionMode.Single" 
+PagerPosition="PagerPosition.TopAndBottom"
+AllowRowSelectOnRowClick="false"
+AllowPaging="true">
+	<Columns>
+		<RadzenDataGridColumn Width="55px" Property="PictureUrl" Title="#">
+			<Template Context="data">
+				<RadzenImage path="@data.PictureUrl" Style="width: 30px; height: 30px;" class="rz-border-radius-2 rz-me-2" />
+			</Template>
+		</RadzenDataGridColumn>
+		<RadzenDataGridColumn Property="Name" Title="名前" />
+		<RadzenDataGridColumn Property="Email" Title="メールアドレス" />
+		<RadzenDataGridColumn Property="UserRole" Title="権限">
+			<Template Context="data">
+				<RadzenDropDown @bind-Value="data.UserRole" Data="@roleStrings" />
+			</Template>
+		</RadzenDataGridColumn>
+	</Columns>
+</RadzenDataGrid>
+
+@code {
+	[Parameter]
+	public List<UsersTable> Users { get; set; }
+
+	private List<string> roleStrings = new();
+
+	private string? selectedRoleString;
+
+	protected override void OnInitialized()
+	{
+		roleStrings = UserRoleTypeHelper.GetAllStrings().ToList();
+	}
+
+	private void OnRowSelected()
+	{
+
+	}
+}
+	
