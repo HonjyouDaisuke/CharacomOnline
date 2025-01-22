@@ -111,7 +111,7 @@
 		switch(menuItemType)
 		{
 			case ProfileMenuItemType.EditProfile :
-				UsersTable? usersTable = UsersViewModel.GetUsersTable();
+				UsersTable? usersTable = UsersViewModel.GetCurrentUserInfo();
 				if (usersTable == null) break;
 				var result = await DialogService.OpenAsync<EditUserProfileDialog>("ユーザ情報の編集", new Dictionary<string, object>
                 {

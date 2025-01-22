@@ -9,6 +9,7 @@ public class AppState
   private string? _userName;
   private string? _userPictureUrl;
   private string? _userRole;
+  private Guid? _userId;
 
   public string? CurrentProjectName
   {
@@ -32,6 +33,19 @@ public class AppState
       {
         _currentProjectId = value;
         OnPropertyChanged(nameof(CurrentProjectId));
+      }
+    }
+  }
+
+  public Guid? UserId
+  {
+    get => _userId;
+    set
+    {
+      if (_userId != value)
+      {
+        _userId = value;
+        OnPropertyChanged(nameof(_userId));
       }
     }
   }

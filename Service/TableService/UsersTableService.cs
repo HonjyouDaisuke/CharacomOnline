@@ -33,6 +33,32 @@ public class UsersTableService(Client supabaseClient)
     }
   }
 
+  public async Task UpdateUserRoleAsync(Guid userId, string newRole)
+  {
+    try
+    {
+      var response = await _supabaseClient
+        .From<UsersTable>() // 更新するテーブル
+        .Where(x => x.Id == userId) // 条件を LINQ の形で指定
+        .Set(x => x.UserRole, newRole)
+        .Update();
+
+      // レスポンスを確認
+      if (response != null && response.Models.Count > 0)
+      {
+        Console.WriteLine("ユーザー情報を更新しました。");
+      }
+      else
+      {
+        Console.WriteLine("更新に失敗しました。");
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
+  }
+
   public async Task<UsersTable?> GetUserAsync(Guid userId)
   {
     try

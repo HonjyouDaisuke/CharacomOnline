@@ -60,6 +60,7 @@
             AppState.UserName = UserViewModel.GetUserName();
             AppState.UserPictureUrl = UserViewModel.GetUserPicture();
             AppState.UserRole = UserViewModel.GetCurrentUserRole();
+            AppState.UserId = UserViewModel.GetCurrentUserInfo().Id;
             NavigationManager.NavigateTo("/");
         }
         catch (Exception ex)

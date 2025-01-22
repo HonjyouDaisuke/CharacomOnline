@@ -7,7 +7,6 @@
 <RadzenDataGrid 
 TItem="UsersTable" 
 Data="@Users" 
-RowSelect="@OnRowSelected" 
 SelectionMode="DataGridSelectionMode.Single" 
 PagerPosition="PagerPosition.TopAndBottom"
 AllowRowSelectOnRowClick="false"
@@ -22,7 +21,7 @@ AllowPaging="true">
 		<RadzenDataGridColumn Property="Email" Title="メールアドレス" />
 		<RadzenDataGridColumn Property="UserRole" Title="権限">
 			<Template Context="data">
-				<RadzenDropDown @bind-Value="data.UserRole" Data="@roleStrings" />
+				<RadzenDropDown @bind-Value="data.UserRole" Data="@roleStrings" Change="@(args =>OnRoleChanged.InvokeAsync((data.Id, args.ToString())))" />
 			</Template>
 		</RadzenDataGridColumn>
 	</Columns>
@@ -31,6 +30,8 @@ AllowPaging="true">
 @code {
 	[Parameter]
 	public List<UsersTable> Users { get; set; }
+	[Parameter]
+	public EventCallback<(Guid UserId, string? NewRole)> OnRoleChanged { get; set; }
 
 	private List<string> roleStrings = new();
 
@@ -39,11 +40,6 @@ AllowPaging="true">
 	protected override void OnInitialized()
 	{
 		roleStrings = UserRoleTypeHelper.GetAllStrings().ToList();
-	}
-
-	private void OnRowSelected()
-	{
-
 	}
 }
 	

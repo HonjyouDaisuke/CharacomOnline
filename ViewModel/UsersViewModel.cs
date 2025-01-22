@@ -12,8 +12,7 @@ public class UsersViewModel
   public UsersViewModel(UserRepository _userRepository, UsersTableService _usersTableService)
   {
     userRepository = _userRepository ?? throw new ArgumentNullException(nameof(_userRepository));
-    usersTableService =
-      _usersTableService ?? throw new ArgumentNullException(nameof(_usersTableService));
+    usersTableService = _usersTableService ?? throw new ArgumentNullException(nameof(_usersTableService));
   }
 
   public async Task SetCurrentUser(Guid userId)
@@ -40,7 +39,7 @@ public class UsersViewModel
     return userRepository.CurrentUser().Name;
   }
 
-  public UsersTable? GetUsersTable()
+  public UsersTable? GetCurrentUserInfo()
   {
     return userRepository.CurrentUser();
   }
@@ -70,5 +69,12 @@ public class UsersViewModel
   public List<UsersTable> GetAllUserList()
   {
     return userRepository.GetAllUser();
+  }
+
+  public async Task UpdateUserRoleAsync(Guid userId, string role)
+  {
+    var response = userRepository.UpdateUserRole(userId, role);
+    if (response == false) return;
+    await usersTableService.UpdateUserRoleAsync(userId, role);
   }
 }
