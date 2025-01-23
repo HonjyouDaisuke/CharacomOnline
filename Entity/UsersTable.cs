@@ -3,7 +3,6 @@ using Supabase.Postgrest.Models;
 
 namespace CharacomOnline.Entity;
 
-
 [Table("users")] // テーブル名
 public class UsersTable : BaseModel
 {

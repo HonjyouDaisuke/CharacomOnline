@@ -8,6 +8,7 @@ public enum ProfileMenuItemType
   DBLogin,
   BoxLogout,
   BoxLogin,
+  UserRole,
   Exit,
 }
 
@@ -22,6 +23,7 @@ public class ProfileMenuItemTypeHelper
       { ProfileMenuItemType.DBLogin, "CharacomDBにログイン" },
       { ProfileMenuItemType.BoxLogout, "Boxからログアウト" },
       { ProfileMenuItemType.BoxLogin, "Boxにログイン" },
+      { ProfileMenuItemType.UserRole, "ユーザー権限" },
       { ProfileMenuItemType.Exit, "アプリを終了" },
     };
 

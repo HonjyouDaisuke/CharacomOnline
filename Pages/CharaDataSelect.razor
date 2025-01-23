@@ -9,112 +9,123 @@
 @inject TokenStorage TokenStorage
 @inject NotificationService NotificationService
 @inject DialogService DialogService
+@inject AppState AppState
 
 @if (isLoading)
 {
-    <RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
-        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-    </RadzenStack>
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
 }
 else if (userId == null)
 {
-    <SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
-                           ErrorMessage="ログインできていません。ログインしてください"
-                           LinkMsg="ログインへ"
-                           LinkClick=" () => OnNaviClick(loginUrl)" />
+	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
+	ErrorMessage="ログインできていません。ログインしてください"
+	LinkMsg="ログインへ"
+	LinkClick=" () => OnNaviClick(loginUrl)" />
 }
 else if (projectId == null)
 {
-    <SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
-                           ErrorMessage="プロジェクトを選択してください。"
-                           LinkMsg="プロジェクト選択へ"
-                           LinkClick=" () => OnNaviClick(projectsUrl)" />
+	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
+	ErrorMessage="プロジェクトを選択してください。"
+	LinkMsg="プロジェクト選択へ"
+	LinkClick=" () => OnNaviClick(projectsUrl)" />
 
 }
 else
 {
-    <RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
-        <RadzenSplitterPane Size="35%" Resizable="true">
-            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
-                <CharaImageCard ImageData="@standardImage" Height="160" Width="160" IsLoading="@stdLoading" />
-                <CharaImageCard IsLoading="@isThinLoading" ImageData="@ImageEffectService.GetBinaryImageData(CharaDataViewModel.OverlayBmp)" Height="160" Width="160" />
-                <CharaImageCard ImageData="@strokeImage" Height="160" Width="160" IsLoading="@strokeLoading" />
-            </RadzenStack>
-        </RadzenSplitterPane>
-        <RadzenSplitterPane Size="65%" Resizable="true">
-            <RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
-                <RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
-                    <CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" OnCharacterSelected="OnCharaSelected" />
-                </RadzenSplitterPane>
-                <RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
-                    <RadzenStack style="height: 100%;">
-                        <RadzenSelectBar TValue="string" Value="@selectedMaterial" Change="@OnMaterialChanged">
-                            <Items>
-                                @foreach (var materialName in CharaDataViewModel._selectingItemsRepository.Materials)
-                                {
-                                    <RadzenSelectBarItem Text="@materialName" Value="@materialName" />
-                                }
-                            </Items>
-                        </RadzenSelectBar>
-                        @if (string.IsNullOrEmpty(selectedMaterial) || string.IsNullOrEmpty(selectedChara))
-                        {
-                            <RadzenText>資料を上のボックスから選び、文字を左のボタンで選択してください。</RadzenText>
-                        }
-                        else
-                        {
-                            <CharaImageList IsLoading="@isCharaLoading" Chara="@selectedChara" Material="@selectedMaterial" ProjectId="@projectId" CardClick="@OnSelectChange" AccessToken="@accessToken" />
-                        }
-                    </RadzenStack>
-                </RadzenSplitterPane>
-            </RadzenSplitter>
-        </RadzenSplitterPane>
-    </RadzenSplitter>
+	<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
+		<RadzenSplitterPane Size="35%" Resizable="true">
+			<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
+				<CharaImageCard ImageData="@standardImage" Height="160" Width="160" IsLoading="@stdLoading" />
+				<CharaImageCard IsLoading="@isThinLoading" ImageData="@ImageEffectService.GetBinaryImageData(CharaDataViewModel.OverlayBmp)" Height="160" Width="160" />
+				<CharaImageCard ImageData="@strokeImage" Height="160" Width="160" IsLoading="@strokeLoading" />
+			</RadzenStack>
+		</RadzenSplitterPane>
+		<RadzenSplitterPane Size="65%" Resizable="true">
+			<RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
+				<RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
+					<CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" OnCharacterSelected="OnCharaSelected" />
+				</RadzenSplitterPane>
+				<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
+					<RadzenStack style="height: 100%;">
+						<RadzenSelectBar TValue="string" Value="@selectedMaterial" Change="@OnMaterialChanged">
+							<Items>
+								@foreach (var materialName in CharaDataViewModel._selectingItemsRepository.Materials)
+								{
+									<RadzenSelectBarItem Text="@materialName" Value="@materialName" />
+								}
+							</Items>
+						</RadzenSelectBar>
+						@if (string.IsNullOrEmpty(selectedMaterial) || string.IsNullOrEmpty(selectedChara))
+						{
+							<RadzenText>資料を上のボックスから選び、文字を左のボタンで選択してください。</RadzenText>
+						}
+						else
+						{
+							<CharaImageList IsLoading="@isCharaLoading" Chara="@selectedChara" Material="@selectedMaterial" ProjectId="@projectId" CardClick="@OnSelectChange" AccessToken="@accessToken" />
+						}
+					</RadzenStack>
+				</RadzenSplitterPane>
+			</RadzenSplitter>
+		</RadzenSplitterPane>
+	</RadzenSplitter>
 }
 <style>
-    .full-height-splitter {
-        height: calc(100vh - 3.5rem - 3.5rem - 3.5rem - 5px); /* 縦方向の高さを画面全体に設定 */
-    }
+	.full-height-splitter {
+	height: calc(100vh - 3.5rem - 3.5rem - 3.5rem - 5px); /* 縦方向の高さを画面全体に設定 */
+	}
 
-    .pane-content {
-        padding: 10px;
-        height: 100%;
-    }
+	.pane-content {
+	padding: 10px;
+	height: 100%;
+	}
 
 </style>
 @code {
-    private bool isLoading = true;
-    private Guid? userId;
-    private Guid? projectId;
-    private string loginUrl = "./login";
-    private string projectsUrl = "./projects";
-    private string selectedChara = "";
-    private string selectedMaterial = "";
-    private string? accessToken = "";
-    private string? standardImage;
-    private string? strokeImage;
-    private bool isThinLoading = false;
+	private bool isLoading = true;
+	private Guid? userId;
+	private Guid? projectId;
+	private string loginUrl = "./login";
+	private string projectsUrl = "./projects";
+	private string selectedChara = "";
+	private string selectedMaterial = "";
+	private string? accessToken = "";
+	private string? standardImage;
+	private string? strokeImage;
+	private bool isThinLoading = false;
 
-    private bool stdLoading = false;
-    private bool strokeLoading = false;
-    private bool isCharaLoading = false;
-    private CancellationTokenSource _cts = new CancellationTokenSource();
+	private bool stdLoading = false;
+	private bool strokeLoading = false;
+	private bool isCharaLoading = false;
+	private CancellationTokenSource _cts = new CancellationTokenSource();
 
-    private ProgressDialogParameters _progressDialogParameters = new ();
+	private ProgressDialogParameters _progressDialogParameters = new ();
 
-    private void OnNaviClick(string goTo)
-    {
-        Navi.NavigateTo(goTo);
-    }
+	private void OnNaviClick(string goTo)
+	{
+		Navi.NavigateTo(goTo);
+	}
 
-    protected override void OnInitialized()
-    {
-        isLoading = true;
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		isLoading = true;
+		await CharaDataViewModel.ClearViewCharaData();
+		selectedChara = "";
+		selectedMaterial = "";
+	}
 
-    private async Task OnSelectChange(CharaDataClass selectItem)
-    {
-        Console.WriteLine("作成中");
-        isThinLoading = true;
+	private async Task OnSelectChange(CharaDataClass selectItem)
+	{
+		Console.WriteLine("作成中");
+
+		if (AppState.UserId != null)
+		{
+			await CharaDataViewModel.SaveSelectChangeAsync(selectItem.Id, selectItem.IsSelected, (Guid)AppState.UserId);
+		} else {
+			Console.WriteLine("userIdがNullです");
+		}
+		isThinLoading = true;
         await InvokeAsync(StateHasChanged);
         await CharaDataViewModel.MakeOverlayBitmapAsync();
         isThinLoading = false;
@@ -207,7 +218,7 @@ else
     }
     private async Task OnMaterialChanged(string newValue)
     {
-        CharaDataViewModel.ClearViewCharaData();
+        await CharaDataViewModel.ClearViewCharaData();
         selectedMaterial = newValue;
         if (!CharaDataViewModel.SelectMaterial(selectedMaterial)) return;
 
@@ -256,7 +267,7 @@ else
         }
         finally
         {
-            CharaDataViewModel.OverlayBmp = null;
+            // CharaDataViewModel.OverlayBmp = null;
             isCharaLoading = false;
             StateHasChanged(); // UI を手動で更新
             CharaDataViewModel.ProgressChanged -= OnProgressChanged;

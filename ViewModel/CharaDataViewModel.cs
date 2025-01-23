@@ -69,7 +69,14 @@ public class CharaDataViewModel(
         SKColors.Red
       );
       OverlayBmp = ImageEffectService.OverlayBinaryImages(OverlayBmp, Standard);
+      Console.WriteLine("í«â¡äÆóπÇ≈Ç∑ÅB");
     });
+  }
+
+  public void ClearOverlayBitmap()
+  {
+    OverlayBmp = new SKBitmap(160, 160);
+    OverlayBmp = ImageEffectService.WhiteFilledBitmap(OverlayBmp);
   }
 
   public bool SelectChara(string chara)
@@ -146,7 +153,11 @@ public class CharaDataViewModel(
     await _charaDataTableService.InitMaterialsData(projectId);
   }
 
-  public async Task GetViewCharaDataAsync(string accessToken, Guid projectId, CancellationToken token)
+  public async Task GetViewCharaDataAsync(
+    string accessToken,
+    Guid projectId,
+    CancellationToken token
+  )
   {
     if (string.IsNullOrEmpty(currentChara) || string.IsNullOrEmpty(currentMaterial))
       return;
@@ -162,11 +173,13 @@ public class CharaDataViewModel(
         Console.WriteLine($"progress:{progress}");
       }
     );
+    await MakeOverlayBitmapAsync();
   }
 
   public async Task ClearViewCharaData()
   {
     await _charaDataRepository.ClearViewCharaDataAsync();
+    ClearOverlayBitmap();
   }
 
   public async Task GetStandardData(string accessToken, string charaName)
@@ -197,5 +210,10 @@ public class CharaDataViewModel(
     if (bmp == null)
       return;
     _charaDataRepository.AddStrokeBmp(bmp);
+  }
+
+  public async Task SaveSelectChangeAsync(Guid charaId, bool isSelected, Guid currentUserId)
+  {
+    await _charaDataTableService.UpdateCharaSelectChangeAsync(charaId, isSelected, currentUserId);
   }
 }

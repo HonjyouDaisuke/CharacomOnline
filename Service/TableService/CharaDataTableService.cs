@@ -1,9 +1,9 @@
-﻿using CharacomOnline.Entity;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using CharacomOnline.Entity;
 using CharacomOnline.ImageProcessing;
 using CharacomOnline.Repositories;
 using Supabase;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -327,8 +327,10 @@ public class CharaDataTableService(
     string accessToken
   )
   {
-    if (item.Id == null) return;
-    if (item.FileId == null) return;
+    if (item.Id == null)
+      return;
+    if (item.FileId == null)
+      return;
 
     // 必要なデータを準備
     CharaDataClass newItem =
@@ -338,10 +340,13 @@ public class CharaDataTableService(
         FileId = item.FileId,
         CharaName = charaName,
         MaterialName = materialName,
+        IsSelected = item.IsSelected,
         SrcImage = await _boxFileService.DownloadFileAsSKBitmapAsync(item.FileId, accessToken),
       };
 
-    if (newItem.SrcImage == null) return;
+    if (newItem.SrcImage == null)
+      return;
+    Console.WriteLine($"fileId:{item.FileId} isSelected:{item.IsSelected}");
 
     // サムネイルと細線画像を生成
     newItem.Thumbnail = ImageEffectService.GetBinaryImageData(
@@ -364,5 +369,57 @@ public class CharaDataTableService(
     await _charaDataRepository.AddViewCharaDataAsync(newItem);
 
     Console.WriteLine($"データを挿入しました: {newItem.Id}");
+  }
+
+  public async Task UpdateCharaSelectChangeAsync(Guid charaId, bool isSelected, Guid userId)
+  {
+    try
+    {
+      Console.WriteLine($"これからデータを埋め込みます。userId={userId} selected={isSelected}");
+      var checkExistence = await _supabaseClient
+        .From<CharaDataClass>()
+        .Where(x => x.Id == charaId)
+        .Single();
+
+      if (checkExistence == null)
+      {
+        Console.WriteLine($"該当するデータが見つかりませんでした: charaId={charaId}");
+        return;
+      }
+
+      var response = await _supabaseClient
+        .From<CharaDataClass>() // 更新するテーブル
+        .Where(x => x.Id == charaId) // 条件を LINQ の形で指定
+        .Set(x => x.IsSelected, isSelected) // IsSelected を更新
+        .Set(x => x.UpdatedBy, userId) // UpdatedBy を更新
+        .Set(x => x.UpdatedAt, DateTime.UtcNow) // UpdatedAt を更新
+        .Update();
+
+      Console.WriteLine($"Response: {response.ToString()}");
+      if (response.Models.Count > 0)
+      {
+        foreach (var model in response.Models)
+        {
+          Console.WriteLine($"Updated record: {model.Id}");
+        }
+      }
+      else
+      {
+        Console.WriteLine("更新されたデータがありません。");
+      }
+      // レスポンスを確認
+      if (response != null && response.Models.Count > 0)
+      {
+        Console.WriteLine($"checkを更新しました:{charaId}");
+      }
+      else
+      {
+        Console.WriteLine($"更新に失敗しました。{charaId}");
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
   }
 }
