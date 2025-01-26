@@ -24,4 +24,41 @@ public class UserProjectsTableService(Client supabaseClient)
       Console.WriteLine($"ProjectTitle {newUserProjects.UserId} added successfully.");
     }
   }
+
+  public async Task<Guid?> FetchUserProjectRoleAsync(Guid projectId, Guid userId)
+  {
+    try
+    {
+      var response = await _supabaseClient
+        .From<UserProjectsTable>() // 更新するテーブル
+        .Where(x => x.ProjectId == projectId && x.UserId == userId)  // 条件を LINQ の形で指定
+        .Single();
+
+      return response.RoleId;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+      return null;
+    }
+  }
+  public async Task<List<Guid>?> FetchProjectUsers(Guid projectId)
+  {
+    try
+    {
+      var response = await _supabaseClient
+        .From<UserProjectsTable>() // 更新するテーブル
+        .Where(x => x.ProjectId == projectId) // 条件を LINQ の形で指定
+        .Select("user_id") // 必要なフィールドを指定
+        .Get();
+
+      var result = response.Models.Select(x => x.UserId).ToList();
+      return result;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+      return null;
+    }
+  }
 }

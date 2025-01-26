@@ -1,9 +1,9 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using CharacomOnline.Entity;
+﻿using CharacomOnline.Entity;
 using CharacomOnline.ImageProcessing;
 using CharacomOnline.Repositories;
 using Supabase;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -371,11 +371,45 @@ public class CharaDataTableService(
     Console.WriteLine($"データを挿入しました: {newItem.Id}");
   }
 
+  public async Task<int> GetCharaDataCountAsync(Guid projectId)
+  {
+    try
+    {
+      var response = await _supabaseClient
+        .From<CharaDataTable>()
+        .Where(x => x.ProjectId == projectId)
+        .Count(Supabase.Postgrest.Constants.CountType.Exact);
+
+      return response;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+      return 0;
+    }
+  }
+
+  public async Task<int> GetSelectedCharaCountAsync(Guid projectId)
+  {
+    try
+    {
+      var response = await _supabaseClient
+        .From<CharaDataTable>()
+        .Where(x => x.ProjectId == projectId && x.IsSelected == true)
+        .Count(Supabase.Postgrest.Constants.CountType.Exact);
+
+      return response;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+      return 0;
+    }
+  }
   public async Task UpdateCharaSelectChangeAsync(Guid charaId, bool isSelected, Guid userId)
   {
     try
     {
-      Console.WriteLine($"これからデータを埋め込みます。userId={userId} selected={isSelected}");
       var checkExistence = await _supabaseClient
         .From<CharaDataClass>()
         .Where(x => x.Id == charaId)

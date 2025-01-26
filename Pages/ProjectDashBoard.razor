@@ -1,0 +1,94 @@
+﻿@page "/project-dashboard"
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Entity
+@using CharacomOnline.Service
+@using CharacomOnline.Components
+@inject ProjectsViewModel ProjectsViewModel
+@inject NavigationManager Navi
+@inject AppState AppState
+@inject TokenStorage TokenStorage
+
+<h3>プロジェクトの管理</h3>
+@if (userId == null)
+{
+	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
+	ErrorMessage="ログインできていません。ログインしてください"
+	LinkMsg="ログインへ"
+	LinkClick=" () => OnNaviClick(loginUrl)" />
+}
+else if (isProjectIdSelected == false)
+{
+	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
+	ErrorMessage="プロジェクトを選択してください。"
+	LinkMsg="プロジェクト選択へ"
+	LinkClick=" () => OnNaviClick(projectsUrl)" />
+
+}
+else if (isLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Gap="10">
+        <ProjectSummary ProjectName="@ProjectsViewModel.GetCurrentProjectName()" ProjectDescription="@projectDescription" CreatedUserName="@createdUserName" CreatedAt="@createdAt"/>
+        <ProjectSummaryUser ProjectUsers="@users" />
+        <ProjectSummaryChart CharaDataCount="@charaDataCount" BoxFolderFiles="@boxFileCount" SelectedCount="@selectedCharaCount" />
+    </RadzenStack>
+}
+@code {
+    private Guid? projectId;
+    private string projectName = "テストプロジェクト";
+    private string projectDescription = "サンプル用です。";
+    private string createdUserName = "テスト太郎";
+    private string createdAt = "2025.01.25";
+
+    // データ数用
+    private int charaDataCount = 0;
+    private int boxFileCount = 0;
+    private int selectedCharaCount = 0;
+    private bool isProjectIdSelected = false;
+    private bool isLoading = true;
+    private Guid? userId;
+
+    private string loginUrl = "./login";
+    private string projectsUrl = "./projects";
+
+    private List<ProjectUsers> users = new();
+
+    private void OnNaviClick(string goTo)
+    {
+        Navi.NavigateTo(goTo);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        userId = AppState.UserId;
+        projectId = ProjectsViewModel.GetCurrentProjectId();
+        if (projectId == null)
+        {
+            return;
+        }
+        isProjectIdSelected = true;
+        await InvokeAsync(StateHasChanged);
+
+        await ProjectsViewModel.GetUsers();
+        users = ProjectsViewModel.GetProjectUsersInfo();
+
+        var accessToken = await TokenStorage.GetAccessTokenAsync();
+
+        charaDataCount = await ProjectsViewModel.GetCharaDataCount((Guid)projectId);
+        var folderId = ProjectsViewModel.GetCurrentProjectFolderId();
+        if (folderId != null && accessToken != null)
+        {
+            boxFileCount = await ProjectsViewModel.GetBoxFileCount(folderId, accessToken);
+        }
+
+        selectedCharaCount = await ProjectsViewModel.GetSelectedCharaDataCount((Guid)projectId);
+
+        isLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+}

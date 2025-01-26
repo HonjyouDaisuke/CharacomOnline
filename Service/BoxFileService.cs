@@ -1,9 +1,9 @@
-﻿using System.Net;
-using System.Net.Http.Headers;
-using CharacomOnline.Entity;
+﻿using CharacomOnline.Entity;
 using Microsoft.AspNetCore.Components;
 using Newtonsoft.Json;
 using SkiaSharp;
+using System.Net;
+using System.Net.Http.Headers;
 
 namespace CharacomOnline.Service;
 
@@ -132,6 +132,7 @@ public class BoxFileService
     response.EnsureSuccessStatusCode();
 
     var responseContent = await response.Content.ReadAsStringAsync();
+
     var folderResponse = JsonConvert.DeserializeObject<BoxFolderDetails>(responseContent);
     if (folderResponse == null)
       return 0;

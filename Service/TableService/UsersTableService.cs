@@ -86,6 +86,38 @@ public class UsersTableService(Client supabaseClient)
     }
   }
 
+  public async Task<ProjectUsers?> GetProjectUserAsync(Guid userId)
+  {
+    try
+    {
+      // Supabaseクエリで条件を指定してデータを取得
+      var response = await _supabaseClient
+        .From<UsersTable>() // テーブルを指定
+        .Select("id, user_name, email, picture_url, user_role") // 必要なカラムのみ選択
+        .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, userId.ToString()) // フィルターを適用
+        .Single();
+
+      //UsersTable user = new UsersTable();
+      if (response == null)
+      {
+        Console.WriteLine($"characomユーザー情報取り込み失敗 userId:{userId}");
+        return null;
+      }
+      ProjectUsers projectUser = new ProjectUsers();
+      projectUser.Id = userId;
+      projectUser.PictureUrl = response.PictureUrl;
+      projectUser.Name = response.Name;
+      projectUser.Email = response.Email;
+
+      return projectUser; // 取得したデータの ProjectTitle を返す
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error fetching project title: {ex.Message}");
+      return null; // エラー時は null を返す
+    }
+  }
+
   public async Task<List<UsersTable>> FetchAllUsersAsync()
   {
     try

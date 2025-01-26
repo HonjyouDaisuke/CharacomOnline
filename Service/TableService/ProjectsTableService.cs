@@ -69,6 +69,27 @@ public class ProjectsTableService(Client supabaseClient)
       return null; // エラー時は null を返す
     }
   }
+
+  public async Task<string?> GetProjectCharaFolderId(Guid projectId)
+  {
+    try
+    {
+      // Supabaseクエリで条件を指定してデータを取得
+      var response = await _supabaseClient
+          .From<ProjectsTable>() // テーブルを指定
+          .Select("chara_folder_id") // 必要なカラムのみ選択
+          .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, projectId.ToString()) // フィルターを適用
+          .Single();
+
+      return response?.CharaFolderId; // 取得したデータの ProjectTitle を返す
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error fetching project title: {ex.Message}");
+      return null; // エラー時は null を返す
+    }
+  }
+
   public async Task<List<ProjectViewData>?> FetchProjectsFromUserIdAsync(Guid userId)
   {
     List<ProjectViewData>? projectViewData = new List<ProjectViewData>();
