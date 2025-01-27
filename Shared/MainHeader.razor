@@ -2,7 +2,6 @@
 @using CharacomOnline.Components
 @using CharacomOnline.Enums
 @using CharacomOnline.ViewModel
-@using Radzen.Blazor.Rendering
 @using Blazored.LocalStorage
 
 @inject ILocalStorageService localStorage
@@ -13,7 +12,6 @@
 @inject ProjectsViewModel ProjectsViewModel
 @inject UsersViewModel UsersViewModel
 @inject AppState AppState
-
 
 <RadzenHeader>
 	<RadzenRow AlignItems="AlignItems.Center" Gap="1">
@@ -54,11 +52,29 @@
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
-		await SessionStorage.LoadAppStateAsync();
+		var session = SupabaseClient.Auth.CurrentSession;
+		if (session?.User != null)
+		{
+			Console.WriteLine($"Callback from Box -> supabaseUserId = {session.User.Id}");
+			if (Guid.TryParse(session.User.Id, out Guid guid))
+			{
+				await UsersViewModel.SetCurrentUser(guid);
+				Console.WriteLine($"Converted GUID: {guid}");
+				var user = UsersViewModel.GetCurrentUserInfo();
+				AppState.UserId = user.Id;
+				AppState.UserRole = user.UserRole;
+				AppState.UserName = user.Name;
+				AppState.UserPictureUrl = user.PictureUrl;
+				Console.WriteLine($" callback UserName = {user.Name}");
+			}
+			else
+			{
+				Console.WriteLine("Invalid GUID format.");
+			}
+
+		}
 		Console.WriteLine($"Header init currentUser = {AppState.UserName}");
 		
-		//if (!firstRender) return;
-		//Console.WriteLine($"avater= {userPictureUrl}");
 		userPictureUrl = UsersViewModel.GetUserPicture();
 		userName = UsersViewModel.GetUserName();
 		isBoxLogin = OAuthService.IsLogin();
@@ -102,13 +118,13 @@
 		}
 	}
 
-	protected override async Task OnInitializedAsync()
+	protected override void OnInitialized()
 	{
-		AppState.PropertyChanged += async (_, e) =>
+		AppState.PropertyChanged += (_, e) =>
 		{
 			if (e.PropertyName == nameof(AppState.CurrentProjectName) || e.PropertyName == nameof(AppState.UserName))
 			{
-				await InvokeAsync(StateHasChanged);
+				StateHasChanged();
 			}
 		};
 	}

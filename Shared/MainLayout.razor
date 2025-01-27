@@ -1,5 +1,8 @@
 ﻿@using CharacomOnline.Components
 @using CharacomOnline.Service
+@using Radzen
+@using Radzen.Blazor
+
 @inherits LayoutComponentBase
 @inject SessionStorageService SessionStorage
 @inject AppState AppState
@@ -22,23 +25,21 @@
 </RadzenLayout>
 
 @code {
-	private bool parentSidebarExpanded = true;
-	private bool _isLoaded = false;
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+    private bool parentSidebarExpanded = true;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            // SessionStorage から AppState を復元
-            var restoredState = await SessionStorage.LoadAppStateAsync();
+        if (!firstRender) return;
 
+        // SessionStorage から AppState を復元
+        var restoredState = await SessionStorage.LoadAppStateAsync();
+        if (string.IsNullOrEmpty(restoredState.UserId.ToString()))
+        {
             // AppState にデータを設定
             AppState.CurrentProjectId = restoredState.CurrentProjectId;
             AppState.UserId = restoredState.UserId;
             AppState.UserName = restoredState.UserName;
             AppState.UserRole = restoredState.UserRole;
             AppState.UserPictureUrl = restoredState.UserPictureUrl;
-
-            _isLoaded = true;
 
             // 再レンダリングをトリガー
             StateHasChanged();
