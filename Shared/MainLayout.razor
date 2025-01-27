@@ -1,5 +1,8 @@
 ﻿@using CharacomOnline.Components
+@using CharacomOnline.Service
 @inherits LayoutComponentBase
+@inject SessionStorageService SessionStorage
+@inject AppState AppState
 
 <PageTitle>CharacomOnline</PageTitle>
 <RadzenComponents @rendermode="InteractiveServer" />
@@ -20,4 +23,25 @@
 
 @code {
 	private bool parentSidebarExpanded = true;
+	private bool _isLoaded = false;
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // SessionStorage から AppState を復元
+            var restoredState = await SessionStorage.LoadAppStateAsync();
+
+            // AppState にデータを設定
+            AppState.CurrentProjectId = restoredState.CurrentProjectId;
+            AppState.UserId = restoredState.UserId;
+            AppState.UserName = restoredState.UserName;
+            AppState.UserRole = restoredState.UserRole;
+            AppState.UserPictureUrl = restoredState.UserPictureUrl;
+
+            _isLoaded = true;
+
+            // 再レンダリングをトリガー
+            StateHasChanged();
+        }
+    }
 }

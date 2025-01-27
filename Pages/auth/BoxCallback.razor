@@ -27,7 +27,7 @@
                 await TokenStorage.SaveTokenAsync(tokenResponse);
 
                 // 認証成功後のページにリダイレクト
-                Navigation.NavigateTo("/box");
+                Navigation.NavigateTo("/box", true);
             }
             catch (Exception ex)
             {

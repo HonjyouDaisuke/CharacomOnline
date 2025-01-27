@@ -33,17 +33,17 @@ else if (isLoading)
 else
 {
     <RadzenStack Gap="10">
-        <ProjectSummary ProjectName="@ProjectsViewModel.GetCurrentProjectName()" ProjectDescription="@projectDescription" CreatedUserName="@createdUserName" CreatedAt="@createdAt"/>
+        <ProjectSummary ProjectName="@projectName" ProjectDescription="@projectDescription" CreatedUserName="@createdUserName" CreatedAt="@createdAt"/>
         <ProjectSummaryUser ProjectUsers="@users" />
         <ProjectSummaryChart CharaDataCount="@charaDataCount" BoxFolderFiles="@boxFileCount" SelectedCount="@selectedCharaCount" />
     </RadzenStack>
 }
 @code {
     private Guid? projectId;
-    private string projectName = "テストプロジェクト";
-    private string projectDescription = "サンプル用です。";
-    private string createdUserName = "テスト太郎";
-    private string createdAt = "2025.01.25";
+    private string? projectName = "テストプロジェクト";
+    private string? projectDescription = "サンプル用です。";
+    private string? createdUserName = "テスト太郎";
+    private string? createdAt = "2025.01.25";
 
     // データ数用
     private int charaDataCount = 0;
@@ -71,16 +71,22 @@ else
         {
             return;
         }
+
         isProjectIdSelected = true;
         await InvokeAsync(StateHasChanged);
 
-        await ProjectsViewModel.GetUsers();
+        projectName = ProjectsViewModel.GetCurrentProjectName();
+    		projectDescription = ProjectsViewModel.GetCurrentProjectDescription();
+    		createdUserName = await ProjectsViewModel.GetCurrentProjectCreatedBy();
+    		createdAt = ProjectsViewModel.GetCurrentProjectCreatedAt()?.ToString("yyyy.MM.dd HH:mm");
+				
+				await ProjectsViewModel.GetUsers();
         users = ProjectsViewModel.GetProjectUsersInfo();
 
         var accessToken = await TokenStorage.GetAccessTokenAsync();
 
         charaDataCount = await ProjectsViewModel.GetCharaDataCount((Guid)projectId);
-        var folderId = ProjectsViewModel.GetCurrentProjectFolderId();
+        var folderId = ProjectsViewModel.GetCurrentProjectCharaFolderId();
         if (folderId != null && accessToken != null)
         {
             boxFileCount = await ProjectsViewModel.GetBoxFileCount(folderId, accessToken);

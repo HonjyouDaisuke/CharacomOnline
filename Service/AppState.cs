@@ -2,8 +2,9 @@
 
 namespace CharacomOnline.Service;
 
-public class AppState
+public class AppState : INotifyPropertyChanged
 {
+  private readonly SessionStorageService sessionStorage;
   private string? _currentProjectName;
   private Guid? _currentProjectId;
   private string? _userName;
@@ -68,7 +69,8 @@ public class AppState
     get => _userRole;
     set
     {
-      if (_userRole == value) return;
+      if (_userRole == value)
+        return;
       _userRole = value;
       OnPropertyChanged(nameof(UserRole));
     }
@@ -89,6 +91,12 @@ public class AppState
 
   public event PropertyChangedEventHandler? PropertyChanged;
 
-  private void OnPropertyChanged(string propertyName) =>
-      PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+  private async void OnPropertyChanged(string propertyName)
+  {
+    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    if (sessionStorage != null) // sessionStorage が null かどうかを確認
+    {
+      await sessionStorage.SaveAppStateAsync(this);
+    }
+  }
 }

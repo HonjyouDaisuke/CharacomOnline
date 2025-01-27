@@ -31,7 +31,8 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
 
   public async Task SetUserPicture(string? pictureUrl)
   {
-    if (pictureUrl == null) return;
+    if (pictureUrl == null)
+      return;
     await _sessionStorage.SetAsync("PictureUrl", pictureUrl);
   }
 
@@ -86,19 +87,45 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
   public async Task<bool> IsLoggedInAsync()
   {
     var userId = await GetUserIDAsync();
-    if (userId == null) return false;
+    if (userId == null)
+      return false;
     return true;
   }
 
   public async Task<bool> IsSelectedProjectAsync()
   {
     var projectId = await GetProjectIDAsync();
-    if (projectId == null) return false;
+    if (projectId == null)
+      return false;
     return true;
   }
 
   public async Task<bool> IsLoginAsync()
   {
     return await GetUserIDAsync() != null;
+  }
+
+  public async Task SaveAppStateAsync(AppState appState)
+  {
+    await _sessionStorage.SetAsync("CurrentProjectName", appState.CurrentProjectName);
+    await _sessionStorage.SetAsync("CurrentProjectId", appState.CurrentProjectId);
+    await _sessionStorage.SetAsync("UserId", appState.UserId);
+    await _sessionStorage.SetAsync("UserName", appState.UserName);
+    await _sessionStorage.SetAsync("UserRole", appState.UserRole);
+    await _sessionStorage.SetAsync("UserPictureUrl", appState.UserPictureUrl);
+  }
+
+  public async Task<AppState> LoadAppStateAsync()
+  {
+    var appState = new AppState
+    {
+      CurrentProjectName = (await _sessionStorage.GetAsync<string>("CurrentProjectName")).Value,
+      CurrentProjectId = (await _sessionStorage.GetAsync<Guid?>("CurrentProjectId")).Value,
+      UserId = (await _sessionStorage.GetAsync<Guid?>("UserId")).Value,
+      UserName = (await _sessionStorage.GetAsync<string>("UserName")).Value,
+      UserRole = (await _sessionStorage.GetAsync<string>("UserRole")).Value,
+      UserPictureUrl = (await _sessionStorage.GetAsync<string>("UserPictureUrl")).Value,
+    };
+    return appState;
   }
 }

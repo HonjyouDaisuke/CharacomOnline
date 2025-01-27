@@ -19,10 +19,7 @@ public class SupabaseService
     var supabaseUrl = _appSettings.SUPABASE_URL;
     var anonKey = _appSettings.ANON_KEY;
 
-    var options = new SupabaseOptions
-    {
-      AutoConnectRealtime = false,
-    };
+    var options = new SupabaseOptions { AutoConnectRealtime = false };
 
     _supabaseClient = new Supabase.Client(supabaseUrl, anonKey, options);
   }
@@ -38,7 +35,6 @@ public class SupabaseService
 
     if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
     {
-
       try
       {
         await _supabaseClient.Auth.SetSession(accessToken, refreshToken);
@@ -58,7 +54,8 @@ public class SupabaseService
     // 現在の認証済みユーザーを取得
     var user = _supabaseClient.Auth.CurrentUser;
     Console.WriteLine($"ユーザ情報習得 {user.Email}");
-    if (user == null) return null;
+    if (user == null)
+      return null;
     // ユーザーのメタデータからプロフィール画像を取得
     Console.WriteLine($"meta = {user.UserMetadata.ToString()}");
     var pictureUrl = user.UserMetadata?["picture"]?.ToString();

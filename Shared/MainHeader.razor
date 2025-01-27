@@ -53,6 +53,10 @@
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
+		if (!firstRender) return;
+		await SessionStorage.LoadAppStateAsync();
+		Console.WriteLine($"Header init currentUser = {AppState.UserName}");
+		
 		//if (!firstRender) return;
 		//Console.WriteLine($"avater= {userPictureUrl}");
 		userPictureUrl = UsersViewModel.GetUserPicture();
@@ -98,7 +102,7 @@
 		}
 	}
 
-	protected override void OnInitialized()
+	protected override async Task OnInitializedAsync()
 	{
 		AppState.PropertyChanged += async (_, e) =>
 		{

@@ -1,4 +1,6 @@
-﻿using CharacomOnline.Entity;
+﻿using System.Threading.Tasks;
+using ApexCharts;
+using CharacomOnline.Entity;
 using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
@@ -23,20 +25,28 @@ public class ProjectsViewModel
     BoxFileService _boxFileService,
     ProjectsRepository _projectRepository,
     CharaDataTableService _charaDataTableService,
-    UsersTableService _usersTableService)
+    UsersTableService _usersTableService
+  )
   {
-    projectsTableService = _projectsTableService ?? throw new ArgumentNullException(nameof(_projectsTableService));
-    userProjectsTableService = _userProjectsTableService ?? throw new ArgumentNullException(nameof(_userProjectsTableService));
-    projectRepository = _projectRepository ?? throw new ArgumentNullException(nameof(_projectRepository));
+    projectsTableService =
+      _projectsTableService ?? throw new ArgumentNullException(nameof(_projectsTableService));
+    userProjectsTableService =
+      _userProjectsTableService
+      ?? throw new ArgumentNullException(nameof(_userProjectsTableService));
+    projectRepository =
+      _projectRepository ?? throw new ArgumentNullException(nameof(_projectRepository));
     boxFileService = _boxFileService ?? throw new ArgumentNullException(nameof(_boxFileService));
-    charaDataTableService = _charaDataTableService ?? throw new ArgumentNullException(nameof(_charaDataTableService));
-    usersTableService = _usersTableService ?? throw new ArgumentNullException(nameof(_usersTableService));
+    charaDataTableService =
+      _charaDataTableService ?? throw new ArgumentNullException(nameof(_charaDataTableService));
+    usersTableService =
+      _usersTableService ?? throw new ArgumentNullException(nameof(_usersTableService));
   }
 
   public async Task GetUsers()
   {
     var projectId = projectRepository.GetCurrentProjectId();
-    if (projectId == null) return;
+    if (projectId == null)
+      return;
     var users = await userProjectsTableService.FetchProjectUsers((Guid)projectId);
     Console.WriteLine($"projectId = {projectId} users = {users.Count}");
     List<UsersTable> usersList = new List<UsersTable>();
@@ -59,13 +69,25 @@ public class ProjectsViewModel
 
   public async Task<bool> IsProjectTitleExists(string? projectTitle)
   {
-    if (projectTitle == null) return false;
+    if (projectTitle == null)
+      return false;
     return await projectsTableService.IsProjectTitleExists(projectTitle);
   }
 
-  public async Task<Guid?> CreateNewProject(string projectName, string description, Guid userId, string folderId, string charaFolderId)
+  public async Task<Guid?> CreateNewProject(
+    string projectName,
+    string description,
+    Guid userId,
+    string folderId,
+    string charaFolderId
+  )
   {
-    Guid? result = await projectsTableService.CreateProject(projectName, description, folderId, charaFolderId);
+    Guid? result = await projectsTableService.CreateProject(
+      projectName,
+      description,
+      folderId,
+      charaFolderId
+    );
     if (result != null)
     {
       await userProjectsTableService.CreateUserProjects(userId, (Guid)result, (Guid)result);
@@ -76,11 +98,21 @@ public class ProjectsViewModel
 
   public async Task SetCurrentProject(Guid projectId, string projectName)
   {
-    ProjectTitle = await projectsTableService.GetProjectTitle(projectId);
-    var folderId = await projectsTableService.GetProjectCharaFolderId(projectId);
-    if (folderId != null) projectRepository.SetProjectFolderId(folderId);
-    projectRepository.SetProjectId(projectId);
-    projectRepository.SetProjectName(projectName);
+    var projectInfo = await projectsTableService.GetProjectInfoAsync(projectId);
+    if (projectInfo == null)
+      return;
+    projectRepository.SetCurrentProjectInfo(projectInfo);
+    //ProjectTitle = await projectsTableService.GetProjectTitle(projectId);
+    //var folderId = await projectsTableService.GetProjectCharaFolderId(projectId);
+    //if (folderId != null)
+    //  projectRepository.SetProjectFolderId(folderId);
+    //projectRepository.SetProjectId(projectId);
+    //projectRepository.SetProjectName(projectName);
+
+    /// <summary>
+    /// ------------------------------------------
+    /// </summary>
+    /// <returns></returns>
   }
 
   public Guid? GetCurrentProjectId()
@@ -92,9 +124,34 @@ public class ProjectsViewModel
   {
     return projectRepository.GetCurrentFolderId();
   }
+
+  public string? GetCurrentProjectCharaFolderId()
+  {
+    return projectRepository.GetCurrentCharaFolderId();
+  }
+
   public string? GetCurrentProjectName()
   {
     return projectRepository.GetCurrentProjectName();
+  }
+
+  public string? GetCurrentProjectDescription()
+  {
+    return projectRepository.GetCurrentProjectDescription();
+  }
+
+  public async Task<string?> GetCurrentProjectCreatedBy()
+  {
+    var createdUserId = projectRepository.GetCurrentProjectCreatedBy();
+    if (createdUserId == null)
+      return "";
+    var createUser = await usersTableService.GetUserAsync((Guid)createdUserId);
+    return createUser?.Name;
+  }
+
+  public DateTime? GetCurrentProjectCreatedAt()
+  {
+    return projectRepository.GetCurrentProjectCreatedAt();
   }
 
   public async Task<List<ProjectViewData>?> FetchProjectsFromUserAsync(Guid userId)
