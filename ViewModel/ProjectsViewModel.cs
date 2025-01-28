@@ -102,17 +102,73 @@ public class ProjectsViewModel
     if (projectInfo == null)
       return;
     projectRepository.SetCurrentProjectInfo(projectInfo);
-    //ProjectTitle = await projectsTableService.GetProjectTitle(projectId);
-    //var folderId = await projectsTableService.GetProjectCharaFolderId(projectId);
-    //if (folderId != null)
-    //  projectRepository.SetProjectFolderId(folderId);
-    //projectRepository.SetProjectId(projectId);
-    //projectRepository.SetProjectName(projectName);
+  }
 
-    /// <summary>
-    /// ------------------------------------------
-    /// </summary>
-    /// <returns></returns>
+  public async Task<Dictionary<
+    string,
+    Dictionary<string, (int SelectCount, int CharaCount)>
+  >?> GetCurrentProjectCharaCount(Guid projectId)
+  {
+    var charaCount = await charaDataTableService.GetCharaDataSelectedCountAsync(projectId);
+    if (charaCount == null)
+      return null;
+    Dictionary<string, Dictionary<string, (int? SelectedCount, int? CharaCount)>> charaData = new();
+
+    Console.WriteLine("始まるよー");
+    foreach (var item in charaCount)
+    {
+      if (!charaData.ContainsKey(item.CharaName))
+      {
+        charaData[item.CharaName] = new Dictionary<string, (int?, int?)>();
+      }
+
+      charaData[item.CharaName][item.MaterialName] = (item.SelectedCount, item.CharaCount);
+
+      //Console.WriteLine(
+      //  $"CharaName = {item.CharaName} material = {item.MaterialName} count = {item.SelectedCount} / {item.CharaCount}"
+      //);
+    }
+    Console.WriteLine("配列を取得するよ");
+    var charaNames = charaCount.Select(item => item.CharaName).Distinct().ToList();
+    var materialNames = charaCount.Select(item => item.MaterialName).Distinct().ToList();
+
+    Dictionary<string, Dictionary<string, (int SelectedCount, int CharaCount)>> result = new();
+    Console.WriteLine("変換するよー");
+    foreach (var charaEntry in charaData)
+    {
+      // チャラネームごとに結果を初期化
+      if (!result.ContainsKey(charaEntry.Key))
+      {
+        result[charaEntry.Key] = new Dictionary<string, (int SelectedCount, int CharaCount)>();
+      }
+
+      foreach (var materialName in materialNames)
+      {
+        // 各マテリアル名について
+        var counts = charaEntry.Value.ContainsKey(materialName)
+          ? charaEntry.Value[materialName]
+          : (SelectedCount: 0, CharaCount: 0); // 存在しない場合は (0, 0) を設定
+
+        // result に追加
+        if (!result[charaEntry.Key].ContainsKey(materialName))
+        {
+          result[charaEntry.Key][materialName] = (
+            counts.SelectedCount ?? 0,
+            counts.CharaCount ?? 0
+          );
+        }
+      }
+    }
+    Console.WriteLine("nullチェックだよ");
+    foreach (var c in result.Keys)
+    {
+      foreach (var m in result[c].Keys)
+      {
+        if (!result[c].ContainsKey(m))
+          Console.WriteLine($"c:{c} m:{m}");
+      }
+    }
+    return result;
   }
 
   public Guid? GetCurrentProjectId()

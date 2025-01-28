@@ -1,9 +1,9 @@
-﻿using CharacomOnline.Entity;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using CharacomOnline.Entity;
 using CharacomOnline.ImageProcessing;
 using CharacomOnline.Repositories;
 using Supabase;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -158,6 +158,38 @@ public class CharaDataTableService(
   {
     [JsonPropertyName("material_name")]
     public string? Name { set; get; }
+  }
+
+  public async Task<List<CharaDataCount>?> GetCharaDataSelectedCountAsync(Guid projectId)
+  {
+    Console.WriteLine("取得しますよー。");
+    try
+    {
+      var response = await _supabaseClient.Rpc(
+        "get_chara_data_count",
+        new { project_id = projectId }
+      );
+      if (string.IsNullOrEmpty(response.Content))
+      {
+        Console.WriteLine("文字数のカウントが取れませんでした。");
+        return null;
+      }
+
+      // JSON を List に変換
+      var charaCount = JsonSerializer.Deserialize<List<CharaDataCount>>(response.Content);
+      if (charaCount == null)
+      {
+        Console.WriteLine("文字が空っぽでした");
+        return null;
+      }
+
+      return charaCount;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+      return null;
+    }
   }
 
   public async Task InitCharactersDataAsync(Guid projectId)
@@ -406,6 +438,7 @@ public class CharaDataTableService(
       return 0;
     }
   }
+
   public async Task UpdateCharaSelectChangeAsync(Guid charaId, bool isSelected, Guid userId)
   {
     try

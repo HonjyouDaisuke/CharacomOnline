@@ -1,0 +1,45 @@
+
+<RadzenCard>
+	<RadzenDataGrid Data="@ProgressData.Keys" TItem="string">
+		<Columns>
+			<RadzenDataGridColumn TItem="string" Title="文字種">
+				<Template Context="charaName">
+					@charaName
+				</Template>
+			</RadzenDataGridColumn>
+			<!-- 動的に生成された列 (Material Name) -->
+			@foreach (var materialName in ProgressData.Values.SelectMany(m => m.Keys).Distinct())
+			{
+				<RadzenDataGridColumn TItem="string" Title="@materialName">
+					<Template Context="charaName">
+						@{
+							// `ProgressData` から charaName と materialName を使ってデータ取得
+							var materialData = ProgressData.TryGetValue(charaName, out var materials) &&
+							                   materials.TryGetValue(materialName, out var data)
+								? data
+								: (SelectedCount: 0, CharaCount: 0);
+						}
+						<div>
+							<!-- プログレスバー表示 -->
+							<RadzenProgressBar Max="@materialData.CharaCount" Value="@materialData.SelectedCount" Style="width: 100%;" />
+							<!-- 進捗テキスト表示 -->
+							<div>@($"{materialData.SelectedCount} / {materialData.CharaCount}")</div>
+						</div>
+					</Template>
+				</RadzenDataGridColumn>
+			}
+		</Columns>
+	</RadzenDataGrid>
+</RadzenCard>
+
+@code {
+	[Parameter]
+	public Dictionary<string, Dictionary<string, (int SelectedCount, int CharaCount)>> ProgressData { get; set; } = new();
+	private string firstChara = "";
+
+
+	protected override void OnInitialized()
+	{
+		
+	}
+}
