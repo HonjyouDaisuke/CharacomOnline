@@ -97,7 +97,6 @@ else
 		selectedCharaCount = await ProjectsViewModel.GetSelectedCharaDataCount((Guid)projectId);
 
 		// 個別文字の選択状況
-		Console.WriteLine("ここから");
 		progressData = await ProjectsViewModel.GetCurrentProjectCharaCount((Guid)projectId);
 		isLoading = false;
         await InvokeAsync(StateHasChanged);

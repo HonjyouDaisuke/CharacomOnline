@@ -8,17 +8,17 @@ public class CharaDataCount : BaseModel
 {
   [Column("chara_name")]
   [JsonPropertyName("chara_name")]
-  public string CharaName { get; set; }
+  public string CharaName { get; set; } = "";
 
   [Column("material_name")]
   [JsonPropertyName("material_name")]
-  public string MaterialName { get; set; }
+  public string MaterialName { get; set; } = "";
 
   [Column("selected_count")]
   [JsonPropertyName("selected_count")]
-  public int SelectedCount { get; set; }
+  public int SelectedCount { get; set; } = 0;
 
   [Column("chara_count")]
   [JsonPropertyName("chara_count")]
-  public int CharaCount { get; set; }
+  public int CharaCount { get; set; } = 0;
 }

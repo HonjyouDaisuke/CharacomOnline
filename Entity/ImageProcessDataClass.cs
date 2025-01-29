@@ -10,5 +10,4 @@ public class ImageProcessDataClass
   public string? SrcImageData { get; set; }
   public string? ThinningImageData { get; set; }
   public string? HistogramImageData { get; set; }
-
 }

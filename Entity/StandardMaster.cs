@@ -13,4 +13,3 @@ public class StandardMaster : BaseModel
   [Column("file_id")]
   public string? FileId { get; set; }
 }
-

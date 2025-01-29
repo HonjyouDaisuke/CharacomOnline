@@ -134,9 +134,6 @@ public class CharaDataTableService(
       if (response != null)
       {
         var inData = response.Models.First();
-        Console.WriteLine(
-          $"Project '{inData.ProjectId}' added successfully with Chara: {inData.CharaName}"
-        );
         return inData.Id; // ID を返す
       }
     }
@@ -162,7 +159,8 @@ public class CharaDataTableService(
 
   public async Task<List<CharaDataCount>?> GetCharaDataSelectedCountAsync(Guid projectId)
   {
-    Console.WriteLine("取得しますよー。");
+    await InitCharactersDataAsync(projectId);
+    await InitMaterialsData(projectId);
     try
     {
       var response = await _supabaseClient.Rpc(
@@ -183,6 +181,33 @@ public class CharaDataTableService(
         return null;
       }
 
+      // 文字または資料名が空っぽだったら削除
+      charaCount.RemoveAll(item =>
+        string.IsNullOrEmpty(item.CharaName) || string.IsNullOrEmpty(item.MaterialName)
+      );
+
+      // 足りないものを追加
+      foreach (var charaName in _selectingItemsRepository.Characters)
+      {
+        foreach (var materialName in _selectingItemsRepository.Materials)
+        {
+          bool exists = charaCount.Any(c =>
+            c.CharaName == charaName && c.MaterialName == materialName
+          );
+          if (exists)
+            continue;
+          charaCount.Add(
+            new CharaDataCount
+            {
+              CharaName = charaName,
+              MaterialName = materialName,
+              SelectedCount = 0,
+              CharaCount = 0,
+            }
+          );
+        }
+      }
+
       return charaCount;
     }
     catch (Exception ex)
@@ -195,12 +220,10 @@ public class CharaDataTableService(
   public async Task InitCharactersDataAsync(Guid projectId)
   {
     // Supabase から RPC を呼び出す
-    Console.WriteLine($"start fetch ProjectId:{projectId}");
     var response = await _supabaseClient.Rpc(
       "get_unique_chara_names",
       new { p_project_id = projectId }
     );
-    Console.WriteLine(response.Content);
 
     // レスポンスの Content は string 型なので、JSON としてデシリアライズ
     if (!string.IsNullOrEmpty(response.Content))
@@ -240,7 +263,7 @@ public class CharaDataTableService(
       "get_unique_material_names",
       new { p_project_id = projectId }
     );
-    Console.WriteLine(response.Content);
+
     // レスポンスの Content は string 型なので、JSON としてデシリアライズ
     if (!string.IsNullOrEmpty(response.Content))
     {
@@ -294,8 +317,6 @@ public class CharaDataTableService(
       }
     );
 
-    Console.WriteLine(response.Content);
-
     if (!string.IsNullOrEmpty(response.Content))
     {
       try
@@ -310,16 +331,12 @@ public class CharaDataTableService(
         int totalTasks = charas.Count;
         int progress = 0;
 
-        Console.WriteLine($"個数は: {totalTasks}");
-
-        Console.WriteLine("Foreach スタート---->");
         foreach (var item in charas)
         {
           if (item.Id == null || item.FileId == null)
             continue;
 
           token.ThrowIfCancellationRequested();
-          Console.WriteLine($"FileId = {item.FileId} を始めます");
 
           // 存在確認をデータベースから行い、確認後に挿入処理
           var exists = await _charaDataRepository.IsViewCharaDataExistsAsync((Guid)item.Id);
@@ -329,15 +346,12 @@ public class CharaDataTableService(
             continue;
           }
 
-          Console.WriteLine($"FileId = {item.FileId} を保存します");
           // 新しいデータを挿入する処理
           await ProcessCharaDataAsync(item, charaName, materialName, accessToken);
-          Console.WriteLine($"FileId = {item.FileId} を保存終わり");
 
           progress++;
           onProgress?.Invoke((progress * 100) / totalTasks);
         }
-        Console.WriteLine("<---- Foreach 終わり");
       }
       catch (JsonException ex)
       {
@@ -378,7 +392,6 @@ public class CharaDataTableService(
 
     if (newItem.SrcImage == null)
       return;
-    Console.WriteLine($"fileId:{item.FileId} isSelected:{item.IsSelected}");
 
     // サムネイルと細線画像を生成
     newItem.Thumbnail = ImageEffectService.GetBinaryImageData(
@@ -462,7 +475,6 @@ public class CharaDataTableService(
         .Set(x => x.UpdatedAt, DateTime.UtcNow) // UpdatedAt を更新
         .Update();
 
-      Console.WriteLine($"Response: {response.ToString()}");
       if (response.Models.Count > 0)
       {
         foreach (var model in response.Models)

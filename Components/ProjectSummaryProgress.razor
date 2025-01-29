@@ -1,6 +1,6 @@
 
 <RadzenCard>
-	<RadzenDataGrid Data="@ProgressData.Keys" TItem="string">
+	<RadzenDataGrid Data="@ProgressData.Keys" TItem="string" AllowPaging="true" PagerPosition="PagerPosition.Bottom">
 		<Columns>
 			<RadzenDataGridColumn TItem="string" Title="文字種">
 				<Template Context="charaName">
@@ -21,9 +21,9 @@
 						}
 						<div>
 							<!-- プログレスバー表示 -->
-							<RadzenProgressBar Max="@materialData.CharaCount" Value="@materialData.SelectedCount" Style="width: 100%;" />
+							<RadzenProgressBar Max="@materialData.CharaCount" Value="@materialData.SelectedCount"  Unit=@($" / {materialData.CharaCount}") Style="width: 100%;" />
 							<!-- 進捗テキスト表示 -->
-							<div>@($"{materialData.SelectedCount} / {materialData.CharaCount}")</div>
+							@*<div>@($"{materialData.SelectedCount} / {materialData.CharaCount}")</div>*@
 						</div>
 					</Template>
 				</RadzenDataGridColumn>
