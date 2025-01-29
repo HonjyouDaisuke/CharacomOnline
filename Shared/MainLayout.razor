@@ -1,11 +1,14 @@
 ﻿@using CharacomOnline.Components
 @using CharacomOnline.Service
+@using CharacomOnline.ViewModel
 @using Radzen
 @using Radzen.Blazor
 
 @inherits LayoutComponentBase
 @inject SessionStorageService SessionStorage
 @inject AppState AppState
+@inject LocalStorageService LocalStorage
+@inject ProjectsViewModel ProjectsViewModel
 
 <PageTitle>CharacomOnline</PageTitle>
 <RadzenComponents @rendermode="InteractiveServer" />
@@ -44,5 +47,19 @@
             // 再レンダリングをトリガー
             StateHasChanged();
         }
+        // LocalStorage から currentProjectIdを復元
+        var currentProjectId = await LocalStorage.GetCurrentProjectIdAsync();
+        if (!string.IsNullOrEmpty(currentProjectId.ToString()))
+        {
+            AppState.CurrentProjectId = currentProjectId;
+            var projectName = await ProjectsViewModel.GetProjectNameFromProjectId((Guid)currentProjectId);
+            if (!string.IsNullOrEmpty(projectName))
+            {
+                await ProjectsViewModel.SetCurrentProject((Guid)currentProjectId, projectName);
+                AppState.CurrentProjectName = projectName;
+            }
+        }
+        
+        
     }
 }

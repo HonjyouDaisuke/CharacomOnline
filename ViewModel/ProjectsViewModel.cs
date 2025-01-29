@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-using ApexCharts;
-using CharacomOnline.Entity;
+﻿using CharacomOnline.Entity;
 using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
@@ -60,6 +58,12 @@ public class ProjectsViewModel
       projectRepository.AddCurrentProjectUsers(userInfo);
     }
     return;
+  }
+
+  public async Task<string?> GetProjectNameFromProjectId(Guid projectId)
+  {
+    var project = await projectsTableService.GetProjectInfoAsync((Guid)projectId);
+    return project?.Title;
   }
 
   public List<ProjectUsers> GetProjectUsersInfo()

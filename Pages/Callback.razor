@@ -49,6 +49,7 @@
             else
             {
                 Console.WriteLine("User ID が有効な GUID ではありません。");
+                AppState.IsLoggedIn = false;
                 NavigationManager.NavigateTo("/login");
                 return;
             }
@@ -61,6 +62,7 @@
             AppState.UserPictureUrl = UserViewModel.GetUserPicture();
             AppState.UserRole = UserViewModel.GetCurrentUserRole();
             AppState.UserId = UserViewModel.GetCurrentUserInfo().Id;
+            AppState.IsLoggedIn = true;
             NavigationManager.NavigateTo("/");
         }
         catch (Exception ex)

@@ -83,49 +83,49 @@ else
 
 </style>
 @code {
-	private bool isLoading = true;
-	private Guid? userId;
-	private Guid? projectId;
-	private string loginUrl = "./login";
-	private string projectsUrl = "./projects";
-	private string selectedChara = "";
-	private string selectedMaterial = "";
-	private string? accessToken = "";
-	private string? standardImage;
-	private string? strokeImage;
-	private bool isThinLoading = false;
+    private bool isLoading = true;
+    private Guid? userId;
+    private Guid? projectId;
+    private string loginUrl = "./login";
+    private string projectsUrl = "./projects";
+    private string selectedChara = "";
+    private string selectedMaterial = "";
+    private string? accessToken = "";
+    private string? standardImage;
+    private string? strokeImage;
+    private bool isThinLoading = false;
 
-	private bool stdLoading = false;
-	private bool strokeLoading = false;
-	private bool isCharaLoading = false;
-	private CancellationTokenSource _cts = new CancellationTokenSource();
+    private bool stdLoading = false;
+    private bool strokeLoading = false;
+    private bool isCharaLoading = false;
+    private CancellationTokenSource _cts = new CancellationTokenSource();
 
-	private ProgressDialogParameters _progressDialogParameters = new ();
+    private ProgressDialogParameters _progressDialogParameters = new ();
 
-	private void OnNaviClick(string goTo)
-	{
-		Navi.NavigateTo(goTo);
-	}
+    private void OnNaviClick(string goTo)
+    {
+        Navi.NavigateTo(goTo);
+    }
 
-	protected override async Task OnInitializedAsync()
-	{
-		isLoading = true;
-		await CharaDataViewModel.ClearViewCharaData();
-		selectedChara = "";
-		selectedMaterial = "";
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        await CharaDataViewModel.ClearViewCharaData();
+        selectedChara = "";
+        selectedMaterial = "";
+    }
 
-	private async Task OnSelectChange(CharaDataClass selectItem)
-	{
-		Console.WriteLine("作成中");
+    private async Task OnSelectChange(CharaDataClass selectItem)
+    {
+        Console.WriteLine("作成中");
 
-		if (AppState.UserId != null)
-		{
-			await CharaDataViewModel.SaveSelectChangeAsync(selectItem.Id, selectItem.IsSelected, (Guid)AppState.UserId);
-		} else {
-			Console.WriteLine("userIdがNullです");
-		}
-		isThinLoading = true;
+        if (AppState.UserId != null)
+        {
+            await CharaDataViewModel.SaveSelectChangeAsync(selectItem.Id, selectItem.IsSelected, (Guid)AppState.UserId);
+        } else {
+            Console.WriteLine("userIdがNullです");
+        }
+        isThinLoading = true;
         await InvokeAsync(StateHasChanged);
         await CharaDataViewModel.MakeOverlayBitmapAsync();
         isThinLoading = false;
@@ -139,29 +139,25 @@ else
 
         try
         {
-            if (!await SessionStorage.IsLoggedInAsync())
+            if (!AppState.IsLoggedIn)
             {
                 isLoading = false;
                 await InvokeAsync(StateHasChanged);
                 return;
             }
 
-            userId = await SessionStorage.GetUserIDAsync();
+            userId = AppState.UserId;
 
-            if (!await SessionStorage.IsSelectedProjectAsync())
+            projectId = AppState.CurrentProjectId;
+            if (projectId == null || string.IsNullOrEmpty(projectId.ToString()))
             {
                 isLoading = false;
                 await InvokeAsync(StateHasChanged);
                 return;
             }
 
-            projectId = await SessionStorage.GetProjectIDAsync();
-
-            if (projectId != null)
-            {
-                await CharaDataViewModel.InitCharactersData((Guid)projectId);
-                await CharaDataViewModel.InitMaterialsData((Guid)projectId);
-            }
+            await CharaDataViewModel.InitCharactersData((Guid)projectId);
+            await CharaDataViewModel.InitMaterialsData((Guid)projectId);
 
             // アクセストークンを取得
             accessToken = await TokenStorage.GetAccessTokenAsync();

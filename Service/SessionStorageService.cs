@@ -1,10 +1,10 @@
 ﻿namespace CharacomOnline.Service;
-
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
-public class SessionStorageService(ProtectedSessionStorage sessionStorage)
+public class SessionStorageService(ProtectedSessionStorage sessionStorage, LocalStorageService localStorage)
 {
   private readonly ProtectedSessionStorage _sessionStorage = sessionStorage;
+  private readonly LocalStorageService _localStorage = localStorage;
 
   public async Task SetUserIDAsync(Guid userID)
   {
@@ -117,7 +117,7 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
 
   public async Task<AppState> LoadAppStateAsync()
   {
-    var appState = new AppState
+    var appState = new AppState(_localStorage, this)
     {
       CurrentProjectName = (await _sessionStorage.GetAsync<string>("CurrentProjectName")).Value,
       CurrentProjectId = (await _sessionStorage.GetAsync<Guid?>("CurrentProjectId")).Value,

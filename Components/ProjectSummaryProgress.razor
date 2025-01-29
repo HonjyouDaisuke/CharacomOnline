@@ -19,7 +19,7 @@
 								? data
 								: (SelectedCount: 0, CharaCount: 0);
 						}
-						<div>
+						<div @ondblclick="@(e => OnCellDoubleClick(charaName, materialName))">
 							<!-- プログレスバー表示 -->
 							<RadzenProgressBar Max="@materialData.CharaCount" Value="@materialData.SelectedCount"  Unit=@($" / {materialData.CharaCount}") Style="width: 100%;" />
 							<!-- 進捗テキスト表示 -->
@@ -37,6 +37,10 @@
 	public Dictionary<string, Dictionary<string, (int SelectedCount, int CharaCount)>> ProgressData { get; set; } = new();
 	private string firstChara = "";
 
+	private void OnCellDoubleClick(string charaName, string materialName)
+	{
+		Console.WriteLine($"セルをダブルクリック: 行='{charaName}', 列='{materialName}'");
+	}
 
 	protected override void OnInitialized()
 	{

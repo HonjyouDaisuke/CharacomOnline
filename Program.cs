@@ -95,6 +95,7 @@ builder.Services.AddScoped<UserRepository>();
 
 // builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddScoped<SessionStorageService>();
+builder.Services.AddScoped<LocalStorageService>();
 
 //Box用
 builder.Services.AddHttpClient<OAuthService>(client =>

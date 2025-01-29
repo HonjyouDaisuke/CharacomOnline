@@ -66,11 +66,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (SessionStorage == null) return;
-        userId = await SessionStorage.GetUserIDAsync();
-        projectId = await SessionStorage.GetProjectIDAsync();
-        if (userId == null) return;
+        userId = AppState.UserId;
+        projectId = AppState.CurrentProjectId;
+
         isStandard = isStandardUser();
+        if (userId == null) return;
         projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
         if (projectId == null) return;
         CheckInitialSelect(projectId);

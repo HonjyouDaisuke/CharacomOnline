@@ -5,12 +5,33 @@ namespace CharacomOnline.Service;
 public class AppState : INotifyPropertyChanged
 {
   private readonly SessionStorageService sessionStorage;
+  private readonly LocalStorageService localStorage;
+  private bool _isLoggedIn = false;
   private string? _currentProjectName;
   private Guid? _currentProjectId;
   private string? _userName;
   private string? _userPictureUrl;
   private string? _userRole;
   private Guid? _userId;
+
+  public AppState(LocalStorageService _localStorage, SessionStorageService _sessionStorage)
+  {
+    this.sessionStorage = _sessionStorage;
+    this.localStorage = _localStorage;
+  }
+
+  public bool IsLoggedIn
+  {
+    get => _isLoggedIn;
+    set
+    {
+      if (_isLoggedIn != value)
+      {
+        _isLoggedIn = value;
+        OnPropertyChanged(nameof(_isLoggedIn));
+      }
+    }
+  }
 
   public string? CurrentProjectName
   {
@@ -93,10 +114,18 @@ public class AppState : INotifyPropertyChanged
 
   private async void OnPropertyChanged(string propertyName)
   {
+    // LocalStorage にも保存
+    if (propertyName == nameof(CurrentProjectId))
+    {
+      await localStorage.SetCurrentProjectIdAsync(CurrentProjectId ?? Guid.Empty);
+      Console.WriteLine($"LocalStorageにprojectIdを保存 projectId={CurrentProjectId}");
+    }
+
     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     if (sessionStorage != null) // sessionStorage が null かどうかを確認
     {
       await sessionStorage.SaveAppStateAsync(this);
     }
+
   }
 }
