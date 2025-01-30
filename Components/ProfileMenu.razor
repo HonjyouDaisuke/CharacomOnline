@@ -11,27 +11,12 @@
 
 <RadzenProfileMenu Click="@(args => HandleMenu(args))">
 	<Template>
-		@if (UserPicture == null || UserPicture == string.Empty)
-		{
-			<RadzenIcon Icon="account_circle" style="font-size: 1rem;" />
-		}
-		else
-		{
-			<RadzenImage Path="@UserPicture" class="rz-gravatar" AlternateText="UserName" />
-		}
+		<RadzenImage Path="@(UserPicture ?? "/images/no_user_icon.png")" class="rz-gravatar" AlternateText="UserName" />
 	</Template>
-
 	<ChildContent>
 		<div style="padding: 20px;">
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal">
-				@if (string.IsNullOrEmpty(AppState.UserName) || string.IsNullOrEmpty(AppState.UserPictureUrl))
-				{
-					<RadzenIcon Icon="account_circle" style="font-size: 2rem;" />
-				}
-				else
-				{
-					<RadzenImage Path="@AppState.UserPictureUrl" class="rz-gravatar" Style="width: 50px; height: 50px;" AlternateText="@AppState.UserName" />
-				}
+				<RadzenImage Path="@UserPicture" class="rz-gravatar" Style="width: 50px; height: 50px;" AlternateText="@AppState.UserName" />
 				<RadzenText TextStyle="TextStyle.H6">@AppState.UserName</RadzenText>
 			</RadzenStack>
 			<hr style="margin: 5px 0;" />
@@ -81,8 +66,7 @@
 </style>
 @code {
 	[Parameter]
-	public string? UserPicture { get; set; }
-
+	public string UserPicture { get; set; }
 	[Parameter]
 	public string? UserName { get; set; }
 

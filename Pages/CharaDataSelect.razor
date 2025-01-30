@@ -3,6 +3,7 @@
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Service
 @using CharacomOnline.Components
+@using Microsoft.AspNetCore.WebUtilities
 @inject CharaDataViewModel CharaDataViewModel
 @inject SessionStorageService SessionStorage
 @inject NavigationManager Navi
@@ -45,7 +46,7 @@ else
 		<RadzenSplitterPane Size="65%" Resizable="true">
 			<RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
 				<RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
-					<CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" OnCharacterSelected="OnCharaSelected" />
+					<CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" SelectedChara="@selectedChara" OnCharacterSelected="OnCharaSelected" />
 				</RadzenSplitterPane>
 				<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
 					<RadzenStack style="height: 100%;">
@@ -83,101 +84,156 @@ else
 
 </style>
 @code {
-    private bool isLoading = true;
-    private Guid? userId;
-    private Guid? projectId;
-    private string loginUrl = "./login";
-    private string projectsUrl = "./projects";
-    private string selectedChara = "";
-    private string selectedMaterial = "";
-    private string? accessToken = "";
-    private string? standardImage;
-    private string? strokeImage;
-    private bool isThinLoading = false;
+	private bool isLoading = true;
+	private Guid? userId;
+	private Guid? projectId;
+	private string loginUrl = "./login";
+	private string projectsUrl = "./projects";
+	private string selectedChara = "";
+	private string selectedMaterial = "";
+	private string? accessToken = "";
+	private string? standardImage;
+	private string? strokeImage;
+	private bool isThinLoading = false;
 
-    private bool stdLoading = false;
-    private bool strokeLoading = false;
-    private bool isCharaLoading = false;
-    private CancellationTokenSource _cts = new CancellationTokenSource();
+	private bool stdLoading = false;
+	private bool strokeLoading = false;
+	private bool isCharaLoading = false;
+	private CancellationTokenSource _cts = new CancellationTokenSource();
 
-    private ProgressDialogParameters _progressDialogParameters = new ();
+	private ProgressDialogParameters _progressDialogParameters = new ();
 
-    private void OnNaviClick(string goTo)
-    {
-        Navi.NavigateTo(goTo);
+	private void OnNaviClick(string goTo)
+	{
+		Navi.NavigateTo(goTo);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		isLoading = true;
+		await CharaDataViewModel.ClearViewCharaData();
+		selectedChara = "";
+		selectedMaterial = "";
+	}
+
+	private async Task OnSelectChange(CharaDataClass selectItem)
+	{
+		Console.WriteLine("作成中");
+
+		if (AppState.UserId != null)
+		{
+			await CharaDataViewModel.SaveSelectChangeAsync(selectItem.Id, selectItem.IsSelected, (Guid)AppState.UserId);
+		} else {
+			Console.WriteLine("userIdがNullです");
+		}
+		isThinLoading = true;
+		await InvokeAsync(StateHasChanged);
+		await CharaDataViewModel.MakeOverlayBitmapAsync();
+		isThinLoading = false;
+		await InvokeAsync(StateHasChanged);
+		Console.WriteLine("作成完了");
+	}
+
+	private bool getQueryParameter()
+	{
+		var uri = new Uri(Navi.Uri);
+		var queryPrams = QueryHelpers.ParseQuery(uri.Query);
+		if (queryPrams.TryGetValue("chara", out var charaValues))
+		{
+			selectedChara = charaValues.ToString();
+		}else{
+			return false;
+		}
+		if (queryPrams.TryGetValue("material", out var materialValues))
+		{
+			selectedMaterial = materialValues.ToString();
+		}else{
+			return false;
+		}
+		return true;
+	}
+
+	private async Task OnInitialRenderAsync()
+	{
+		if (string.IsNullOrEmpty(selectedChara) || string.IsNullOrEmpty(selectedMaterial)) return;
+
+		// 最初にLoading中にする
+		stdLoading = true;
+		strokeLoading = true;
+		await InvokeAsync(StateHasChanged);
+		// 標準ファイルの読み込み
+		await CharaDataViewModel.GetStandardData(accessToken, selectedChara);
+		standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
+		stdLoading = false;
+		await InvokeAsync(StateHasChanged);
+		// 筆順ファイルの読み込み    
+		await CharaDataViewModel.GetStrokeData(accessToken, selectedChara);
+		strokeImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StrokeBmp);
+		strokeLoading = false;
+		await InvokeAsync(StateHasChanged);
+		Console.WriteLine($"???....{selectedChara}");
+		CharaDataViewModel.SelectChara(selectedChara);
+		CharaDataViewModel.SelectMaterial(selectedMaterial);
+
+		isCharaLoading = true;
+		await InvokeAsync(StateHasChanged);
+		Console.WriteLine("refresh....");
+		await RefreshCharaList();
+		await InvokeAsync(StateHasChanged);
+	}
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
+
+		try
+		{
+			Console.WriteLine($"userid = {AppState.UserId}");
+			if (!AppState.IsLoggedIn)
+			{
+				isLoading = false;
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
+
+			userId = AppState.UserId;
+
+			projectId = AppState.CurrentProjectId;
+			if (projectId == null || string.IsNullOrEmpty(projectId.ToString()))
+			{
+				isLoading = false;
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
+
+			await CharaDataViewModel.InitCharactersData((Guid)projectId);
+			await CharaDataViewModel.InitMaterialsData((Guid)projectId);
+
+			// アクセストークンを取得
+			accessToken = await TokenStorage.GetAccessTokenAsync();
+			if (string.IsNullOrEmpty(accessToken))
+			{
+				Navi.NavigateTo("/auth");
+				return;
+			}
+
+			Console.WriteLine($"文字個数:{CharaDataViewModel._selectingItemsRepository.Characters.Count}");
+
+			// クエリパラメータのチェック
+			if (getQueryParameter())
+			{
+				Console.WriteLine($"クエリパラメータが来ました。chara={selectedChara} material={selectedMaterial}");
+				await OnInitialRenderAsync();
+				//await OnMaterialChanged(selectedMaterial);
+				//await OnCharaSelected(selectedChara);
+			}
+      isLoading = false;
+      await InvokeAsync(StateHasChanged);
     }
-
-    protected override async Task OnInitializedAsync()
+    catch (JSDisconnectedException)
     {
-        isLoading = true;
-        await CharaDataViewModel.ClearViewCharaData();
-        selectedChara = "";
-        selectedMaterial = "";
+    	Console.WriteLine("JavaScript interop failed due to disconnected circuit.");
     }
-
-    private async Task OnSelectChange(CharaDataClass selectItem)
-    {
-        Console.WriteLine("作成中");
-
-        if (AppState.UserId != null)
-        {
-            await CharaDataViewModel.SaveSelectChangeAsync(selectItem.Id, selectItem.IsSelected, (Guid)AppState.UserId);
-        } else {
-            Console.WriteLine("userIdがNullです");
-        }
-        isThinLoading = true;
-        await InvokeAsync(StateHasChanged);
-        await CharaDataViewModel.MakeOverlayBitmapAsync();
-        isThinLoading = false;
-        await InvokeAsync(StateHasChanged);
-        Console.WriteLine("作成完了");
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-
-        try
-        {
-            if (!AppState.IsLoggedIn)
-            {
-                isLoading = false;
-                await InvokeAsync(StateHasChanged);
-                return;
-            }
-
-            userId = AppState.UserId;
-
-            projectId = AppState.CurrentProjectId;
-            if (projectId == null || string.IsNullOrEmpty(projectId.ToString()))
-            {
-                isLoading = false;
-                await InvokeAsync(StateHasChanged);
-                return;
-            }
-
-            await CharaDataViewModel.InitCharactersData((Guid)projectId);
-            await CharaDataViewModel.InitMaterialsData((Guid)projectId);
-
-            // アクセストークンを取得
-            accessToken = await TokenStorage.GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                Navi.NavigateTo("/auth");
-                return;
-                // throw new Exception("Access token not found. Please authenticate first.");
-            }
-
-            Console.WriteLine($"文字個数:{CharaDataViewModel._selectingItemsRepository.Characters.Count}");
-
-            isLoading = false;
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (JSDisconnectedException)
-        {
-            Console.WriteLine("JavaScript interop failed due to disconnected circuit.");
-        }
-    }
+  }
 
     private async Task OnCharaSelected(string? _selectedChara)
     {
@@ -224,19 +280,20 @@ else
 
     private async Task RefreshCharaList()
     {
+			Console.WriteLine($"accessToken = {accessToken} projectId = {projectId}");
         if (string.IsNullOrEmpty(accessToken)) return;
         if (projectId == null) return;
-        _cts = new CancellationTokenSource();
+				_cts = new CancellationTokenSource();
         CharaDataViewModel.ProgressChanged += OnProgressChanged;
         _progressDialogParameters = new ProgressDialogParameters
-            {
+        {
                 Message = $"文字「{CharaDataViewModel.currentChara}」を読み込んでいます。。。",
                 Value = 0,
                 MaxValue = 100,
                 Unit = " %",
                 OnCancel = EventCallback.Factory.Create(this, CancelOperation),
                 Token = _cts.Token,
-            };
+        };
         DialogService.Open<ProgressDialog>("データをダウンロードします", new Dictionary<string, object>
             {
               {"parameters", _progressDialogParameters}
@@ -246,6 +303,8 @@ else
 
         try
         {
+					Console.WriteLine($"GetViewCharaDataAsync");
+        
             await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId, _cts.Token);
         }
         catch (OperationCanceledException)

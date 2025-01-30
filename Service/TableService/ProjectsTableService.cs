@@ -62,11 +62,14 @@ public class ProjectsTableService(Client supabaseClient)
     try
     {
       // Supabaseクエリで条件を指定してデータを取得
-      var response = await _supabaseClient
+      var project = await _supabaseClient
         .From<ProjectsTable>() // テーブルを指定
         .Select("id, title, description, created_at, created_by, folder_id, chara_folder_id") // 必要なカラムのみ選択
-        .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, projectId.ToString()) // フィルターを適用
-        .Single();
+        .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, projectId.ToString("D")) // フィルターを適用
+        .Limit(1)
+        .Get();
+
+      var response = project.Models.FirstOrDefault();
 
       //UsersTable user = new UsersTable();
       if (response == null)
@@ -79,7 +82,7 @@ public class ProjectsTableService(Client supabaseClient)
     }
     catch (Exception ex)
     {
-      Console.WriteLine($"Error fetching project title: {ex.Message}");
+      Console.WriteLine($"Error fetching project title: {ex.Message} projectId={projectId}");
       return null; // エラー時は null を返す
     }
   }

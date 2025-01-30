@@ -31,25 +31,25 @@
 
 <style>
 	.custom-cursor {
-		cursor: default; /* デフォルトのカーソル */
+	cursor: default; /* デフォルトのカーソル */
 	}
 
-		.custom-cursor:hover {
-			cursor: pointer; /* ホバー時に指マークのカーソルに変更 */
-		}
+	.custom-cursor:hover {
+	cursor: pointer; /* ホバー時に指マークのカーソルに変更 */
+	}
 
 	.full-width {
-		width: 100%;
+	width: 100%;
 	}
 
 	.stack-margin-top {
-		padding-top: 50px; /* 必要なスペースを指定 */
+	padding-top: 50px; /* 必要なスペースを指定 */
 	}
 </style>
 @code {
 	private string? email;
 	private string? password;
-	
+
 	private async Task Signup()
 	{
 		Console.WriteLine("signup start ---- >");
@@ -61,8 +61,9 @@
 		try
 		{
 			var response = await SupabaseClient.Auth.SignUp(email, password);
-			if (response.User != null)
+			if (response?.User != null)
 			{
+				Console.WriteLine($"sign up user = {response.User}");
 				NavigationManager.NavigateTo("/");
 			}
 			else

@@ -126,6 +126,5 @@ public class AppState : INotifyPropertyChanged
     {
       await sessionStorage.SaveAppStateAsync(this);
     }
-
   }
 }

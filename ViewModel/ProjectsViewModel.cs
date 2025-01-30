@@ -53,6 +53,10 @@ public class ProjectsViewModel
     {
       var userInfo = await usersTableService.GetProjectUserAsync((Guid)user);
       Console.WriteLine($"userId = {userInfo.Id} Name = {userInfo.Name}");
+      if (string.IsNullOrEmpty(userInfo.PictureUrl))
+      {
+        userInfo.PictureUrl = "/images/no_user_icon.png";
+      }
       // if (userInfo.Role == null) continue;
       userInfo.Role = "guest";
       projectRepository.AddCurrentProjectUsers(userInfo);

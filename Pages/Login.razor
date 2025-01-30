@@ -20,14 +20,14 @@
 				<RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH5">Characom Imager Pro Online</RadzenText>
 				<RadzenStack Class="full-width">
 					<RadzenText>E-mail</RadzenText>
-					<RadzenTextBox @bind-bind-Value="email" Placeholder="E-mail" />
+					<RadzenTextBox @bind-Value="email" @onkeydown="HandleKeyDown" Placeholder="E-mail" />
 				</RadzenStack>
 				<RadzenStack Class="full-width">
 					<RadzenText>password</RadzenText>
-					<RadzenPassword @bind-value="password" Placeholder="password" />
+					<RadzenPassword @bind-value="password" @onkeydown="HandleKeyDown" Placeholder="password" />
 				</RadzenStack>
 				<RadzenRow Gap="10" JustifyContent="JustifyContent.Center">
-					<RadzenButton Click=@(async () => await LoginProc())>ログイン</RadzenButton>
+					<RadzenButton ButtonStyle="ButtonStyle.Primary" Click=@(async () => await LoginProc())>ログイン</RadzenButton>
 				</RadzenRow>
 				<RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body2">or you can sign in width </RadzenText>
 				<RadzenRow Gap="10" JustifyContent="JustifyContent.Center">
@@ -48,19 +48,19 @@
 
 <style>
 	.custom-cursor {
-	  cursor: default; /* デフォルトのカーソル */
+	cursor: default; /* デフォルトのカーソル */
 	}
 
 	.custom-cursor:hover {
-	  cursor: pointer; /* ホバー時に指マークのカーソルに変更 */
+	cursor: pointer; /* ホバー時に指マークのカーソルに変更 */
 	}
 
 	.full-width {
-		width: 100%;
+	width: 100%;
 	}
 
 	.stack-margin-top {
-		padding-top: 50px; /* 必要なスペースを指定 */
+	padding-top: 50px; /* 必要なスペースを指定 */
 	}
 </style>
 
@@ -100,12 +100,12 @@
 
 	private async Task LoginProc()
 	{
-		Console.WriteLine("LoginStart...");
+		Console.WriteLine("LoginStart...{email} {password}");
 		try
 		{
 			if (string.IsNullOrEmpty(email)) return;
 			if (string.IsNullOrEmpty(password)) return;
-			var response = await SupabaseClient.Auth.SignIn(email, password);
+			var response = await SupabaseClient.Auth.SignInWithPassword(email, password);
 			if (response == null) return;
 			if (response.User == null) return;
 			NavigationManager.NavigateTo("/");
@@ -114,5 +114,11 @@
 		{
 			Console.WriteLine($"Error: {ex.Message}");
 		}
+	}
+
+	private async Task HandleKeyDown(KeyboardEventArgs args)
+	{
+		if (args.Key != "Enter") return;
+		await LoginProc(); // エンターキーが押されたらボタンのログイン
 	}
 }

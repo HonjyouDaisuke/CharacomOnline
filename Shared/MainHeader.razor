@@ -28,7 +28,7 @@
 		</RadzenColumn>
 		<RadzenColumn >
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End" Style="padding-right: 1rem;">
-				<ProfileMenu UserPicture="@AppState.UserPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName"/>
+				<ProfileMenu UserPicture="@userPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName"/>
 			</RadzenStack>
 		</RadzenColumn>
 	</RadzenRow>
@@ -52,37 +52,20 @@
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
-		var session = SupabaseClient.Auth.CurrentSession;
-		if (session?.User != null)
+
+		await UsersViewModel.SetUserInfoToAppState();
+
+		userPictureUrl = AppState.UserPictureUrl;
+		if (string.IsNullOrEmpty(userPictureUrl))
 		{
-			Console.WriteLine($"Callback from Box -> supabaseUserId = {session.User.Id}");
-			if (Guid.TryParse(session.User.Id, out Guid guid))
-			{
-				await UsersViewModel.SetCurrentUser(guid);
-				Console.WriteLine($"Converted GUID: {guid}");
-				var user = UsersViewModel.GetCurrentUserInfo();
-				AppState.UserId = user.Id;
-				AppState.UserRole = user.UserRole;
-				AppState.UserName = user.Name;
-				AppState.UserPictureUrl = user.PictureUrl;
-				Console.WriteLine($" callback UserName = {user.Name}");
-			}
-			else
-			{
-				Console.WriteLine("Invalid GUID format.");
-			}
-
-		}
-		Console.WriteLine($"Header init currentUser = {AppState.UserName}");
-		
-		userPictureUrl = UsersViewModel.GetUserPicture();
-		userName = UsersViewModel.GetUserName();
+			userPictureUrl = "/images/no_user_icon.png";
+		} 
+		userName = AppState.UserName;
 		isBoxLogin = OAuthService.IsLogin();
-		isDBLogin = await SessionStorage.IsLoginAsync();
-		currentProjectId = ProjectsViewModel.GetCurrentProjectId();
-		currentProjectName = ProjectsViewModel.GetCurrentProjectName();
+		isDBLogin = AppState.IsLoggedIn;
+		currentProjectId = AppState.CurrentProjectId;
+		currentProjectName = AppState.CurrentProjectName;
 		await InvokeAsync(StateHasChanged);
-
 	}
 
 	private async Task ChangeExpand()

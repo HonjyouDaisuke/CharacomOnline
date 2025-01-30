@@ -6,6 +6,7 @@ using CharacomOnline.Service.TableService;
 using CharacomOnline.ViewModel;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Radzen;
+using Supabase;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,7 +62,9 @@ if (string.IsNullOrEmpty(supabaseUrl) || string.IsNullOrEmpty(supabaseAnonKey))
 
 builder.Services.AddSingleton<Supabase.Client>(_ =>
 {
-  var client = new Supabase.Client(supabaseUrl, supabaseAnonKey);
+  var options = new SupabaseOptions { AutoRefreshToken = true };
+
+  var client = new Supabase.Client(supabaseUrl, supabaseAnonKey, options);
   return client;
 });
 

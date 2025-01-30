@@ -159,6 +159,7 @@ public class CharaDataViewModel(
     CancellationToken token
   )
   {
+    Console.WriteLine($"chara = {currentChara} materila = {currentMaterial}");
     if (string.IsNullOrEmpty(currentChara) || string.IsNullOrEmpty(currentMaterial))
       return;
     await _charaDataTableService.GetCharaListAsync(

@@ -1,5 +1,6 @@
 ﻿using CharacomOnline.Entity;
 using CharacomOnline.Repositories;
+using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
 
 namespace CharacomOnline.ViewModel;
@@ -8,11 +9,21 @@ public class UsersViewModel
 {
   private readonly UserRepository userRepository;
   private readonly UsersTableService usersTableService;
+  private readonly AppState appState;
+  private readonly Supabase.Client supabaseClient;
 
-  public UsersViewModel(UserRepository _userRepository, UsersTableService _usersTableService)
+  public UsersViewModel(
+    UserRepository _userRepository,
+    UsersTableService _usersTableService,
+    AppState _appState,
+    Supabase.Client _supabaseClient
+  )
   {
     userRepository = _userRepository ?? throw new ArgumentNullException(nameof(_userRepository));
-    usersTableService = _usersTableService ?? throw new ArgumentNullException(nameof(_usersTableService));
+    usersTableService =
+      _usersTableService ?? throw new ArgumentNullException(nameof(_usersTableService));
+    appState = _appState ?? throw new ArgumentNullException(nameof(_appState));
+    supabaseClient = _supabaseClient ?? throw new ArgumentNullException(nameof(_supabaseClient));
   }
 
   public async Task SetCurrentUser(Guid userId)
@@ -62,6 +73,10 @@ public class UsersViewModel
 
     foreach (var user in users)
     {
+      if (string.IsNullOrEmpty(user.PictureUrl))
+      {
+        user.PictureUrl = "/images/no_user_icon.png";
+      }
       userRepository.AddUser(user);
     }
   }
@@ -74,7 +89,31 @@ public class UsersViewModel
   public async Task UpdateUserRoleAsync(Guid userId, string role)
   {
     var response = userRepository.UpdateUserRole(userId, role);
-    if (response == false) return;
+    if (response == false)
+      return;
     await usersTableService.UpdateUserRoleAsync(userId, role);
+  }
+
+  public async Task SetUserInfoToAppState()
+  {
+    var session = supabaseClient.Auth.CurrentSession;
+    if (session?.User != null)
+    {
+      if (Guid.TryParse(session.User.Id, out Guid guid))
+      {
+        await SetCurrentUser(guid);
+        var user = GetCurrentUserInfo();
+        appState.UserId = user.Id;
+        appState.UserRole = user.UserRole;
+        appState.UserName = user.Name;
+        appState.UserPictureUrl = user.PictureUrl;
+        appState.IsLoggedIn = true;
+        Console.WriteLine($" set AppState UserName = {user.Name}");
+      }
+      else
+      {
+        Console.WriteLine("Invalid GUID format.");
+      }
+    }
   }
 }

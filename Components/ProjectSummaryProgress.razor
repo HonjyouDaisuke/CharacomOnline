@@ -1,3 +1,4 @@
+@inject NavigationManager NavigationManager
 
 <RadzenCard>
 	<RadzenDataGrid Data="@ProgressData.Keys" TItem="string" AllowPaging="true" PagerPosition="PagerPosition.Bottom">
@@ -15,15 +16,13 @@
 						@{
 							// `ProgressData` から charaName と materialName を使ってデータ取得
 							var materialData = ProgressData.TryGetValue(charaName, out var materials) &&
-							                   materials.TryGetValue(materialName, out var data)
+																	materials.TryGetValue(materialName, out var data)
 								? data
 								: (SelectedCount: 0, CharaCount: 0);
 						}
 						<div @ondblclick="@(e => OnCellDoubleClick(charaName, materialName))">
 							<!-- プログレスバー表示 -->
 							<RadzenProgressBar Max="@materialData.CharaCount" Value="@materialData.SelectedCount"  Unit=@($" / {materialData.CharaCount}") Style="width: 100%;" />
-							<!-- 進捗テキスト表示 -->
-							@*<div>@($"{materialData.SelectedCount} / {materialData.CharaCount}")</div>*@
 						</div>
 					</Template>
 				</RadzenDataGridColumn>
@@ -40,6 +39,7 @@
 	private void OnCellDoubleClick(string charaName, string materialName)
 	{
 		Console.WriteLine($"セルをダブルクリック: 行='{charaName}', 列='{materialName}'");
+		NavigationManager.NavigateTo($"/chara-data-select?chara={charaName}&material={materialName}");
 	}
 
 	protected override void OnInitialized()
