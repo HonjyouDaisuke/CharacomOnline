@@ -9,6 +9,7 @@
 @inject AppState AppState
 @inject LocalStorageService LocalStorage
 @inject ProjectsViewModel ProjectsViewModel
+@inject ThemeService ThemeService
 
 <PageTitle>CharacomOnline</PageTitle>
 <RadzenComponents @rendermode="InteractiveServer" />
@@ -28,11 +29,16 @@
 </RadzenLayout>
 
 @code {
-    private bool parentSidebarExpanded = true;
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
+	private bool parentSidebarExpanded = true;
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
 
+		var option = new ThemeOptions
+			{
+				Theme = "standard",
+			};
+		ThemeService.SetTheme(option);
         // SessionStorage から AppState を復元
         var restoredState = await SessionStorage.LoadAppStateAsync();
         if (string.IsNullOrEmpty(restoredState.UserId.ToString()))
