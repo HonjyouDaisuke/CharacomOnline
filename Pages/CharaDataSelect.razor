@@ -12,6 +12,7 @@
 @inject DialogService DialogService
 @inject AppState AppState
 
+@namespace CharacomOnline.Pages
 @if (isLoading)
 {
 	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
@@ -23,7 +24,7 @@ else if (userId == null)
 	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
 	ErrorMessage="ログインできていません。ログインしてください"
 	LinkMsg="ログインへ"
-	LinkClick=" () => OnNaviClick(loginUrl)" />
+	LinkClick="@(() => OnNaviClick(loginUrl))" />
 }
 else if (projectId == null)
 {
@@ -38,8 +39,22 @@ else
 	<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
 		<RadzenSplitterPane Size="35%" Resizable="true">
 			<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
+				<RadzenStack AlignItems="AlignItems.End" Orientation="Radzen.Orientation.Vertical" Gap="3" >
+					<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
+						<RadzenLabel>グリッドライン</RadzenLabel>
+						<RadzenSwitch @bind-Value="isGridLine" Change="@(async () => await OnSetupChanged())"/>
+					</RadzenStack>
+					<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
+						<RadzenLabel>センターライン</RadzenLabel>
+						<RadzenSwitch @bind-Value="isCenterLine" Change="@(async () => await OnSetupChanged())"/>
+					</RadzenStack>
+					<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
+						<RadzenLabel>標準文字</RadzenLabel>
+						<RadzenSwitch @bind-Value="isStandard" Change="@(async () => await OnSetupChanged())"/>
+					</RadzenStack>
+				</RadzenStack>
 				<CharaImageCard ImageData="@standardImage" Height="160" Width="160" IsLoading="@stdLoading" />
-				<CharaImageCard IsLoading="@isThinLoading" ImageData="@ImageEffectService.GetBinaryImageData(CharaDataViewModel.OverlayBmp)" Height="160" Width="160" />
+				<CharaImageCard IsLoading="@isThinLoading" ImageData="@ImageEffectService.GetBinaryImageData(CharaDataViewModel.ViewBitmap)" Height="160" Width="160" />
 				<CharaImageCard ImageData="@strokeImage" Height="160" Width="160" IsLoading="@strokeLoading" />
 			</RadzenStack>
 		</RadzenSplitterPane>
@@ -83,6 +98,7 @@ else
 	}
 
 </style>
+
 @code {
 	private bool isLoading = true;
 	private Guid? userId;
@@ -97,8 +113,14 @@ else
 	private bool isThinLoading = false;
 
 	private bool stdLoading = false;
-	private bool strokeLoading = false;
+  private bool strokeLoading = false;
 	private bool isCharaLoading = false;
+
+	private bool isStandard = false;
+
+	private bool isCenterLine = false;
+
+	private bool isGridLine = false;
 	private CancellationTokenSource _cts = new CancellationTokenSource();
 
 	private ProgressDialogParameters _progressDialogParameters = new ();
@@ -128,12 +150,18 @@ else
 		}
 		isThinLoading = true;
 		await InvokeAsync(StateHasChanged);
-		await CharaDataViewModel.MakeOverlayBitmapAsync();
+		await CharaDataViewModel.MakeOverlayBitmapAsync(isStandard, isCenterLine, isGridLine);
 		isThinLoading = false;
 		await InvokeAsync(StateHasChanged);
 		Console.WriteLine("作成完了");
 	}
 
+	private async Task OnSetupChanged()
+	{
+		Console.WriteLine($"標準:{isStandard} センター:{isCenterLine} グリッド:{isGridLine}");
+		await CharaDataViewModel.MakeViewBitmapAsync(isStandard, isCenterLine, isGridLine);
+		await InvokeAsync(StateHasChanged);
+	}
 	private bool getQueryParameter()
 	{
 		var uri = new Uri(Navi.Uri);
@@ -305,7 +333,7 @@ else
         {
 					Console.WriteLine($"GetViewCharaDataAsync");
         
-            await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId, _cts.Token);
+            await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId, _cts.Token, isStandard, isCenterLine, isGridLine);
         }
         catch (OperationCanceledException)
         {

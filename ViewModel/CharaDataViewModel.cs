@@ -2,6 +2,7 @@ using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.IdentityModel.Tokens;
 using SkiaSharp;
 
 namespace CharacomOnline.ViewModel;
@@ -36,22 +37,22 @@ public class CharaDataViewModel(
   public event Action<int>? ProgressChanged;
   public SKBitmap? OverlayBmp { get; set; }
 
+  public SKBitmap? ViewBitmap { get; set; }
+
   public string currentChara = "";
   public string currentMaterial = "";
 
-  public async Task MakeOverlayBitmapAsync()
+  public async Task MakeOverlayBitmapAsync(bool isStandard, bool isCenterLine,bool isGridLine)
   {
-    await Task.Run(() =>
+    await Task.Run(async () =>
     {
       OverlayBmp = new SKBitmap(160, 160);
-      if (OverlayBmp == null)
-        return;
       OverlayBmp = ImageEffectService.WhiteFilledBitmap(OverlayBmp);
       foreach (var item in _charaDataRepository.viewCharaData)
       {
         if (!item.IsSelected)
           continue;
-        Console.WriteLine($"overLay‚É’Ç‰Á:{item.FileId}");
+        Console.WriteLine($"overLayã«è¿½åŠ :{item.FileId}");
         if (OverlayBmp == null)
           continue;
         if (item.ThinImage == null)
@@ -61,18 +62,33 @@ public class CharaDataViewModel(
       if (OverlayBmp == null)
         return;
       OverlayBmp = ImageEffectService.ColorChangeBitmap(OverlayBmp, SKColors.Blue);
-
-      if (charaDataRepository.StandardThinBmp == null)
-        return;
-      var Standard = ImageEffectService.ColorChangeBitmap(
-        charaDataRepository.StandardThinBmp,
-        SKColors.Red
-      );
-      OverlayBmp = ImageEffectService.OverlayBinaryImages(OverlayBmp, Standard);
-      Console.WriteLine("’Ç‰ÁŠ®—¹‚Å‚·B");
+      await MakeViewBitmapAsync(isStandard, isCenterLine, isGridLine);
+      Console.WriteLine("è¿½åŠ å®Œäº†ã§ã™ã€‚");
     });
   }
 
+  public async Task MakeViewBitmapAsync(bool isStandard, bool isCenterLine,bool isGridLine)
+  {
+    ViewBitmap = new SKBitmap(160, 160);
+    ViewBitmap = ImageEffectService.WhiteFilledBitmap(ViewBitmap);
+    if (OverlayBmp == null) return;
+    ViewBitmap = OverlayBmp;
+    if (ViewBitmap == null) return;
+    await Task.Run(() => {
+      Console.WriteLine("ããƒ¼ã‚Œ");
+      if (isStandard && charaDataRepository.StandardThinBmp != null) {
+        var Standard = ImageEffectService.ColorChangeBitmap(charaDataRepository.StandardThinBmp, SKColors.Red);
+        ViewBitmap = ImageEffectService.OverlayBinaryImages(ViewBitmap, Standard);
+      }
+      if (isGridLine) {
+        Console.WriteLine("æ›¸ãã‚ˆ");
+        ViewBitmap = ImageEffectService.GridLine(ViewBitmap);
+      }
+      if (isCenterLine) {
+        ViewBitmap = ImageEffectService.CenterLine(ViewBitmap);
+      }
+    });
+  }
   public void ClearOverlayBitmap()
   {
     OverlayBmp = new SKBitmap(160, 160);
@@ -113,7 +129,7 @@ public class CharaDataViewModel(
 
   public async Task<Guid?> DataInputAsync(IBrowserFile file)
   {
-    // ƒtƒ@ƒCƒ‹‚ğStorage‚É•Û‘¶
+    // ãƒ•ã‚¡ã‚¤ãƒ«ã‚’Storageã«ä¿å­˜
     var uniqueFileName = RandomStringMaker.MakeString(10) + Path.GetExtension(file.Name);
     await _storageService.UploadFileAsync(file, uniqueFileName);
     var bmp = await ImageEffectService.LoadImageFileAsync(file);
@@ -125,7 +141,7 @@ public class CharaDataViewModel(
     var thumbnailBmpString = ImageEffectService.GetBinaryImageData(thumbnailBmp);
     if (thumbnailBmpString == null)
       return null;
-    // CharaImageî•ñ‚ğDB‚É•Û‘¶
+    // CharaImageæƒ…å ±ã‚’DBã«ä¿å­˜
     var imageId = await _imagesTableService.AddImageFile(
       uniqueFileName,
       "Images/",
@@ -156,7 +172,10 @@ public class CharaDataViewModel(
   public async Task GetViewCharaDataAsync(
     string accessToken,
     Guid projectId,
-    CancellationToken token
+    CancellationToken token,
+    bool isStandard,
+    bool isCenterLine,
+    bool isGridLine
   )
   {
     Console.WriteLine($"chara = {currentChara} materila = {currentMaterial}");
@@ -174,7 +193,7 @@ public class CharaDataViewModel(
         Console.WriteLine($"progress:{progress}");
       }
     );
-    await MakeOverlayBitmapAsync();
+    await MakeOverlayBitmapAsync(isStandard, isCenterLine, isGridLine);
   }
 
   public async Task ClearViewCharaData()
@@ -186,10 +205,10 @@ public class CharaDataViewModel(
   public async Task GetStandardData(string accessToken, string charaName)
   {
     var fileId = await _standardTableService.GetFileIdAsync(charaName);
-    Console.WriteLine($"•W€ID:{fileId}");
+    Console.WriteLine($"æ¨™æº–ID:{fileId}");
     if (fileId == null)
     {
-      Console.WriteLine($"•W€š‘Ì‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½B{fileId}");
+      Console.WriteLine($"æ¨™æº–å­—ä½“ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã§ã—ãŸã€‚{fileId}");
       return;
     }
     var bmp = await _boxFileService.DownloadFileAsSKBitmapAsync(fileId, accessToken);
@@ -201,10 +220,10 @@ public class CharaDataViewModel(
   public async Task GetStrokeData(string accessToken, string charaName)
   {
     var fileId = await _strokeTableService.GetFileIdAsync(charaName);
-    Console.WriteLine($"•M‡ID:{fileId}");
+    Console.WriteLine($"ç­†é †ID:{fileId}");
     if (fileId == null)
     {
-      Console.WriteLine($"•M‡‘‘Ì‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½B{fileId}");
+      Console.WriteLine($"ç­†é †æ›¸ä½“ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã§ã—ãŸã€‚{fileId}");
       return;
     }
     var bmp = await _boxFileService.DownloadFileAsSKBitmapAsync(fileId, accessToken);

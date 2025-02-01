@@ -246,4 +246,43 @@ public static class ImageEffectService
 
     return threshold;
   }
+
+  public static SKBitmap? GridLine(SKBitmap? bitmap)
+  {
+    if (bitmap == null) return null;
+    var heightSize = bitmap.Height / 8;
+    var widthSize = bitmap.Width / 8;
+    var paint = new SKPaint();
+
+    paint.Color = SKColors.DarkGray;
+    paint.StrokeWidth = 1;
+    Console.WriteLine("書いちゃった");
+    using (var canvas = new SKCanvas(bitmap))
+    {
+      for (int i = 1; i < 8; i++)
+      {
+        canvas.DrawLine(0, i * heightSize, bitmap.Width, i * heightSize, paint);
+        canvas.DrawLine(i * widthSize, 0, i * widthSize, bitmap.Height, paint);
+      }
+    }
+    return bitmap;
+  }
+
+  public static SKBitmap? CenterLine(SKBitmap? bitmap)
+  {
+    if (bitmap == null) return null;
+    var heightSize = bitmap.Height / 2;
+    var widthSize = bitmap.Width / 2;
+    var paint = new SKPaint();
+
+    paint.Color = SKColors.Red;
+    paint.StrokeWidth = 1;
+
+    using (var canvas = new SKCanvas(bitmap))
+    {
+      canvas.DrawLine(0, heightSize, bitmap.Width, heightSize, paint);
+      canvas.DrawLine(widthSize, 0, widthSize, bitmap.Height, paint);
+    }
+    return bitmap;
+  }
 }
