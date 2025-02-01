@@ -24,13 +24,16 @@
 		</div>
 	</RadzenBody>
 	<RadzenFooter>
-		Footer
+        Characom Imager Pro Online ©2025 鈴木・三崎法科学研究所
 	</RadzenFooter>
 </RadzenLayout>
 
 @code {
-	private bool parentSidebarExpanded = true;
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+    private bool parentSidebarExpanded = true;
+    private bool isDark = false;
+
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
 

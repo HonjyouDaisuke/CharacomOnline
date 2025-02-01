@@ -11,6 +11,7 @@
 @inject TokenStorage TokenStorage
 @inject UsersViewModel UsersViewModel
 @inject AppState AppState
+@inject LocalStorageService LocalStorage
 
 <h3>ProjectsSelect</h3>
 
@@ -64,16 +65,30 @@
         return true;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
+        await UsersViewModel.SetUserInfoToAppState(); 
         userId = AppState.UserId;
-        projectId = AppState.CurrentProjectId;
-
+        var storageProjectId = await LocalStorage.GetCurrentProjectIdAsync();
+        if (storageProjectId != null)
+        {
+            projectId = storageProjectId;
+        }
+        else
+        {
+            projectId = AppState.CurrentProjectId;
+        }
+        
         isStandard = isStandardUser();
         if (userId == null) return;
         projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
+        await InvokeAsync(StateHasChanged);
         if (projectId == null) return;
         CheckInitialSelect(projectId);
+        await InvokeAsync(StateHasChanged);
+
+
     }
 
     private void OnClick(string text)

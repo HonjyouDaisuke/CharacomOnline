@@ -55,15 +55,23 @@
             }
 
             await UserViewModel.SetCurrentUser(userId);
+            var user = UserViewModel.GetCurrentUserInfo();
+            if (user != null) AppState.SetUserInfoFromUserTable(user);
 
             Console.WriteLine($"ログイン成功: {session.User.Email}");
             Console.WriteLine($"ユーザの権限：{UserViewModel.GetCurrentUserRole()}");
-            AppState.UserName = UserViewModel.GetUserName();
-            AppState.UserPictureUrl = UserViewModel.GetUserPicture();
-            AppState.UserRole = UserViewModel.GetCurrentUserRole();
-            AppState.UserId = UserViewModel.GetCurrentUserInfo().Id;
-            AppState.IsLoggedIn = true;
-            NavigationManager.NavigateTo("/");
+
+            Console.WriteLine($"user name = {AppState.UserName}");
+            Console.WriteLine($"user role = {AppState.UserRole}");
+            Console.WriteLine($"user pict = {AppState.UserPictureUrl}");
+
+
+            //AppState.UserName = UserViewModel.GetUserName();
+            //AppState.UserPictureUrl = UserViewModel.GetUserPicture();
+            //AppState.UserRole = UserViewModel.GetCurrentUserRole();
+            //AppState.UserId = UserViewModel.ge();
+            //AppState.IsLoggedIn = true;
+            NavigationManager.NavigateTo("/projects", true);
         }
         catch (Exception ex)
         {

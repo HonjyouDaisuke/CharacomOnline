@@ -28,7 +28,8 @@
 		</RadzenColumn>
 		<RadzenColumn >
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End" Style="padding-right: 1rem;">
-				<ProfileMenu UserPicture="@userPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName"/>
+				<RadzenAppearanceToggle />
+				<ProfileMenu UserPicture="@userPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName" />
 			</RadzenStack>
 		</RadzenColumn>
 	</RadzenRow>
@@ -54,7 +55,7 @@
 		if (!firstRender) return;
 
 		await UsersViewModel.SetUserInfoToAppState();
-
+		Console.WriteLine($"userPict = {AppState.UserPictureUrl}");
 		userPictureUrl = AppState.UserPictureUrl;
 		if (string.IsNullOrEmpty(userPictureUrl))
 		{

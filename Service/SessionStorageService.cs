@@ -107,12 +107,13 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage, Local
 
   public async Task SaveAppStateAsync(AppState appState)
   {
-    await _sessionStorage.SetAsync("CurrentProjectName", appState.CurrentProjectName);
-    await _sessionStorage.SetAsync("CurrentProjectId", appState.CurrentProjectId);
-    await _sessionStorage.SetAsync("UserId", appState.UserId);
-    await _sessionStorage.SetAsync("UserName", appState.UserName);
-    await _sessionStorage.SetAsync("UserRole", appState.UserRole);
-    await _sessionStorage.SetAsync("UserPictureUrl", appState.UserPictureUrl);
+    if (appState.CurrentProjectName != null) await _sessionStorage.SetAsync("CurrentProjectName", appState.CurrentProjectName);
+    if (appState.CurrentProjectId != null) await _sessionStorage.SetAsync("CurrentProjectId", appState.CurrentProjectId);
+    Console.WriteLine($"-----{appState.UserId}");
+    if (appState.UserId != null) await _sessionStorage.SetAsync("UserId", appState.UserId);
+    if (appState.UserName != null) await _sessionStorage.SetAsync("UserName", appState.UserName);
+    if (appState.UserRole != null) await _sessionStorage.SetAsync("UserRole", appState.UserRole);
+    if (appState.UserPictureUrl != null) await _sessionStorage.SetAsync("UserPictureUrl", appState.UserPictureUrl);
   }
 
   public async Task<AppState> LoadAppStateAsync()

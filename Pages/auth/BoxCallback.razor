@@ -34,7 +34,7 @@
                 await TokenStorage.SaveTokenAsync(tokenResponse);
 
                 // 認証成功後のページにリダイレクト
-                Navigation.NavigateTo("/box", true);
+                Navigation.NavigateTo("/project-dashboard", true);
             }
             catch (Exception ex)
             {
