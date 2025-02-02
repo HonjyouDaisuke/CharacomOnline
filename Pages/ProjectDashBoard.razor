@@ -7,6 +7,7 @@
 @inject NavigationManager Navi
 @inject AppState AppState
 @inject TokenStorage TokenStorage
+@inject UsersViewModel UsersViewModel
 
 <h3>プロジェクトの管理</h3>
 @if (userId == null)
@@ -67,6 +68,8 @@ else
 
 	protected override async Task OnInitializedAsync()
 	{
+		await UsersViewModel.SetUserInfoToAppState();
+
 		userId = AppState.UserId;
 		projectId = ProjectsViewModel.GetCurrentProjectId();
 		if (projectId == null)

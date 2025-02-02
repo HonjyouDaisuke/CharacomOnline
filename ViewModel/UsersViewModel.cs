@@ -20,8 +20,7 @@ public class UsersViewModel
 	)
 	{
 		userRepository = _userRepository ?? throw new ArgumentNullException(nameof(_userRepository));
-		usersTableService =
-			_usersTableService ?? throw new ArgumentNullException(nameof(_usersTableService));
+		usersTableService = _usersTableService ?? throw new ArgumentNullException(nameof(_usersTableService));
 		appState = _appState ?? throw new ArgumentNullException(nameof(_appState));
 		supabaseClient = _supabaseClient ?? throw new ArgumentNullException(nameof(_supabaseClient));
 	}
