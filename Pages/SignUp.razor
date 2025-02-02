@@ -1,0 +1,79 @@
+﻿@page "/signup"
+@layout EmptyLayout
+@inject Supabase.Client SupabaseClient
+@inject NavigationManager NavigationManager
+
+@namespace CharacomOnline.Pages
+
+<PageTitle>CharacomImagerPro Online LoginPage</PageTitle>
+
+<RadzenRow Class="stack-margin-top" JustifyContent="JustifyContent.Center">
+	<RadzenColumn Size="4">
+		<RadzenCard>
+			<RadzenStack AlignItems="AlignItems.Center">
+				<RadzenImage Path="images/characomIcon.png" height="81" width="100" />
+				<RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH5">Characom Imager Pro Online</RadzenText>
+				<RadzenStack Class="full-width">
+					<RadzenText>E-mail</RadzenText>
+					<RadzenTextBox Placeholder="E-mail" @bind-Value="email" />
+				</RadzenStack>
+				<RadzenStack Class="full-width">
+					<RadzenText>password</RadzenText>
+					<RadzenPassword Placeholder="password" @bind-Value="password" />
+				</RadzenStack>
+				<RadzenRow Gap="10" JustifyContent="JustifyContent.Center">
+					<RadzenButton Click=@(async () => await Signup()) >新規登録</RadzenButton>
+				</RadzenRow>
+			</RadzenStack>
+		</RadzenCard>
+	</RadzenColumn>
+</RadzenRow>
+
+<style>
+	.custom-cursor {
+	cursor: default; /* デフォルトのカーソル */
+	}
+
+	.custom-cursor:hover {
+	cursor: pointer; /* ホバー時に指マークのカーソルに変更 */
+	}
+
+	.full-width {
+	width: 100%;
+	}
+
+	.stack-margin-top {
+	padding-top: 50px; /* 必要なスペースを指定 */
+	}
+</style>
+@code {
+	private string? email;
+	private string? password;
+
+	private async Task Signup()
+	{
+		Console.WriteLine("signup start ---- >");
+		if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+		{
+			Console.WriteLine("email or password empty");
+			return;
+		}
+		try
+		{
+			var response = await SupabaseClient.Auth.SignUp(email, password);
+			if (response?.User != null)
+			{
+				Console.WriteLine($"sign up user = {response.User}");
+				NavigationManager.NavigateTo("/");
+			}
+			else
+			{
+				Console.WriteLine("Sign up error...");	
+			}
+		}
+		catch(Exception ex)
+		{
+			Console.WriteLine($"Sign up error...{ex.Message}");
+		}
+	}
+}

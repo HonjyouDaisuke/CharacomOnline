@@ -1,0 +1,50 @@
+﻿<RadzenCard>
+    <RadzenStack Gap="4" >
+        <RadzenRow>
+            <RadzenColumn Size="3">
+                <RadzenText>プロジェクト名</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="9">
+                <RadzenText>@ProjectName</RadzenText>
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow>
+            <RadzenColumn Size="3">
+                <RadzenText>説明</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="9">
+                <RadzenText>@ProjectDescription</RadzenText>
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenRow>
+            <RadzenColumn Size="2">
+                <RadzenText>作成者</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="4">
+                <RadzenText>@CreatedUserName</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="2">
+                <RadzenText>作成日</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="4">
+                <RadzenText>@CreatedAt</RadzenText>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter]
+    public required string ProjectName { get; set; } = "";
+
+    [Parameter]
+    public required string ProjectDescription { get; set; } = "";
+
+    [Parameter]
+    public required string CreatedUserName { get; set; } = "";
+
+    [Parameter]
+    public required string CreatedAt { get; set; } = "";
+
+
+}

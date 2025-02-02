@@ -1,0 +1,40 @@
+﻿@using CharacomOnline.Service
+<RadzenCard>
+    <LoadingProgress IsLoading="@IsLoading"/>
+    @if (!IsLoading)
+    {
+        if (string.IsNullOrEmpty(ImageData))
+        {
+            <RadzenImage Path="images/no_image.png" height="160" width="160" />
+        }
+        else
+        {
+            <img src="@ImageData" alt="Binary Image" width="@Width" height="@Height" />
+        }
+    }
+</RadzenCard>
+
+@code {
+    [Parameter]
+    public required string Width { get; set; }
+
+    [Parameter]
+    public required string Height { get; set; }
+
+    [Parameter]
+    public string? ImageData { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; } = true;
+
+    private string msg = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(() =>
+        {
+            msg = $"isLoading : {IsLoading} ImageData=NULL =>{ImageData == null} ImageData:[{ImageData}]";
+        });
+    }
+
+}

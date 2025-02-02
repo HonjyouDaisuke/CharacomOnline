@@ -14,13 +14,16 @@
     <link href="CharacomOnline.styles.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png"/>
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
-		<component type="typeof(RadzenTheme)" render-mode="ServerPrerendered" param-Theme="@("default")" />
-		<link href="_content/Radzen.Blazor/css/default-base.css" rel="stylesheet" />
-    <link href="_content/Radzen.Blazor/css/default.css" rel="stylesheet" />
+	<component type="typeof(RadzenTheme)" render-mode="ServerPrerendered" param-Theme="@("standard")" />
+	<link href="_content/Radzen.Blazor/css/standard-base.css" rel="stylesheet" />
+    <link href="_content/Radzen.Blazor/css/standard.css" rel="stylesheet" />
+    <link href="_content/Radzen.Blazor/css/standard-dark-base.css" rel="stylesheet" />
+    <link href="_content/Radzen.Blazor/css/standard-dark.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 <body>
     <component type="typeof(App)" render-mode="ServerPrerendered" />
-
     <div id="blazor-error-ui">
         <environment include="Staging,Production">
             An error has occurred. This application may no longer respond until reloaded.
@@ -33,8 +36,10 @@
     </div>
 
     <script src="_framework/blazor.server.js"></script>
-	<script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+    <!--
     <script src="_content/Blazor-ApexCharts/js/blazor-apex-charts.js"></script>
     <script src="_content/Blazor-ApexCharts/js/apex-charts.min.js"></script>
+    -->
 </body>
 </html>

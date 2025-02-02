@@ -1,0 +1,21 @@
+﻿@namespace CharacomOnline.Components
+@inject DialogService DialogService
+
+<RadzenStack Orientation="Radzen.Orientation.Vertical" JustifyContent="JustifyContent.Center">
+    <RadzenCard>
+        <div style="text-align: center;">
+            <img src="@SrcImageData" style="border: 1px solid black; padding: 4px; box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5); border-radius: 4px;" />
+        </div>
+    </RadzenCard>
+    <RadzenButton Text="OK" Click="OnClick" />
+</RadzenStack>
+
+@code {
+    [Parameter] 
+    public string? SrcImageData { get; set; }
+
+    private void OnClick()
+    {
+        DialogService.Close();
+    }
+}

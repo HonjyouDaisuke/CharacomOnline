@@ -1,0 +1,160 @@
+﻿@page "/upload"
+@using CharacomOnline.Service
+@using CharacomOnline.Service.TableService
+@using Blazored.LocalStorage
+@inject Supabase.Client SupabaseClient
+@inject SupabaseService SupabaseService
+@inject AppSettings AppSettings
+@inject NotificationService NotificationService
+@inject StorageService StorageService
+@inject ImagesTableService ImagesTableService
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject SessionStorageService SessionStorage
+
+
+<h3>ファイルアップロード</h3>
+
+<!-- InputFileコンポーネントを使用 -->
+<InputFile OnChange="HandleFileSelected" />
+
+<button @onclick="UploadFile">アップロード</button>
+
+<!--
+<h3>コネクションID</h3>
+<p>Supabase URL:@AppSettings.SUPABASE_URL</p>
+<p>Supabase AnonKey:@AppSettings.ANON_KEY</p>
+-->
+
+<input id="downloadFile" type="text" @bind="@fileNameString" />
+<button @onclick="DownloadFile">ダウンロード</button>
+<p>E-Mail : @userEmail</p>
+<p>session User Id : @userId</p>
+<br />
+
+
+
+@code {
+    private IBrowserFile? selectedFile;
+    private string? fileNameString;
+    private string? userEmail;
+    private string? userId;
+
+
+    // ファイル選択時の処理
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    // 通知
+    void ShowNotification(NotificationMessage message)
+    {
+        NotificationService.Notify(message);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // var client = await SupabaseService.GetClientAsync();
+
+        // セッション情報を再取得
+        var session = SupabaseClient.Auth.CurrentSession;
+        if (session != null && session.User != null)
+        {
+            userEmail = session.User.Email;
+        }
+        else
+        {
+            userEmail = "セッション情報がありません。ログインしてください。";
+        }
+
+        var _userId = await SessionStorage.GetUserIDAsync();
+        if (_userId == null) return;
+        userId = ((Guid)_userId).ToString();
+    }
+
+    private async Task AddImageData(string fileName, long size)
+    {
+        string Message = string.Empty;
+        try
+        {
+            await ImagesTableService.AddImageFile(fileName, "Images/", size, "");
+            Message = "User added successfully!";
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error: {ex.Message}";
+        }
+
+        Console.WriteLine(Message);
+    }
+
+    // アップロード処理
+    private async Task UploadFile()
+    {
+        Console.WriteLine("アップロードスタート");
+        if (selectedFile == null || string.IsNullOrEmpty(selectedFile.Name))
+        {
+            // 通知を表示
+            ShowNotification(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "アップロード エラー",
+                    Detail = $"ファイルが選択されていません。<br>ファイルを選択してください。",
+                    Duration = 2000
+                }
+            );
+            Console.WriteLine("ファイルが選択されていません");
+            return;
+        }
+
+        var uniqueFileName = RandomStringMaker.MakeString(10) + Path.GetExtension(selectedFile.Name);
+        Console.WriteLine($"アップロード準備完了{uniqueFileName}");
+
+        await StorageService.UploadFileAsync(selectedFile, uniqueFileName);
+        Console.WriteLine("アップロード終了");
+        // 通知を表示
+        ShowNotification(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "アップロード完了",
+                Detail = $"アップロードが完了しました。<br>ファイル名：{uniqueFileName}",
+                Duration = 2000
+            }
+        ); 
+        Console.WriteLine("アップロード成功");
+
+        await AddImageData(uniqueFileName, selectedFile.Size);
+
+    }
+
+    // ダウンロード処理
+    private async Task DownloadFile()
+    {
+        if (string.IsNullOrEmpty(fileNameString))
+        {
+            // 通知を表示
+            ShowNotification(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "ダウンロード エラー。",
+                    Detail = $"ファイルが選択されていません。<br>ファイル名を指定してください。",
+                    Duration = 2000
+                }
+            );
+            Console.WriteLine("ファイルが選択されていません");
+            return;
+        }
+        
+        // 通知を表示
+        ShowNotification(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "ダウンロード完了",
+                Detail = $"ダウンロードが完了しました。<br>ファイル名：{fileNameString}",
+                Duration = 2000
+            }
+        );
+    }
+    
+}

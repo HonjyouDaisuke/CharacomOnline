@@ -1,0 +1,28 @@
+﻿@using CharacomOnline.Entity
+
+<RadzenCard @onclick="OnCardClick" Style="@(Project?.GetCardStyle() ?? ";")">
+    <RadzenStack Orientation="Radzen.Orientation.Vertical">
+        <RadzenText class="rz-text-truncate" TextStyle="TextStyle.H6">@Project?.Name</RadzenText>
+        <RadzenText TextStyle="TextStyle.Body1">@Project?.Description</RadzenText>
+        <RadzenStack Orientation="Radzen.Orientation.Horizontal">
+            <RadzenIcon Icon="account_box" /> @(Project?.Users)人
+            <RadzenIcon Icon="image" /> @(Project?.Characters)個
+        </RadzenStack>
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter]
+    public ProjectViewData? Project { get; set; }
+
+    [Parameter]
+    public EventCallback<ProjectViewData> CardClick { get; set; }
+
+    private async Task OnCardClick()
+    {
+        if (CardClick.HasDelegate)
+        {
+            await CardClick.InvokeAsync(Project);
+        }
+    }
+}

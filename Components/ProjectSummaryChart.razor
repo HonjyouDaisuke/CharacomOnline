@@ -1,0 +1,36 @@
+﻿<RadzenCard>
+    <RadzenStack Gap="8" >
+        <RadzenRow>
+            <RadzenColumn Size="3">
+                <RadzenText>切出しフォルダ</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="7">
+                <RadzenProgressBar Value="@CharaDataCount" Max="@BoxFolderFiles" Unit=@($" / {BoxFolderFiles}") />
+            </RadzenColumn>
+            <RadzenColumn Size="2">
+                <RadzenButton>アップデート</RadzenButton>
+            </RadzenColumn>
+        </RadzenRow>
+    
+        <RadzenRow>
+            <RadzenColumn Size="3">
+                <RadzenText>選択文字</RadzenText>
+            </RadzenColumn>
+            <RadzenColumn Size="9">
+                <RadzenProgressBar Value="@SelectedCount" Max="CharaDataCount" Unit=@($" / {CharaDataCount}") />
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter]
+    public int CharaDataCount { get; set; }
+
+    [Parameter]
+    public int BoxFolderFiles { get; set; }
+
+    [Parameter]
+    public int SelectedCount { get; set; }
+
+}

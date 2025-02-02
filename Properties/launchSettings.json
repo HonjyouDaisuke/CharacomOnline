@@ -26,6 +26,16 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
+    "AppConfigurationTest": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:7241;http://localhost:5055",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_APPCONFIG": "Endpoint=https://characomimageronline.azconfig.io;Id=eLYJ;Secret=6BTLyUGZNbL9tqs2YdFHeEa6VJaCgUFblE9IJrDt3cUzeY24RyK0JQQJ99ALACi0881Ek3vgAAACAZAC3Fwn"
+      }
+    },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,

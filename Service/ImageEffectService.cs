@@ -5,9 +5,10 @@ namespace CharacomOnline.Service;
 
 public static class ImageEffectService
 {
-	public static string? GetBinaryImageData(SKBitmap skBitmap)
+	public static string? GetBinaryImageData(SKBitmap? skBitmap)
 	{
-		// 2値化画像をPNG形式にエンコードしてBase64文字列に変換
+		if (skBitmap == null) return null;
+		// 画像をPNG形式にエンコードしてBase64文字列に変換
 		using var image = SKImage.FromBitmap(skBitmap);
 		using var data = image.Encode(SKEncodedImageFormat.Png, 100);
 		var base64 = Convert.ToBase64String(data.ToArray());
@@ -98,8 +99,9 @@ public static class ImageEffectService
 		return result;
 	}
 
-	public static SKBitmap WhiteFilledBitmap(SKBitmap srcBitmap)
+	public static SKBitmap? WhiteFilledBitmap(SKBitmap srcBitmap)
 	{
+		if (srcBitmap == null) return null;
 		// 指定したサイズで新しいBitmapを作成
 		SKBitmap bitmap = new(srcBitmap.Width, srcBitmap.Height);
 
@@ -112,8 +114,10 @@ public static class ImageEffectService
 		return bitmap; // 塗りつぶしたBitmapを返す
 	}
 
-	public static SKBitmap? OverlayBinaryImages(SKBitmap backBitmap, SKBitmap foreBitmap)
+	public static SKBitmap? OverlayBinaryImages(SKBitmap? backBitmap, SKBitmap? foreBitmap)
 	{
+		if (backBitmap == null) return null;
+		if (foreBitmap == null) return null;
 		if (backBitmap.Width != foreBitmap.Width || backBitmap.Height != foreBitmap.Height)
 		{
 			return null;
@@ -176,11 +180,16 @@ public static class ImageEffectService
 
 		return resultBitmap;
 	}
-
 	public static SKBitmap ResizeBitmap(SKBitmap skBitmap, int width, int height)
 	{
-		var resizedBitmap = skBitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.High);
-		return resizedBitmap;
+		// SKSamplingOptions を使用して線形補間でリサイズ
+		var samplingOptions = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None);
+
+		// 新しいサイズでビットマップをリサイズ
+		var resizedBitmap = skBitmap.Resize(new SKImageInfo(width, height), samplingOptions);
+
+		// リサイズが失敗した場合、元のビットマップを返す
+		return resizedBitmap ?? skBitmap;
 	}
 
 	private static int GetThreshold(SKBitmap bitmap)
@@ -236,5 +245,60 @@ public static class ImageEffectService
 		}
 
 		return threshold;
+	}
+
+	public static SKBitmap? OutlineFrame(SKBitmap? bitmap)
+	{
+		if (bitmap == null) return null;
+		var paint = new SKPaint();
+
+		paint.Color = SKColors.Black;
+		paint.StrokeWidth = 1;
+		using (var canvas = new SKCanvas(bitmap))
+		{
+			canvas.DrawLine(0, 0, bitmap.Width - 1, 0, paint);
+			canvas.DrawLine(0, bitmap.Height - 1, bitmap.Width - 1, bitmap.Height - 1, paint);
+			canvas.DrawLine(0, 0, 0, bitmap.Height - 1, paint);
+			canvas.DrawLine(bitmap.Width - 1, 0, bitmap.Width - 1, bitmap.Height - 1, paint);
+		}
+		return bitmap;
+	}
+
+	public static SKBitmap? GridLine(SKBitmap? bitmap)
+	{
+		if (bitmap == null) return null;
+		var heightSize = bitmap.Height / 8;
+		var widthSize = bitmap.Width / 8;
+		var paint = new SKPaint();
+
+		paint.Color = SKColors.DarkGray;
+		paint.StrokeWidth = 1;
+		using (var canvas = new SKCanvas(bitmap))
+		{
+			for (int i = 1; i < 8; i++)
+			{
+				canvas.DrawLine(0, i * heightSize, bitmap.Width, i * heightSize, paint);
+				canvas.DrawLine(i * widthSize, 0, i * widthSize, bitmap.Height, paint);
+			}
+		}
+		return bitmap;
+	}
+
+	public static SKBitmap? CenterLine(SKBitmap? bitmap)
+	{
+		if (bitmap == null) return null;
+		var heightSize = bitmap.Height / 2;
+		var widthSize = bitmap.Width / 2;
+		var paint = new SKPaint();
+
+		paint.Color = SKColors.Red;
+		paint.StrokeWidth = 1;
+
+		using (var canvas = new SKCanvas(bitmap))
+		{
+			canvas.DrawLine(0, heightSize, bitmap.Width, heightSize, paint);
+			canvas.DrawLine(widthSize, 0, widthSize, bitmap.Height, paint);
+		}
+		return bitmap;
 	}
 }
