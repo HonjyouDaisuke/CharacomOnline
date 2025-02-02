@@ -1,19 +1,28 @@
 using SkiaSharp;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace CharacomOnline.Entity;
 
-public class CharaDataClass
+[Table("chara_data")]
+public class CharaDataClass : BaseModel
 {
+  [PrimaryKey("id")]
+  [Column("id")]
   public Guid Id { get; set; }
 
   // public string? ProjectId { get; set; }
 
+  [Column("file_id")]
   public string? FileId { get; set; }
 
+  [Column("chara_name")]
   public string? CharaName { get; set; }
 
+  [Column("material_name")]
   public string? MaterialName { get; set; }
 
+  [Column("times_name")]
   public string? TimesName { get; set; }
 
   public SKBitmap? SrcImage { get; set; }
@@ -22,15 +31,23 @@ public class CharaDataClass
 
   public SKBitmap? ThinImage { get; set; }
 
+  [Column("is_selected")]
   public bool IsSelected { get; set; } = false;
+
+  [Column("updated_by")]
+  public Guid? UpdatedBy { get; set; }
+
+  [Column("updated_at")]
+  public DateTime? UpdatedAt { get; set; }
 
   public override string ToString()
   {
     return $"id: {Id}  CharaName: {CharaName} MaterialName: {MaterialName} FileId: {FileId}";
   }
-  // ƒXƒ^ƒCƒ‹‚ğ“®“I‚ÉŒˆ’è‚·‚éƒƒ\ƒbƒh
+
+  // ï¿½Xï¿½^ï¿½Cï¿½ï¿½ï¿½ğ“®“Iï¿½ÉŒï¿½ï¿½è‚·ï¿½éƒï¿½\ï¿½bï¿½h
   public string GetCardStyle()
   {
-    return $"background-color: {(IsSelected ? "lightcyan" : "white")};";
+    return $"background-color: {(IsSelected ? "var(--rz-primary-light)" : "var(--rz-base)")};";
   }
 }

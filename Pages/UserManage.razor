@@ -1,0 +1,61 @@
+@page "/user-manage"
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Components
+@using CharacomOnline.Service
+@using CharacomOnline.Entity
+@inject NotificationService NotificationService
+@inject UsersViewModel UsersViewModel
+@inject AppState AppState
+
+@namespace CharacomOnline.Pages
+
+<h3>ユーザー管理</h3>
+
+<UsersGrid Users="@users" OnRoleChanged="UpdateUserRoleAsync"/>
+
+@code {
+    private List<UsersTable> users = new ();
+    protected override async Task OnInitializedAsync()
+    {
+        await UsersViewModel.FetchAllUsersAsync();
+        users = UsersViewModel.GetAllUserList();
+    }
+
+    private void showNotify(NotificationSeverity type, string detail)
+    {
+        // 通知を表示
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = type,
+                Summary = "権限の変更",
+                Detail = detail,
+                Duration = 2000
+            }
+            );
+    }
+
+    private async Task UpdateUserRoleAsync((Guid UserId, string NewRole) change)
+    {
+        try
+        {
+            var (userId, newRole) = change;
+
+            // ViewModel 経由でデータを更新
+            await UsersViewModel.UpdateUserRoleAsync(userId, newRole);
+            if (userId == AppState.UserId)
+            {
+                AppState.UserRole = newRole;
+                // TODO: ユーザのプロフィールメニューに権限を表示のみで追加
+                Console.WriteLine($"現在の権限を変更しました。{newRole}");
+            }
+            showNotify(NotificationSeverity.Success, $"ユーザの権限を更新しました 新しい権限「{newRole}」");
+            return;
+        }
+        catch (Exception ex)
+        {
+            showNotify(NotificationSeverity.Error, $"権限の更新でエラーが発生しました:{ex.Message}");
+            return;
+        }
+    }
+}	
+	

@@ -5,6 +5,15 @@ public class SelectingItemsRepository
   public readonly List<string> Characters = new();
   public readonly List<string> Materials = new();
 
+  public int GetCharactersCount()
+  {
+    return Characters.Count;
+  }
+
+  public int GetMaterialsCount()
+  {
+    return Materials.Count;
+  }
 
   /// <summary>
   /// 個別文字群をクリア
@@ -41,6 +50,4 @@ public class SelectingItemsRepository
   {
     Materials.Add(material);
   }
-
-
 }

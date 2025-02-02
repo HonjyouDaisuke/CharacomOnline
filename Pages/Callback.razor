@@ -8,6 +8,7 @@
 @inject NavigationManager NavigationManager
 @inject SessionStorageService SessionStorage
 @inject UsersViewModel UserViewModel
+@inject AppState AppState
 
 <h3>ログイン処理中...</h3>
 
@@ -48,15 +49,29 @@
             else
             {
                 Console.WriteLine("User ID が有効な GUID ではありません。");
+                AppState.IsLoggedIn = false;
                 NavigationManager.NavigateTo("/login");
                 return;
             }
 
             await UserViewModel.SetCurrentUser(userId);
+            var user = UserViewModel.GetCurrentUserInfo();
+            if (user != null) AppState.SetUserInfoFromUserTable(user);
 
             Console.WriteLine($"ログイン成功: {session.User.Email}");
             Console.WriteLine($"ユーザの権限：{UserViewModel.GetCurrentUserRole()}");
-            NavigationManager.NavigateTo("/");
+
+            Console.WriteLine($"user name = {AppState.UserName}");
+            Console.WriteLine($"user role = {AppState.UserRole}");
+            Console.WriteLine($"user pict = {AppState.UserPictureUrl}");
+
+
+            //AppState.UserName = UserViewModel.GetUserName();
+            //AppState.UserPictureUrl = UserViewModel.GetUserPicture();
+            //AppState.UserRole = UserViewModel.GetCurrentUserRole();
+            //AppState.UserId = UserViewModel.ge();
+            //AppState.IsLoggedIn = true;
+            NavigationManager.NavigateTo("/projects", true);
         }
         catch (Exception ex)
         {

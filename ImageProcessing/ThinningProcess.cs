@@ -38,7 +38,7 @@ public class ThinningProcess(SKBitmap srcBitmap)
 
     do
     {
-      Console.WriteLine("細線化プロセス");
+      // Console.WriteLine("細線化プロセス");
       ProcessThinning();
     } while (UpdateCheck());
 

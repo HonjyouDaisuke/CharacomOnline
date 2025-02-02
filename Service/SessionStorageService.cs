@@ -1,10 +1,10 @@
 ﻿namespace CharacomOnline.Service;
-
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
-public class SessionStorageService(ProtectedSessionStorage sessionStorage)
+public class SessionStorageService(ProtectedSessionStorage sessionStorage, LocalStorageService localStorage)
 {
   private readonly ProtectedSessionStorage _sessionStorage = sessionStorage;
+  private readonly LocalStorageService _localStorage = localStorage;
 
   public async Task SetUserIDAsync(Guid userID)
   {
@@ -31,7 +31,8 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
 
   public async Task SetUserPicture(string? pictureUrl)
   {
-    if (pictureUrl == null) return;
+    if (pictureUrl == null)
+      return;
     await _sessionStorage.SetAsync("PictureUrl", pictureUrl);
   }
 
@@ -86,19 +87,46 @@ public class SessionStorageService(ProtectedSessionStorage sessionStorage)
   public async Task<bool> IsLoggedInAsync()
   {
     var userId = await GetUserIDAsync();
-    if (userId == null) return false;
+    if (userId == null)
+      return false;
     return true;
   }
 
   public async Task<bool> IsSelectedProjectAsync()
   {
     var projectId = await GetProjectIDAsync();
-    if (projectId == null) return false;
+    if (projectId == null)
+      return false;
     return true;
   }
 
   public async Task<bool> IsLoginAsync()
   {
     return await GetUserIDAsync() != null;
+  }
+
+  public async Task SaveAppStateAsync(AppState appState)
+  {
+    if (appState.CurrentProjectName != null) await _sessionStorage.SetAsync("CurrentProjectName", appState.CurrentProjectName);
+    if (appState.CurrentProjectId != null) await _sessionStorage.SetAsync("CurrentProjectId", appState.CurrentProjectId);
+    Console.WriteLine($"-----{appState.UserId}");
+    if (appState.UserId != null) await _sessionStorage.SetAsync("UserId", appState.UserId);
+    if (appState.UserName != null) await _sessionStorage.SetAsync("UserName", appState.UserName);
+    if (appState.UserRole != null) await _sessionStorage.SetAsync("UserRole", appState.UserRole);
+    if (appState.UserPictureUrl != null) await _sessionStorage.SetAsync("UserPictureUrl", appState.UserPictureUrl);
+  }
+
+  public async Task<AppState> LoadAppStateAsync()
+  {
+    var appState = new AppState(_localStorage, this)
+    {
+      CurrentProjectName = (await _sessionStorage.GetAsync<string>("CurrentProjectName")).Value,
+      CurrentProjectId = (await _sessionStorage.GetAsync<Guid?>("CurrentProjectId")).Value,
+      UserId = (await _sessionStorage.GetAsync<Guid?>("UserId")).Value,
+      UserName = (await _sessionStorage.GetAsync<string>("UserName")).Value,
+      UserRole = (await _sessionStorage.GetAsync<string>("UserRole")).Value,
+      UserPictureUrl = (await _sessionStorage.GetAsync<string>("UserPictureUrl")).Value,
+    };
+    return appState;
   }
 }

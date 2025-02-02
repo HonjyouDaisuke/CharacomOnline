@@ -6,58 +6,60 @@
 @inject SessionStorageService SessionStorage
 @inject CharaDataViewModel CharaDataViewModel
 
-@if (isLoading)
+@if (IsLoading)
 {
-    <RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
-        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-    </RadzenStack>
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
 }
 else
 {
-    <div style="max-height: calc(100% - 55px);">
-        @if (isProgressShow){
-            <RadzenProgressBar Value="@progress" Max="100" ShowValue="true" Mode="ProgressBarMode.Determinate" />
-        }
-        <div style="height: 100%; overflow-y: auto;">
-            <div class="responsive-grid-container">
-                @foreach (var item in CharaDataViewModel._charaDataRepository.viewCharaData)
-                {
-                    <CharaDataCard CharaData="@item" Height="50" Width="50" IsLoading="false" CardClick="OnCardClick"/>
-                }
-            </div>
-        </div>
-    </div>
+	<div style="max-height: calc(100% - 55px);">
+		@if (isProgressShow){
+			<RadzenProgressBar Value="@progress" Max="100" ShowValue="true" Mode="ProgressBarMode.Determinate" />
+		}
+		<div style="height: 100%; overflow-y: auto;">
+			<div class="responsive-grid-container">
+				@foreach (var item in CharaDataViewModel._charaDataRepository.viewCharaData)
+				{
+					<CharaDataCard CharaData="@item" Height="50" Width="50" IsLoading="false" CardClick="OnCardClick"/>
+				}
+			</div>
+		</div>
+	</div>
 }
 
 
 <style>
-    .responsive-grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 柔軟な列数 */
-        gap: 10px; /* ボタン間のスペース */
-        padding: 5px;
-        max-height: 100%; /* ヘッダー分の高さ調整 */
-        overflow-y: auto; /* 縦スクロールを有効化 */
-    }
+	.responsive-grid-container {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 柔軟な列数 */
+	gap: 10px; /* ボタン間のスペース */
+	padding: 5px;
+	max-height: 100%; /* ヘッダー分の高さ調整 */
+	overflow-y: auto; /* 縦スクロールを有効化 */
+	}
 
-    .responsive-grid-container .rz-button {
-        width: 100%; /* ボタンをセルの幅に合わせる */
-    }
+	.responsive-grid-container .rz-button {
+	width: 100%; /* ボタンをセルの幅に合わせる */
+	}
 </style>
 
 @code {
-    [Parameter]
-    public string? Chara { get; set; }
-    [Parameter]
-    public string? Material { get; set; }
-    [Parameter]
-    public Guid? ProjectId { get; set; }
-    [Parameter]
-    public string? AccessToken { get; set; }
-    [Parameter]
-    public EventCallback<CharaDataClass> CardClick { get; set; }
+	[Parameter]
+	public string? Chara { get; set; }
+	[Parameter]
+	public string? Material { get; set; }
+	[Parameter]
+	public Guid? ProjectId { get; set; }
+	[Parameter]
+	public string? AccessToken { get; set; }
+	[Parameter]
+	public EventCallback<CharaDataClass> CardClick { get; set; }
 
-    private bool isLoading = true;
+	[Parameter]
+	public bool IsLoading { get; set; }
+	private bool isLoading = true;
     private int progress = 0;
     private bool isProgressShow = false;
     private string? prevChara;
@@ -74,9 +76,6 @@ else
         clickedCard.IsSelected = !clickedCard.IsSelected;
         await InvokeAsync(StateHasChanged);
         await CardClick.InvokeAsync(clickedCard);
-        //Console.WriteLine($"親コンポーネントで受信: fileId={clickedCard.FileId}, selected={clickedCard.IsSelected}");
-        //await CharaDataViewModel.MakeOverlayBitmap();
-        //await InvokeAsync(StateHasChanged);
     }
 
     private void OnProgressChanged(int value)
@@ -89,37 +88,6 @@ else
             StateHasChanged();
             return Task.CompletedTask;
         });
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        // パラメータが変更された際に再処理
-        if (string.IsNullOrEmpty(Chara) || string.IsNullOrEmpty(Material) || ProjectId == null)
-        {
-            return;
-        }
-
-        if (prevChara == Chara && prevMaterial == Material) return;
-
-        isLoading = true;
-        await InvokeAsync(StateHasChanged);
-
-        isLoading = false;
-
-        isProgressShow = true;
-        await InvokeAsync(StateHasChanged); // UIを更新
-
-        CharaDataViewModel.ProgressChanged += OnProgressChanged;
-
-        // データをロード
-        await CharaDataViewModel.AddViewCharaData(AccessToken, (Guid)ProjectId, Chara, Material);
-        prevChara = Chara;
-        prevMaterial = Material;
-        Dispose();
-
-        isProgressShow = false;
-        progress = 0;
-        await InvokeAsync(StateHasChanged); // UIを更新
     }
 
     public void Dispose()

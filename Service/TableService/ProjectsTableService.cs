@@ -1,6 +1,6 @@
-﻿using CharacomOnline.Entity;
+﻿using System.Text.Json;
+using CharacomOnline.Entity;
 using Supabase;
-using System.Text.Json;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -8,7 +8,12 @@ public class ProjectsTableService(Client supabaseClient)
 {
   private readonly Client _supabaseClient = supabaseClient;
 
-  public async Task<Guid?> CreateProject(string title, string description, string folderId, string charaFolderId)
+  public async Task<Guid?> CreateProject(
+    string title,
+    string description,
+    string folderId,
+    string charaFolderId
+  )
   {
     if (await IsProjectTitleExists(title))
     {
@@ -33,7 +38,9 @@ public class ProjectsTableService(Client supabaseClient)
     if (response != null && response.Models.Count > 0)
     {
       var insertedProject = response.Models.First();
-      Console.WriteLine($"Project '{insertedProject.Title}' added successfully with ID: {insertedProject.Id}");
+      Console.WriteLine(
+        $"Project '{insertedProject.Title}' added successfully with ID: {insertedProject.Id}"
+      );
       return insertedProject.Id; // ID を返す
     }
     return null;
@@ -43,11 +50,41 @@ public class ProjectsTableService(Client supabaseClient)
   {
     // RPC関数を呼び出す
     var response = await _supabaseClient.Rpc<bool>(
-        "is_project_title_exists",  // 関数名
-        new { p_title = title }    // パラメーターを渡す
+      "is_project_title_exists", // 関数名
+      new { p_title = title } // パラメーターを渡す
     );
 
     return response;
+  }
+
+  public async Task<ProjectsTable?> GetProjectInfoAsync(Guid projectId)
+  {
+    try
+    {
+      // Supabaseクエリで条件を指定してデータを取得
+      var project = await _supabaseClient
+        .From<ProjectsTable>() // テーブルを指定
+        .Select("id, title, description, created_at, created_by, folder_id, chara_folder_id") // 必要なカラムのみ選択
+        .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, projectId.ToString("D")) // フィルターを適用
+        .Limit(1)
+        .Get();
+
+      var response = project.Models.FirstOrDefault();
+
+      //UsersTable user = new UsersTable();
+      if (response == null)
+      {
+        Console.WriteLine($"project読込関数失敗 ProjectId:{projectId}");
+        return null;
+      }
+
+      return response; // 取得したデータの ProjectTitle を返す
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error fetching project title: {ex.Message} projectId={projectId}");
+      return null; // エラー時は null を返す
+    }
   }
 
   public async Task<string?> GetProjectTitle(Guid projectId)
@@ -56,10 +93,10 @@ public class ProjectsTableService(Client supabaseClient)
     {
       // Supabaseクエリで条件を指定してデータを取得
       var response = await _supabaseClient
-          .From<ProjectsTable>() // テーブルを指定
-          .Select("title") // 必要なカラムのみ選択
-          .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, projectId.ToString()) // フィルターを適用
-          .Single();
+        .From<ProjectsTable>() // テーブルを指定
+        .Select("title") // 必要なカラムのみ選択
+        .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, projectId.ToString()) // フィルターを適用
+        .Single();
 
       return response?.Title; // 取得したデータの ProjectTitle を返す
     }
@@ -69,6 +106,27 @@ public class ProjectsTableService(Client supabaseClient)
       return null; // エラー時は null を返す
     }
   }
+
+  public async Task<string?> GetProjectCharaFolderId(Guid projectId)
+  {
+    try
+    {
+      // Supabaseクエリで条件を指定してデータを取得
+      var response = await _supabaseClient
+        .From<ProjectsTable>() // テーブルを指定
+        .Select("chara_folder_id") // 必要なカラムのみ選択
+        .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, projectId.ToString()) // フィルターを適用
+        .Single();
+
+      return response?.CharaFolderId; // 取得したデータの ProjectTitle を返す
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error fetching project title: {ex.Message}");
+      return null; // エラー時は null を返す
+    }
+  }
+
   public async Task<List<ProjectViewData>?> FetchProjectsFromUserIdAsync(Guid userId)
   {
     List<ProjectViewData>? projectViewData = new List<ProjectViewData>();

@@ -1,8 +1,13 @@
 ﻿@page "/box-callback"
 @using CharacomOnline.Service
+@using CharacomOnline.ViewModel
 @inject NavigationManager Navigation
 @inject OAuthService OAuthService
 @inject TokenStorage TokenStorage
+@inject Supabase.Client SupabaseClient
+@inject UsersViewModel UsersViewModel
+@inject AppState AppState
+
 <h3>Authenticating...</h3>
 
 @code {
@@ -12,6 +17,8 @@
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
         if (!firstRender) return;
+
+        
         if (query["code"] != null)
         {
             var code = query["code"];
@@ -27,7 +34,7 @@
                 await TokenStorage.SaveTokenAsync(tokenResponse);
 
                 // 認証成功後のページにリダイレクト
-                Navigation.NavigateTo("/box");
+                Navigation.NavigateTo("/project-dashboard", true);
             }
             catch (Exception ex)
             {

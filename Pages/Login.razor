@@ -1,4 +1,5 @@
 ﻿@page "/login"
+@using CharacomOnline.Shared
 @layout EmptyLayout
 @using Blazored.LocalStorage
 @using CharacomOnline.Service
@@ -19,14 +20,17 @@
 				<RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH5">Characom Imager Pro Online</RadzenText>
 				<RadzenStack Class="full-width">
 					<RadzenText>E-mail</RadzenText>
-					<RadzenTextBox @bind-bind-Value="email" Placeholder="E-mail" />
+					<RadzenTextBox @onkeydown="HandleKeyDown" ValueChanged=@(args => onChange(args, "email")) Placeholder="E-mail" />
 				</RadzenStack>
 				<RadzenStack Class="full-width">
 					<RadzenText>password</RadzenText>
-					<RadzenPassword @bind-value="password" Placeholder="password" />
+					<RadzenPassword @onkeydown="HandleKeyDown" ValueChanged=@(args => onChange(args, "password")) Placeholder="password" />
+				</RadzenStack>
+				<RadzenStack>
+					<RadzenText Style="color: red;">@message</RadzenText>
 				</RadzenStack>
 				<RadzenRow Gap="10" JustifyContent="JustifyContent.Center">
-					<RadzenButton Click=@(async () => await LoginProc())>ログイン</RadzenButton>
+					<RadzenButton ButtonStyle="ButtonStyle.Primary" Click=@(async () => await LoginProc())>ログイン</RadzenButton>
 				</RadzenRow>
 				<RadzenText TextAlign="TextAlign.Center" TextStyle="TextStyle.Body2">or you can sign in width </RadzenText>
 				<RadzenRow Gap="10" JustifyContent="JustifyContent.Center">
@@ -47,19 +51,19 @@
 
 <style>
 	.custom-cursor {
-	  cursor: default; /* デフォルトのカーソル */
+	cursor: default; /* デフォルトのカーソル */
 	}
 
 	.custom-cursor:hover {
-	  cursor: pointer; /* ホバー時に指マークのカーソルに変更 */
+	cursor: pointer; /* ホバー時に指マークのカーソルに変更 */
 	}
 
 	.full-width {
-		width: 100%;
+	width: 100%;
 	}
 
 	.stack-margin-top {
-		padding-top: 50px; /* 必要なスペースを指定 */
+	padding-top: 50px; /* 必要なスペースを指定 */
 	}
 </style>
 
@@ -70,6 +74,8 @@
 	private string Twitter = "twitter";
 	private string? email;
 	private string? password;
+
+	private string message = "";
 
 	private void LoginWithProvider(string provider)
 	{
@@ -99,19 +105,52 @@
 
 	private async Task LoginProc()
 	{
-		Console.WriteLine("LoginStart...");
+		Console.WriteLine($"LoginStart...{email} {password}");
 		try
 		{
 			if (string.IsNullOrEmpty(email)) return;
 			if (string.IsNullOrEmpty(password)) return;
-			var response = await SupabaseClient.Auth.SignIn(email, password);
-			if (response == null) return;
-			if (response.User == null) return;
+			var response = await SupabaseClient.Auth.SignInWithPassword(email, password);
+			if (response == null || response.User == null)
+			{
+				message = "※メールアドレスまたはパスワードが間違っています。再度入力してみてください。";
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
 			NavigationManager.NavigateTo("/");
 		}
 		catch(Exception ex)
 		{
 			Console.WriteLine($"Error: {ex.Message}");
+			message = "※メールアドレスまたはパスワードが間違っています。再度入力してみてください。";
+			await InvokeAsync(StateHasChanged);
 		}
+	}
+
+	private async Task HandleKeyDown(KeyboardEventArgs args)
+	{
+		Console.WriteLine($"Key pressed: {args.Key}");
+		if (args.Key.ToString() != "Enter") return;
+		await LoginProc(); // エンターキーが押されたらボタンのログイン
+	}
+
+	private async Task onChange(string value, string key)
+	{
+
+		if (string.IsNullOrEmpty(value)) return;
+		switch (key)
+		{
+			case "email":
+				email = value;
+				break;
+			case "password":
+				password = value;
+				break;
+			default:
+				return;
+		}
+		
+		Console.WriteLine("Login test....");
+		await LoginProc();
 	}
 }

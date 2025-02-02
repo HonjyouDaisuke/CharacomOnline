@@ -1,6 +1,6 @@
-﻿using Supabase.Postgrest.Attributes;
+﻿using System.Text.Json.Serialization;
+using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
-using System.Text.Json.Serialization;
 
 namespace CharacomOnline.Entity;
 

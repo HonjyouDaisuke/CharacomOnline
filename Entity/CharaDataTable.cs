@@ -1,5 +1,6 @@
 ﻿using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
+
 namespace CharacomOnline.Entity;
 
 [Table("chara_data")] // テーブル名
@@ -20,7 +21,9 @@ public class CharaDataTable : BaseModel
   [Column("material_name")]
   public string? MaterialName { get; set; }
 
+  [Column("is_selected")]
+  public bool IsSelected { get; set; } = false;
+
   [Column("times_name")]
   public string? TimesName { get; set; }
-
 }

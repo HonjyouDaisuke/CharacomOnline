@@ -31,6 +31,6 @@ public class ProjectViewData : BaseModel
   // スタイルを動的に決定するメソッド
   public string GetCardStyle()
   {
-    return $"background-color: {(IsSelected ? "lightcyan" : "white")}; width: 300px; padding: 15px; border-radius: 8px; margin: 10px;";
+    return $"background-color: {(IsSelected ? "var(--rz-primary-light)" : "var(--rz-base)")}; width: 300px; padding: 15px; border-radius: 8px; margin: 10px;";
   }
 }

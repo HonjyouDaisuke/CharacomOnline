@@ -3,12 +3,15 @@
 @using CharacomOnline.Components
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Entity
+@using CharacomOnline.Shared
 @inject SessionStorageService SessionStorage
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 @inject BoxFileService BoxFileService
 @inject TokenStorage TokenStorage
 @inject UsersViewModel UsersViewModel
+@inject AppState AppState
+@inject LocalStorageService LocalStorage
 
 <h3>ProjectsSelect</h3>
 
@@ -62,16 +65,30 @@
         return true;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (SessionStorage == null) return;
-        userId = await SessionStorage.GetUserIDAsync();
-        projectId = await SessionStorage.GetProjectIDAsync();
-        if (userId == null) return;
+        if (!firstRender) return;
+        await UsersViewModel.SetUserInfoToAppState(); 
+        userId = AppState.UserId;
+        var storageProjectId = await LocalStorage.GetCurrentProjectIdAsync();
+        if (storageProjectId != null)
+        {
+            projectId = storageProjectId;
+        }
+        else
+        {
+            projectId = AppState.CurrentProjectId;
+        }
+        
         isStandard = isStandardUser();
+        if (userId == null) return;
         projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
+        await InvokeAsync(StateHasChanged);
         if (projectId == null) return;
         CheckInitialSelect(projectId);
+        await InvokeAsync(StateHasChanged);
+
+
     }
 
     private void OnClick(string text)
@@ -133,7 +150,8 @@
 
         await InstallCharaDataAsync((Guid)projectId, result.Title, result.CharaFolderId);
         await ProjectsViewModel.SetCurrentProject((Guid)projectId, result.Title);
-
+        AppState.CurrentProjectId = projectId;
+        AppState.CurrentProjectName = result.Title;
         StateHasChanged();
     }
 
@@ -148,7 +166,9 @@
         message = $"プロジェクトが選択されました。件名{clickedProject.Name} id:{clickedProject.Id}";
         await SessionStorage.SetProjectIDAsync(clickedProject.Id);
         await ProjectsViewModel.SetCurrentProject(clickedProject.Id, clickedProject.Name);
-
+        AppState.CurrentProjectId = clickedProject.Id;
+        AppState.CurrentProjectName = clickedProject.Name;
+        
     }
 
     private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId)

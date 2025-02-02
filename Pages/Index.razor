@@ -1,9 +1,12 @@
 ﻿@page "/"
 @using CharacomOnline.Service
+@using CharacomOnline.ViewModel
 @inject IConfiguration Configuration
 @inject AppSettings AppSettings
 @inject NavigationManager NavigationManager
 @inject SessionStorageService SessionStorage
+@inject AppState AppState
+@inject UsersViewModel UsersViewModel
 
 <PageTitle>Index</PageTitle>
 
@@ -15,17 +18,18 @@ Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
 
-<RadzenText>user: @user</RadzenText>
 @code {
 	private string? user;
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		user = await SessionStorage.GetUserPicture();
-		await InvokeAsync(StateHasChanged);
-		// TODO: ここは、アプリ全体でログインさせるように変更する
 		if (!firstRender) return;
-		if (await SessionStorage.IsLoggedInAsync()) return;
+
+		await UsersViewModel.SetUserInfoToAppState();
+
+		// TODO: ここは、アプリ全体でログインさせるように変更する
+		Console.WriteLine("LoginCheck...");
+		if (AppState.IsLoggedIn) return;
 		NavigationManager.NavigateTo("/login");
 		// ここまで
 	}

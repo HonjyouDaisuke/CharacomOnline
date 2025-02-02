@@ -2,7 +2,6 @@
 @using CharacomOnline.Components
 @using CharacomOnline.Enums
 @using CharacomOnline.ViewModel
-@using Radzen.Blazor.Rendering
 @using Blazored.LocalStorage
 
 @inject ILocalStorageService localStorage
@@ -12,7 +11,7 @@
 @inject NavigationManager NavigationManager
 @inject ProjectsViewModel ProjectsViewModel
 @inject UsersViewModel UsersViewModel
-
+@inject AppState AppState
 
 <RadzenHeader>
 	<RadzenRow AlignItems="AlignItems.Center" Gap="1">
@@ -22,9 +21,15 @@
 				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.H5">Characom Imapger Pro Online</RadzenText>
 			</RadzenStack>
 		</RadzenColumn>
+		<RadzenColumn>
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.Subtitle1">@AppState.CurrentProjectName</RadzenText>
+			</RadzenStack>
+		</RadzenColumn>
 		<RadzenColumn >
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End" Style="padding-right: 1rem;">
-				<ProfileMenu UserPicture="@userPictureUrl" UserName="@userName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName"/>
+				<RadzenAppearanceToggle />
+				<ProfileMenu UserPicture="@userPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName" />
 			</RadzenStack>
 		</RadzenColumn>
 	</RadzenRow>
@@ -47,16 +52,21 @@
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		//if (!firstRender) return;
-		//Console.WriteLine($"avater= {userPictureUrl}");
-		userPictureUrl = UsersViewModel.GetUserPicture();
-		userName = UsersViewModel.GetUserName();
-		isBoxLogin = OAuthService.IsLogin();
-		isDBLogin = await SessionStorage.IsLoginAsync();
-		currentProjectId = ProjectsViewModel.GetCurrentProjectId();
-		currentProjectName = ProjectsViewModel.GetCurrentProjectName();
-		await InvokeAsync(StateHasChanged);
+		if (!firstRender) return;
 
+		await UsersViewModel.SetUserInfoToAppState();
+		Console.WriteLine($"userPict = {AppState.UserPictureUrl}");
+		userPictureUrl = AppState.UserPictureUrl;
+		if (string.IsNullOrEmpty(userPictureUrl))
+		{
+			userPictureUrl = "/images/no_user_icon.png";
+		} 
+		userName = AppState.UserName;
+		isBoxLogin = OAuthService.IsLogin();
+		isDBLogin = AppState.IsLoggedIn;
+		currentProjectId = AppState.CurrentProjectId;
+		currentProjectName = AppState.CurrentProjectName;
+		await InvokeAsync(StateHasChanged);
 	}
 
 	private async Task ChangeExpand()
@@ -90,6 +100,21 @@
 				Console.WriteLine($"ログアウトエラー: {ex.Message}");
 			}
 		}
-		
+	}
+
+	protected override void OnInitialized()
+	{
+		AppState.PropertyChanged += (_, e) =>
+		{
+			if (e.PropertyName == nameof(AppState.CurrentProjectName) || e.PropertyName == nameof(AppState.UserName))
+			{
+				StateHasChanged();
+			}
+		};
+	}
+
+	public void Dispose()
+	{
+		AppState.PropertyChanged -= async (_, e) => await InvokeAsync(StateHasChanged);
 	}
 }
