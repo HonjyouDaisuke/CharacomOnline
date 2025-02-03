@@ -11,7 +11,7 @@ Drop="@OnDrop">
 			<RadzenSplitterPane Size="35%" Resizable="true">
 				<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
 
-					<RadzenDropZone Value="Status.Started" class="drop-zone rz-display-flex rz-flex-column rz-background-color-info-lighter rz-border-info-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+					<RadzenDropZone Value="Status.Started" Style="flex: 1; gap: 1rem;" >
 						<RadzenText>Put Zone1</RadzenText>
 					</RadzenDropZone>
 
@@ -19,7 +19,7 @@ Drop="@OnDrop">
 						<RadzenText>No Put Zone</RadzenText>
 					</RadzenDropZone>
 
-					<RadzenDropZone Value="Status.Completed" class="drop-zone rz-display-flex rz-flex-column rz-background-color-success-lighter rz-border-success-light rz-border-radius-2 rz-p-4" Style="flex: 1; gap: 1rem;">
+					<RadzenDropZone Name="aaa" Value="Status.Completed" Style="flex: 1; gap: 1rem;" >
 						<RadzenText >Put Zone2</RadzenText>
 					</RadzenDropZone>
 
@@ -46,8 +46,9 @@ Drop="@OnDrop">
 
 <style>
 	.rz-can-drop {
-	background-color: var(--rz-background-color-primary);
+    border: dashed 2px darkorange !important;
 	}
+
 
 	.drop-zone {
 	padding: 2px;
@@ -55,21 +56,20 @@ Drop="@OnDrop">
 	transition: border linear 0.2s;
 	}
 
-	.drop-zone.hover {
+	.drop-zone.hover , .drop-zone:hover {
 	border: dashed 2px darkorange;
 	cursor: pointer;
 	}
 </style>
 
 @code {
+	private bool isHovering = false;
 	// Filter items by zone value
 	Func<MyTask, RadzenDropZone<MyTask>, bool> ItemSelector = (item, zone) => item.Status == (Status)zone.Value && item.Status != Status.Deleted;
 
-	Func<RadzenDropZoneItemEventArgs<MyTask>, bool> CanDrop = request =>
-	{
-		// Allow item drop only in the same zone, in "Deleted" zone or in the next/previous zone.
-		return request.FromZone == request.ToZone || (Status)request.ToZone.Value == Status.Deleted ||
-				Math.Abs((int)request.Item.Status - (int)request.ToZone.Value) == 1;
+	Func<RadzenDropZoneItemEventArgs<MyTask>, bool> CanDrop = request => {
+		if (request.ToZone.Value.ToString() == "Started" || request.ToZone.Value.ToString() == "Completed") return true;
+		return false;
 	};
 
 	void OnItemRender(RadzenDropZoneItemRenderEventArgs<MyTask> args)
