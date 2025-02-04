@@ -1,28 +1,30 @@
-@page "/dragdrop"
+@page "/dragdrop2"
 @using Radzen
 @using CharacomOnline.Components
 
 <RadzenDropZoneContainer TItem="Overlays" Data="data" 
 ItemSelector="@ItemSelector"
-ItemRender="@OnItemRender"
 CanDrop="@CanDrop"
 Drop="@OnDrop">
 	<ChildContent>
 		<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
 			<RadzenSplitterPane Size="35%" Resizable="true">
 				<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
-
-					<RadzenDropZone Value="Areas.BoxA" Style="flex: 1; gap: 1rem;" >
-						<CharaImageCard ImageData="" Height="160" Width="160" IsLoading="false" />
-					</RadzenDropZone>
-
+					<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
+						<RadzenColorPicker @bind-Value=colorA ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
+						<RadzenDropZone Value="Areas.BoxA" Style="flex: 1; gap: 1rem;" >
+							<CharaImageCard ImageData="" Height="160" Width="160" IsLoading="false" />
+						</RadzenDropZone>
+					</RadzenStack>
 					<CharaImageCard ImageData="" Height="320" Width="320" IsLoading="false" />
 
 
-					<RadzenDropZone Name="aaa" Value="Areas.BoxB" Style="flex: 1; gap: 1rem;" >
-						<CharaImageCard ImageData="" Height="160" Width="160" IsLoading="false" />
-					</RadzenDropZone>
-
+					<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
+						<RadzenColorPicker @bind-Value=colorB ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
+						<RadzenDropZone Name="aaa" Value="Areas.BoxB" Style="flex: 1; gap: 1rem;" >
+							<CharaImageCard ImageData="" Height="160" Width="160" IsLoading="false" />
+						</RadzenDropZone>
+					</RadzenStack>
 				</RadzenStack>
 			</RadzenSplitterPane>
 			<RadzenSplitterPane Size="65%" Resizable="true">
@@ -31,16 +33,16 @@ Drop="@OnDrop">
 						Defalut Area
 					</RadzenSplitterPane>
 					<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
-						<RadzenDropZone Value="Areas.Select" class="rz-display-flex rz-flex-row rz-flex-column rz-border-radius-2 rz-p-4" Style="gap: 1rem;">
-							itemZone
+						<RadzenDropZone TItem="Overlays" Value="Areas.Select" class="rz-border-radius-2 rz-p-4" Style="display: flex; flex-wrap: wrap; gap: 1rem;">
+							
 						</RadzenDropZone>	
 					</RadzenSplitterPane>
 				</RadzenSplitter>
 			</RadzenSplitterPane>
 		</RadzenSplitter>
 	</ChildContent>
-	<Template>
-		<strong>@context.Name</strong>
+	<Template Context="item">
+		<CharaImageCard ImageData="" Height="80" Width="80" />
 	</Template>
 </RadzenDropZoneContainer>
 
@@ -64,19 +66,30 @@ Drop="@OnDrop">
 
 @code {
 	private bool isHovering = false;
+	private bool showHSV = false;
+	private bool showRGBA = false;
+	private bool showColors = true;
+	private bool showButton = false;
+
+	string colorA = "rgb(68, 58, 110)";
+	string colorB = "rgb(68, 58, 110)";
 	// Filter items by zone value
-	Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
+	Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) =>
+	{
+		return item.Area == (Areas)zone.Value;
+	};
+  //Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
 	Func<RadzenDropZoneItemEventArgs<Overlays>, bool> CanDrop = request => {
 		if (request.ToZone.Value.ToString() == "Select") return false;
 		return true;
 	};
 
-	void OnItemRender(RadzenDropZoneItemRenderEventArgs<Overlays> args)
-	{
-		args.Attributes["class"] = "rz-card ";
-		args.Attributes["style"] = "width: 160px; height: 160px;";
-		
-	}
+	//void OnItemRender(RadzenDropZoneItemRenderEventArgs<Overlays> args)
+	//{
+	//	args.Attributes["class"] = "rz-card ";
+	//	args.Attributes["style"] = "width: 160px; height: 160px;";
+	//	
+	//}
 
 	void OnDrop(RadzenDropZoneItemEventArgs<Overlays> args)
 	{
