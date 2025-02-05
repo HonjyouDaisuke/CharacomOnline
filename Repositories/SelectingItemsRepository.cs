@@ -3,7 +3,7 @@
 public class SelectingItemsRepository
 {
   public readonly List<string> Characters = new();
-  public readonly List<string> Materials = new();
+  public List<string> Materials { get; } = new();
 
   public int GetCharactersCount()
   {
@@ -49,5 +49,10 @@ public class SelectingItemsRepository
   public void AddMaterials(string material)
   {
     Materials.Add(material);
+  }
+
+  public List<string> GetMaterials()
+  {
+    return Materials;
   }
 }

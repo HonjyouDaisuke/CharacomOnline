@@ -1,5 +1,14 @@
-@page "/dragdrop2"
+@page "/overlay"
+@using Radzen
+@using Radzen.Blazor
+@using CharacomOnline.Service
+@using CharacomOnline.ViewModel
 @using CharacomOnline.Components
+@inject OverlayViewModel OverlayViewModel
+@inject TokenStorage TokenStorage
+@inject NavigationManager Navi
+@inject AppState AppState
+@inject UserSettingsViewModel UserSettingsViewModel
 
 @namespace CharacomOnline.Page
 
@@ -35,7 +44,7 @@ Drop="@OnDrop">
 					</RadzenSplitterPane>
 					<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
 						<RadzenDropZone TItem="Overlays" Value="Areas.Select" class="rz-border-radius-2 rz-p-4" Style="display: flex; flex-wrap: wrap; gap: 1rem;">
-							
+
 						</RadzenDropZone>	
 					</RadzenSplitterPane>
 				</RadzenSplitter>
@@ -71,6 +80,9 @@ Drop="@OnDrop">
 	private bool showRGBA = false;
 	private bool showColors = true;
 	private bool showButton = false;
+	private Guid? projectId;
+
+	private string? accessToken;
 
 	string colorA = "rgb(68, 58, 110)";
 	string colorB = "rgb(68, 58, 110)";
@@ -79,7 +91,7 @@ Drop="@OnDrop">
 	{
 		return item.Area == (Areas)zone.Value;
 	};
-  //Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
+	//Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
 	Func<RadzenDropZoneItemEventArgs<Overlays>, bool> CanDrop = request => {
 		if (request.ToZone.Value.ToString() == "Select") return false;
 		return true;
@@ -97,23 +109,34 @@ Drop="@OnDrop">
 		Console.WriteLine($"args (From) = {args.FromZone.Value.ToString()}");
 		Console.WriteLine($"args (To) = {args.ToZone.Value.ToString()}");
 		Console.WriteLine($"args (Item) = {args.Item.Name}");
-		//if ((Status)args.FromZone.Value != Status.NotStarted) return;
-		//data.Remove(args.Item);
-		//data.Insert(data.IndexOf(args.ToItem), args.Item);
-		// args.Item.Status = (Status)args.ToZone.Value;
-
-		// if (args.ToItem != null && args.ToItem != args.Item)
-		//  {
-		//      // reorder items in same zone or place the item at specific index in new zone
-		//      data.Remove(args.Item);
-		//      data.Insert(data.IndexOf(args.ToItem), args.Item);
-		//  } *@
+		
 	}
 
 	List<Overlays> data = new ();
 
-	protected override void OnInitialized()
+	protected override async Task OnInitializedAsync()
 	{
+		// アクセストークンを取得
+		accessToken = await TokenStorage.GetAccessTokenAsync();
+		if (string.IsNullOrEmpty(accessToken))
+		{
+			Navi.NavigateTo("/auth");
+			return;
+		}
+
+		if (AppState.UserId != null) await UserSettingsViewModel.GetUserSettings((Guid)AppState.UserId);
+
+		projectId = AppState.CurrentProjectId;
+
+		await OverlayViewModel.InitMaterialsData((Guid)projectId);
+		foreach (var material in OverlayViewModel.Materials)
+		{
+			var overlay = await OverlayViewModel.MakeOverlayDataAsync((Guid)projectId, "川", material, accessToken);
+			Console.WriteLine($"chara={overlay.CharaName} material={overlay.MaterialName} 個数 = {overlay.SelectedItemCount}");
+		}
+		
+
+		
 		data.Add(new Overlays
 		{
 			Id = 1,

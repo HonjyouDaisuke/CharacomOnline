@@ -46,6 +46,82 @@ public class CharaDataTableService(
     return JsonSerializer.Deserialize<List<CharaDataRecode>>(json, options);
   }
 
+  public async Task<List<CharaDataClass>?> FetchSelectedCharaData(
+    Guid projectId,
+    string charaName,
+    string materialName,
+    string accessToken
+  )
+  {
+    List<CharaDataClass>? result = new();
+    // Supabase から RPC を呼び出す
+    Console.WriteLine($"start fetch ProjectId:{projectId}");
+    var response = await _supabaseClient.Rpc(
+      "get_selected_chara_data_by_project_and_name",
+      new
+      {
+        input_project_id = projectId,
+        input_chara_name = charaName,
+        input_material_name = materialName,
+      }
+    );
+
+    if (!string.IsNullOrEmpty(response.Content))
+    {
+      try
+      {
+        // JSON を List に変換
+        var charas = JsonSerializer.Deserialize<List<CharaImageListClass>>(response.Content);
+        if (charas == null)
+          return null;
+
+        int totalTasks = charas.Count;
+        // int progress = 0;
+
+        foreach (var item in charas)
+        {
+          if (item.Id == null || item.FileId == null)
+            continue;
+          CharaDataClass charaData = new();
+
+          // token.ThrowIfCancellationRequested();
+          charaData.CharaName = charaName;
+          charaData.MaterialName = materialName;
+          charaData.Id = (Guid)item.Id;
+          charaData.IsSelected = true;
+          charaData.SrcImage = await _boxFileService.DownloadFileAsSKBitmapAsync(
+            item.FileId,
+            accessToken
+          );
+          var resize = ImageEffectService.ResizeBitmap(charaData.SrcImage, 160, 160);
+          var binary = ImageEffectService.GetBinaryBitmap(resize);
+          var thinning = new ThinningProcess(binary);
+          charaData.ThinImage = await thinning.ThinBinaryImageAsync();
+
+          result.Add(charaData);
+          // 新しいデータを挿入する処理
+          //await ProcessCharaDataAsync(item, charaName, materialName, accessToken);
+
+          //progress++;
+          //onProgress?.Invoke((progress * 100) / totalTasks);
+        }
+
+        return result;
+      }
+      catch (JsonException ex)
+      {
+        // デシリアライズエラー処理
+        Console.WriteLine("JSON Parsing Error: " + ex.Message);
+      }
+    }
+    else
+    {
+      // レスポンスエラー処理
+      Console.WriteLine("Error: No content returned");
+    }
+    return null;
+  }
+
   public async Task<List<CharaDataClass>?> FetchCharaDataFromProject(Guid projectId, Guid modelId)
   {
     var response = await _supabaseClient.Rpc(
