@@ -129,7 +129,7 @@ Drop="@OnDrop">
 		projectId = AppState.CurrentProjectId;
 
 		await OverlayViewModel.InitMaterialsData((Guid)projectId);
-		foreach (var material in OverlayViewModel.Materials)
+		foreach (var material in OverlayViewModel.GetMaterials())
 		{
 			var overlay = await OverlayViewModel.MakeOverlayDataAsync((Guid)projectId, "川", material, accessToken);
 			Console.WriteLine($"chara={overlay.CharaName} material={overlay.MaterialName} 個数 = {overlay.SelectedItemCount}");
