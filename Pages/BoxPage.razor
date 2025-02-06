@@ -7,89 +7,89 @@
 <h3>Download Image</h3>
 @if (imageData != null)
 {
-    <img src="@imageDataUrl" alt="Downloaded Image" style="max-width: 100%; height: auto;" />
+	<img src="@imageDataUrl" alt="Downloaded Image" style="max-width: 100%; height: auto;" />
 }
 else if (isLoading)
 {
-    <p>Loading image...</p>
+	<p>Loading image...</p>
 }
 else
 {
-    <button @onclick="DownloadImage">Download Image</button>
+	<button @onclick="DownloadImage">Download Image</button>
 }
 <button @onclick="ViewFileList">View List</button>
 
 <h4>@msg</h4>
 
 @code {
-    private bool isLoading = false;
-    private byte[]? imageData;
-    private string? imageDataUrl;
-    private string? msg;
+	private bool isLoading = false;
+	private byte[]? imageData;
+	private string? imageDataUrl;
+	private string? msg;
 
-    private async Task ViewFileList()
-    {
-        try
-        {
-            // アクセストークンを取得
-            var accessToken = await TokenStorage.GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                throw new Exception("Access token not found. Please authenticate first.");
-            }
+	private async Task ViewFileList()
+	{
+		try
+		{
+			// アクセストークンを取得
+			var accessToken = await TokenStorage.GetAccessTokenAsync();
+			if (string.IsNullOrEmpty(accessToken))
+			{
+				throw new Exception("Access token not found. Please authenticate first.");
+			}
 
-            var topFolder = await SessionStorage.GetTopFolderId();
-            var standardFolder = await SessionStorage.GetStandardFolderId();
-            var strokeFolder = await SessionStorage.GetStrokeFolderId();
+			var topFolder = await SessionStorage.GetTopFolderId();
+			var standardFolder = await SessionStorage.GetStandardFolderId();
+			var strokeFolder = await SessionStorage.GetStrokeFolderId();
 
-            msg = $"session Data  top:{topFolder} 標準:{standardFolder} 筆順:{strokeFolder}";
-            // BoxのフォルダID
-            var folderId = "182412895309";
+			msg = $"session Data  top:{topFolder} 標準:{standardFolder} 筆順:{strokeFolder}";
+			// BoxのフォルダID
+			var folderId = "182412895309";
 
-            // 画像をダウンロード
-            var fileList = await BoxFileService.GetFolderItemsAsync(folderId,100,0, accessToken);
+			// 画像をダウンロード
+			var fileList = await BoxFileService.GetFolderItemsAsync(folderId,100,0, accessToken);
+			if (fileList == null) return;
+			foreach(var item in fileList)
+			{
+				Console.WriteLine($"id:{item.Id} Name = {item.Name} Type = {item.Type}");
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error downloading image: {ex.Message}");
+		}
 
-            foreach(var item in fileList)
-            {
-                Console.WriteLine($"id:{item.Id} Name = {item.Name} Type = {item.Type}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error downloading image: {ex.Message}");
-        }
+	}
 
+	private async Task DownloadImage()
+	{
+		isLoading = true;
+
+		try
+		{
+			// アクセストークンを取得
+			var accessToken = await TokenStorage.GetAccessTokenAsync();
+			if (string.IsNullOrEmpty(accessToken))
+			{
+				throw new Exception("Access token not found. Please authenticate first.");
+			}
+
+			// BoxのファイルID
+			var fileId = "1632511758340";
+
+			// 画像をダウンロード
+			imageData = await BoxFileService.DownloadFileAsync(fileId, accessToken);
+			if (imageData == null) return;
+			// Base64エンコードして表示
+      imageDataUrl = $"data:image/png;base64,{Convert.ToBase64String(imageData)}";
     }
-
-    private async Task DownloadImage()
+    catch (Exception ex)
     {
-        isLoading = true;
-
-        try
-        {
-            // アクセストークンを取得
-            var accessToken = await TokenStorage.GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                throw new Exception("Access token not found. Please authenticate first.");
-            }
-
-            // BoxのファイルID
-            var fileId = "1632511758340";
-
-            // 画像をダウンロード
-            imageData = await BoxFileService.DownloadFileAsync(fileId, accessToken);
-
-            // Base64エンコードして表示
-            imageDataUrl = $"data:image/png;base64,{Convert.ToBase64String(imageData)}";
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error downloading image: {ex.Message}");
-        }
-        finally
-        {
-            isLoading = false;
-        }
+      Console.WriteLine($"Error downloading image: {ex.Message}");
     }
+    finally
+    {
+      isLoading = false;
+    }
+  }
 }

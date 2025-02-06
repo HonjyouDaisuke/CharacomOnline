@@ -46,20 +46,28 @@ public class ProjectsViewModel
     if (projectId == null)
       return;
     var users = await userProjectsTableService.FetchProjectUsers((Guid)projectId);
-    Console.WriteLine($"projectId = {projectId} users = {users.Count}");
+    Console.WriteLine($"projectId = {projectId} users = {users?.Count}");
     List<UsersTable> usersList = new List<UsersTable>();
     projectRepository.ClearCurrentProjectUsers();
+    if (users == null)
+      return;
     foreach (var user in users)
     {
       var userInfo = await usersTableService.GetProjectUserAsync((Guid)user);
-      Console.WriteLine($"userId = {userInfo.Id} Name = {userInfo.Name}");
-      if (string.IsNullOrEmpty(userInfo.PictureUrl))
+      Console.WriteLine($"userId = {userInfo?.Id} Name = {userInfo?.Name}");
+      if (userInfo == null)
+        continue;
+      if (string.IsNullOrEmpty(userInfo?.PictureUrl))
       {
-        userInfo.PictureUrl = "/images/no_user_icon.png";
+        if (userInfo != null)
+          userInfo.PictureUrl = "/images/no_user_icon.png";
       }
       // if (userInfo.Role == null) continue;
-      userInfo.Role = "guest";
-      projectRepository.AddCurrentProjectUsers(userInfo);
+      if (userInfo != null)
+      {
+        userInfo.Role = "guest";
+        projectRepository.AddCurrentProjectUsers(userInfo);
+      }
     }
     return;
   }

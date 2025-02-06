@@ -9,35 +9,35 @@
 @inject CharaDataViewModel CharaDataViewModel
 
 @namespace CharacomOnline.Components
-	<RadzenDataGrid 
-		TItem="CharaDataClass" 
-		Data="@CharaDataViewModel._charaDataRepository.Appraisals" 
-		AllowRowSelectOnRowClick="true"
-		RowClick="@OnRowSelected"
-		SelectionMode="DataGridSelectionMode.Multiple"
-		EditMode="DataGridEditMode.Single"
-		AllowVirtualization="true"
-		AllowGrouping="true" >
-		<Columns>
-			<RadzenDataGridColumn Property="CharaName" Title="文字種" />
-			<RadzenDataGridColumn Property="MaterialName" Title="資料名" />
-			<RadzenDataGridColumn Title="イメージ">
-				<Template>
-					<img src="@context.Thumbnail" alt="@context.CharaName" width="50" height="50" />
-				</Template>
-			</RadzenDataGridColumn>
-			<!--
-			<RadzenDataGridColumn Property="Color" Title="Color">
-				<EditTemplate>
-					<RadzenDropDown TValue="Item" Data=@colors Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
-				</EditTemplate>
-				<Template>
-					<RadzenText>aaa</RadzenText>
-				</Template>
-			</RadzenDataGridColumn>
-			-->
-		</Columns>
-	</RadzenDataGrid>
+<RadzenDataGrid 
+TItem="CharaDataClass" 
+Data="@CharaDataViewModel._charaDataRepository.Appraisals" 
+AllowRowSelectOnRowClick="true"
+RowClick="@OnRowSelected"
+SelectionMode="DataGridSelectionMode.Multiple"
+EditMode="DataGridEditMode.Single"
+AllowVirtualization="true"
+AllowGrouping="true" >
+	<Columns>
+		<RadzenDataGridColumn Property="CharaName" Title="文字種" />
+		<RadzenDataGridColumn Property="MaterialName" Title="資料名" />
+		<RadzenDataGridColumn Title="イメージ">
+			<Template>
+				<img src="@context.Thumbnail" alt="@context.CharaName" width="50" height="50" />
+			</Template>
+		</RadzenDataGridColumn>
+		<!--
+		<RadzenDataGridColumn Property="Color" Title="Color">
+		<EditTemplate>
+		<RadzenDropDown TValue="Item" Data=@colors Style="width: 100%; max-width: 400px;" Name="DropDownBindValue" />
+		</EditTemplate>
+		<Template>
+		<RadzenText>aaa</RadzenText>
+		</Template>
+		</RadzenDataGridColumn>
+		-->
+	</Columns>
+</RadzenDataGrid>
 
 <style>
 	.drop-zone {
@@ -82,7 +82,7 @@
 	private async Task OnRowSelected(DataGridRowMouseEventArgs<CharaDataClass> args)
 	{
 		var item = args.Data;
-			
+
 		Console.WriteLine(item.ToString());
 		// アイテムが既に選択済みか確認
 		if (selectedData.Contains(item))
@@ -109,8 +109,8 @@
 	public class Item
 	{
 		public int Id { get; set; }
-		public string Name { get; set; }
-		public string Color { get; set; } // 色の選択肢
+		public string Name { get; set; } = "";
+		public string Color { get; set; } = ""; // 色の選択肢
 	}
 
 }

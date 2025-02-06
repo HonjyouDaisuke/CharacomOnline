@@ -57,6 +57,8 @@ public class OverlayViewModel
       materialName,
       accessToken
     );
+    if (selectedCharas == null)
+      return overlay;
     var overlayBmp = new SKBitmap(160, 160);
     overlayBmp = ImageEffectService.WhiteFilledBitmap(overlayBmp);
     int count = 0;
@@ -64,7 +66,6 @@ public class OverlayViewModel
     {
       if (!item.IsSelected)
         continue;
-      Console.WriteLine($"overLayに追加:{item.FileId}");
       if (overlayBmp == null)
         continue;
       if (item.ThinImage == null)
@@ -81,7 +82,6 @@ public class OverlayViewModel
     overlay.OverlayBmp = overlayBmp;
     overlay.SelectedItemCount = count;
     overlay.IsSelected = false;
-    Console.WriteLine($"追加完了です！{count}");
     return overlay;
   }
 

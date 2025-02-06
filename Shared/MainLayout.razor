@@ -24,51 +24,49 @@
 		</div>
 	</RadzenBody>
 	<RadzenFooter>
-        Characom Imager Pro Online ©2025 鈴木・三崎法科学研究所
+		Characom Imager Pro Online ©2025 鈴木・三崎法科学研究所
 	</RadzenFooter>
 </RadzenLayout>
 
 @code {
-    private bool parentSidebarExpanded = true;
-    private bool isDark = false;
+	private bool parentSidebarExpanded = true;
 
-    
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
 
 		var option = new ThemeOptions
-			{
-				Theme = "standard",
-			};
+		{
+			Theme = "standard",
+		};
 		ThemeService.SetTheme(option);
-        // SessionStorage から AppState を復元
-        var restoredState = await SessionStorage.LoadAppStateAsync();
-        if (string.IsNullOrEmpty(restoredState.UserId.ToString()))
-        {
-            // AppState にデータを設定
-            AppState.CurrentProjectId = restoredState.CurrentProjectId;
-            AppState.UserId = restoredState.UserId;
-            AppState.UserName = restoredState.UserName;
-            AppState.UserRole = restoredState.UserRole;
-            AppState.UserPictureUrl = restoredState.UserPictureUrl;
+		// SessionStorage から AppState を復元
+		var restoredState = await SessionStorage.LoadAppStateAsync();
+		if (string.IsNullOrEmpty(restoredState.UserId.ToString()))
+		{
+			// AppState にデータを設定
+			AppState.CurrentProjectId = restoredState.CurrentProjectId;
+			AppState.UserId = restoredState.UserId;
+			AppState.UserName = restoredState.UserName;
+			AppState.UserRole = restoredState.UserRole;
+			AppState.UserPictureUrl = restoredState.UserPictureUrl;
 
-            // 再レンダリングをトリガー
-            StateHasChanged();
-        }
-        // LocalStorage から currentProjectIdを復元
-        var currentProjectId = await LocalStorage.GetCurrentProjectIdAsync();
-        if (!string.IsNullOrEmpty(currentProjectId.ToString()))
-        {
-            AppState.CurrentProjectId = currentProjectId;
-            var projectName = await ProjectsViewModel.GetProjectNameFromProjectId((Guid)currentProjectId);
-            if (!string.IsNullOrEmpty(projectName))
-            {
-                await ProjectsViewModel.SetCurrentProject((Guid)currentProjectId, projectName);
-                AppState.CurrentProjectName = projectName;
-            }
-        }
-        
-        
-    }
+			// 再レンダリングをトリガー
+			StateHasChanged();
+		}
+		// LocalStorage から currentProjectIdを復元
+		var currentProjectId = await LocalStorage.GetCurrentProjectIdAsync();
+		if (!string.IsNullOrEmpty(currentProjectId.ToString()))
+		{
+			AppState.CurrentProjectId = currentProjectId;
+			var projectName = await ProjectsViewModel.GetProjectNameFromProjectId((Guid)currentProjectId);
+			if (!string.IsNullOrEmpty(projectName))
+			{
+				await ProjectsViewModel.SetCurrentProject((Guid)currentProjectId, projectName);
+				AppState.CurrentProjectName = projectName;
+			}
+		}
+
+
+	}
 }

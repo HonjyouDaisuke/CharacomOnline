@@ -1,11 +1,13 @@
 @page "/overlay"
 @using Radzen
 @using Radzen.Blazor
+@using CharacomOnline.Entity
 @using CharacomOnline.Service
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Components
 @inject OverlayViewModel OverlayViewModel
 @inject TokenStorage TokenStorage
+@inject BoxFileService BoxFileService
 @inject NavigationManager Navi
 @inject AppState AppState
 @inject UserSettingsViewModel UserSettingsViewModel
@@ -14,6 +16,7 @@
 
 <RadzenDropZoneContainer TItem="Overlays" Data="data" 
 ItemSelector="@ItemSelector"
+Style="height:auto 100%;"
 CanDrop="@CanDrop"
 Drop="@OnDrop">
 	<ChildContent>
@@ -23,7 +26,7 @@ Drop="@OnDrop">
 					<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
 						<RadzenColorPicker @bind-Value=colorA ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
 						<RadzenDropZone Value="Areas.BoxA" Style="flex: 1; gap: 1rem;" >
-							<CharaImageCard ImageData="" Height="160" Width="160" IsLoading="false" />
+							<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.OverlayA.OverlayBmp)" Height="160" Width="160" IsLoading="false" />
 						</RadzenDropZone>
 					</RadzenStack>
 					<CharaImageCard ImageData="" Height="320" Width="320" IsLoading="false" />
@@ -32,7 +35,7 @@ Drop="@OnDrop">
 					<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
 						<RadzenColorPicker @bind-Value=colorB ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
 						<RadzenDropZone Name="aaa" Value="Areas.BoxB" Style="flex: 1; gap: 1rem;" >
-							<CharaImageCard ImageData="" Height="160" Width="160" IsLoading="false" />
+							<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.OverlayB.OverlayBmp)" Height="160" Width="160" IsLoading="false" />
 						</RadzenDropZone>
 					</RadzenStack>
 				</RadzenStack>
@@ -52,7 +55,7 @@ Drop="@OnDrop">
 		</RadzenSplitter>
 	</ChildContent>
 	<Template Context="item">
-		<CharaImageCard ImageData="" Id="@item.Name" Height="80" Width="80" />
+		<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(item.overlay.OverlayBmp)" Id="@item.Name" Height="80" Width="80" />
 	</Template>
 </RadzenDropZoneContainer>
 
@@ -92,119 +95,88 @@ Drop="@OnDrop">
 		return item.Area == (Areas)zone.Value;
 	};
 	//Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
-	Func<RadzenDropZoneItemEventArgs<Overlays>, bool> CanDrop = request => {
+	Func<RadzenDropZoneItemEventArgs<Overlays>, bool> CanDrop = request =>
+	{
 		if (request.ToZone.Value.ToString() == "Select") return false;
 		return true;
 	};
 
 	//void OnItemRender(RadzenDropZoneItemRenderEventArgs<Overlays> args)
 	//{
-	//	args.Attributes["class"] = "rz-card ";
-	//	args.Attributes["style"] = "width: 160px; height: 160px;";
-	//	
-	//}
+
 
 	void OnDrop(RadzenDropZoneItemEventArgs<Overlays> args)
 	{
 		Console.WriteLine($"args (From) = {args.FromZone.Value.ToString()}");
 		Console.WriteLine($"args (To) = {args.ToZone.Value.ToString()}");
 		Console.WriteLine($"args (Item) = {args.Item.Name}");
-		
+		if (args.ToZone.Value.ToString() == "BoxA") {
+			OverlayViewModel.OverlayA = args.Item.overlay;
+			var toColor = ImageEffectService.ConvertRgbStringToSKColor(colorA);
+			OverlayViewModel.OverlayA.OverlayBmp = ImageEffectService.ColorChangeBitmap(OverlayViewModel.OverlayA.OverlayBmp, toColor);
+
+		}
+		if (args.ToZone.Value.ToString() == "BoxB") {
+			OverlayViewModel.OverlayB = args.Item.overlay;
+			var toColor = ImageEffectService.ConvertRgbStringToSKColor(colorB);
+			OverlayViewModel.OverlayB.OverlayBmp = ImageEffectService.ColorChangeBitmap(OverlayViewModel.OverlayB.OverlayBmp, toColor);
+		}
+
+		StateHasChanged();
 	}
 
 	List<Overlays> data = new ();
+	List<OverlayDataClass> overlayItems = new ();
 
-	protected override async Task OnInitializedAsync()
+	private async Task ChangeChara(string charaName)
 	{
 		// アクセストークンを取得
 		accessToken = await TokenStorage.GetAccessTokenAsync();
+		Console.WriteLine($"accessToken = {accessToken}");
 		if (string.IsNullOrEmpty(accessToken))
 		{
 			Navi.NavigateTo("/auth");
 			return;
 		}
 
+		Console.WriteLine("accessTokenCheck...");
+		if (!(await BoxFileService.IsTokenValidAsync(accessToken)))
+		{
+			Navi.NavigateTo("/auth");
+			return;
+		}
 		if (AppState.UserId != null) await UserSettingsViewModel.GetUserSettings((Guid)AppState.UserId);
 
 		projectId = AppState.CurrentProjectId;
-
+		if (projectId == null) return;
 		await OverlayViewModel.InitMaterialsData((Guid)projectId);
+		int count = 0;
 		foreach (var material in OverlayViewModel.GetMaterials())
 		{
-			var overlay = await OverlayViewModel.MakeOverlayDataAsync((Guid)projectId, "川", material, accessToken);
+			var overlay = await OverlayViewModel.MakeOverlayDataAsync((Guid)projectId, charaName, material, accessToken);
+			Overlays newItem = new();
+			newItem.Id = count;
+			newItem.Area = Areas.Select;
+			newItem.Name = overlay.MaterialName;
+			newItem.overlay = overlay;
+			data.Add(newItem);
+			count++;
 			Console.WriteLine($"chara={overlay.CharaName} material={overlay.MaterialName} 個数 = {overlay.SelectedItemCount}");
 		}
-		
+	}
 
-		
-		data.Add(new Overlays
-		{
-			Id = 1,
-			Name = "A",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 2,
-			Name = "B",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 3,
-			Name = "C",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 4,
-			Name = "C",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 5,
-			Name = "C",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 6,
-			Name = "C",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 7,
-			Name = "C",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 8,
-			Name = "C",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 9,
-			Name = "C",
-			Area = Areas.Select,
-		});
-		data.Add(new Overlays
-		{
-			Id = 10,
-			Name = "C",
-			Area = Areas.Select,
-		});
-  }
+	protected override async Task OnInitializedAsync()
+	{
+		await ChangeChara("川");
+	}
 
-    public class Overlays
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public Areas Area { get; set; } = Areas.Select;
-    }
+	public class Overlays
+	{
+		public int Id { get; set; }
+		public string Name { get; set; } = "";
+		public Areas Area { get; set; } = Areas.Select;
+		public OverlayDataClass overlay { get; set; } = new();
+	}
 
     public enum Areas
     {

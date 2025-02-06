@@ -2,30 +2,30 @@
 @inject TooltipService tooltipService
 
 <RadzenCard>
-    <RadzenRow>
-        <RadzenColumn Size="2">
-            <RadzenText>ユーザ</RadzenText>
-        </RadzenColumn>
-        <RadzenColumn Size="9">
-            @foreach (var data in ProjectUsers){
-                <RadzenImage 
-                    path="@data.PictureUrl" 
-                    Style="width: 30px; height: 30px;" 
-                    class="rz-border-radius-2 rz-me-2" 
-                    MouseEnter="@(args => ShowTooltip(args,data.Name))" 
-                />
-            }
-        </RadzenColumn>
-        <RadzenColumn>
-            <RadzenButton >招待</RadzenButton>
-        </RadzenColumn>
-    </RadzenRow>
+	<RadzenRow>
+		<RadzenColumn Size="2">
+			<RadzenText>ユーザ</RadzenText>
+		</RadzenColumn>
+		<RadzenColumn Size="9">
+			@foreach (var data in ProjectUsers){
+				<RadzenImage 
+				path="@data.PictureUrl" 
+				Style="width: 30px; height: 30px;" 
+				class="rz-border-radius-2 rz-me-2" 
+				MouseEnter="@(args => ShowTooltip(args,data.Name))" 
+				/>
+			}
+		</RadzenColumn>
+		<RadzenColumn>
+			<RadzenButton >招待</RadzenButton>
+		</RadzenColumn>
+	</RadzenRow>
 </RadzenCard>
 
 @code {
-    [Parameter]
-    public List<ProjectUsers> ProjectUsers { get; set; }
-    void ShowTooltip(ElementReference elementReference, string tooltipText, TooltipOptions options = null)
+	[Parameter]
+	public List<ProjectUsers> ProjectUsers { get; set; } = new();
+	void ShowTooltip(ElementReference elementReference, string tooltipText, TooltipOptions? options = null)
     {
         tooltipService.Open(elementReference, tooltipText, options);
     }

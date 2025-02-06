@@ -45,7 +45,6 @@ public class CharaDataClass : BaseModel
     return $"id: {Id}  CharaName: {CharaName} MaterialName: {MaterialName} FileId: {FileId}";
   }
 
-  // �X�^�C���𓮓I�Ɍ��肷�郁�\�b�h
   public string GetCardStyle()
   {
     return $"background-color: {(IsSelected ? "var(--rz-primary-light)" : "var(--rz-base)")};";

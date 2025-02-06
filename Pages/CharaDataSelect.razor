@@ -137,7 +137,7 @@ else
 		isLoading = true;
 		await InvokeAsync(StateHasChanged);
 		await UsersViewModel.SetUserInfoToAppState();
-		
+
 		await CharaDataViewModel.ClearViewCharaData();
 		selectedChara = "";
 		selectedMaterial = "";
@@ -198,7 +198,8 @@ else
 		stdLoading = true;
 		strokeLoading = true;
 		await InvokeAsync(StateHasChanged);
-		
+
+		if (string.IsNullOrEmpty(accessToken)) return;
 		// 標準ファイルの読み込み
 		await CharaDataViewModel.GetStandardData(accessToken, selectedChara);
 		standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
