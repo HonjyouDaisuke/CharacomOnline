@@ -1,0 +1,192 @@
+@page "/dragdrop2"
+@using CharacomOnline.Components
+
+@namespace CharacomOnline.Page
+
+<RadzenDropZoneContainer TItem="Overlays" Data="data" 
+ItemSelector="@ItemSelector"
+CanDrop="@CanDrop"
+Drop="@OnDrop">
+	<ChildContent>
+		<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
+			<RadzenSplitterPane Size="65%" Resizable="true">
+				<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
+					<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
+						<RadzenColorPicker @bind-Value=colorA ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
+						<RadzenDropZone Value="Areas.BoxA" Style="flex: 1; gap: 1rem;" >
+							<CharaImageCard ImageData="" Height="160" Width="160" IsLoading="false" />
+						</RadzenDropZone>
+					</RadzenStack>
+					<CharaImageCard ImageData="" Height="320" Width="320" IsLoading="false" />
+
+
+					<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
+						<RadzenColorPicker @bind-Value=colorB ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
+						<RadzenDropZone Name="aaa" Value="Areas.BoxB" Style="flex: 1; gap: 1rem;" >
+							<CharaImageCard ImageData="" Height="160" Width="160" IsLoading="false" />
+						</RadzenDropZone>
+					</RadzenStack>
+				</RadzenStack>
+			</RadzenSplitterPane>
+			<RadzenSplitterPane Size="30%" Resizable="true">
+				<RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
+					<RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
+						Defalut Area
+					</RadzenSplitterPane>
+					<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
+						<RadzenDropZone TItem="Overlays" Value="Areas.Select" class="rz-border-radius-2 rz-p-4" Style="display: flex; flex-wrap: wrap; gap: 1rem;">
+							
+						</RadzenDropZone>	
+					</RadzenSplitterPane>
+				</RadzenSplitter>
+			</RadzenSplitterPane>
+		</RadzenSplitter>
+	</ChildContent>
+	<Template Context="item">
+		<CharaImageCard ImageData="" Id="@item.Name" Height="80" Width="80" />
+	</Template>
+</RadzenDropZoneContainer>
+
+<style>
+	.rz-can-drop {
+	border: dashed 2px darkorange !important;
+	}
+
+
+	.drop-zone {
+	padding: 2px;
+	border: dashed 2px transparent;
+	transition: border linear 0.2s;
+	}
+
+	.drop-zone.hover , .drop-zone:hover {
+	border: dashed 2px darkorange;
+	cursor: pointer;
+	}
+</style>
+
+@code {
+	private bool isHovering = false;
+	private bool showHSV = false;
+	private bool showRGBA = false;
+	private bool showColors = true;
+	private bool showButton = false;
+
+	string colorA = "rgb(68, 58, 110)";
+	string colorB = "rgb(68, 58, 110)";
+	// Filter items by zone value
+	Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) =>
+	{
+		return item.Area == (Areas)zone.Value;
+	};
+  //Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
+	Func<RadzenDropZoneItemEventArgs<Overlays>, bool> CanDrop = request => {
+		if (request.ToZone.Value.ToString() == "Select") return false;
+		return true;
+	};
+
+	//void OnItemRender(RadzenDropZoneItemRenderEventArgs<Overlays> args)
+	//{
+	//	args.Attributes["class"] = "rz-card ";
+	//	args.Attributes["style"] = "width: 160px; height: 160px;";
+	//	
+	//}
+
+	void OnDrop(RadzenDropZoneItemEventArgs<Overlays> args)
+	{
+		Console.WriteLine($"args (From) = {args.FromZone.Value.ToString()}");
+		Console.WriteLine($"args (To) = {args.ToZone.Value.ToString()}");
+		Console.WriteLine($"args (Item) = {args.Item.Name}");
+		//if ((Status)args.FromZone.Value != Status.NotStarted) return;
+		//data.Remove(args.Item);
+		//data.Insert(data.IndexOf(args.ToItem), args.Item);
+		// args.Item.Status = (Status)args.ToZone.Value;
+
+		// if (args.ToItem != null && args.ToItem != args.Item)
+		//  {
+		//      // reorder items in same zone or place the item at specific index in new zone
+		//      data.Remove(args.Item);
+		//      data.Insert(data.IndexOf(args.ToItem), args.Item);
+		//  } *@
+	}
+
+	List<Overlays> data = new ();
+
+	protected override void OnInitialized()
+	{
+		data.Add(new Overlays
+		{
+			Id = 1,
+			Name = "A",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 2,
+			Name = "B",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 3,
+			Name = "C",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 4,
+			Name = "C",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 5,
+			Name = "C",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 6,
+			Name = "C",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 7,
+			Name = "C",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 8,
+			Name = "C",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 9,
+			Name = "C",
+			Area = Areas.Select,
+		});
+		data.Add(new Overlays
+		{
+			Id = 10,
+			Name = "C",
+			Area = Areas.Select,
+		});
+  }
+
+    public class Overlays
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public Areas Area { get; set; } = Areas.Select;
+    }
+
+    public enum Areas
+    {
+        BoxA,
+        BoxB,
+        Select,
+    }
+}
