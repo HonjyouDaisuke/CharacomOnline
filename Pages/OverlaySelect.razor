@@ -10,55 +10,86 @@
 @inject BoxFileService BoxFileService
 @inject NavigationManager Navi
 @inject AppState AppState
+@inject UsersViewModel UsersViewModel
 @inject UserSettingsViewModel UserSettingsViewModel
 
 @namespace CharacomOnline.Page
 
-<RadzenDropZoneContainer TItem="Overlays" Data="data" 
-ItemSelector="@ItemSelector"
-Style="height:auto 100%;"
-CanDrop="@CanDrop"
-Drop="@OnDrop">
-	<ChildContent>
-		<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
-			<RadzenSplitterPane Size="65%" Resizable="true">
-				<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
-					<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
-						<RadzenColorPicker @bind-Value=colorA ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
-						<RadzenDropZone Value="Areas.BoxA" Style="flex: 1; gap: 1rem;" >
-							<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.OverlayA.OverlayBmp)" Height="160" Width="160" IsLoading="false" />
-						</RadzenDropZone>
+@if (isLoading)
+{
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
+}
+else if (userId == null)
+{
+	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
+	ErrorMessage="ログインできていません。ログインしてください"
+	LinkMsg="ログインへ"
+	LinkClick="@(() => OnNaviClick(loginUrl))" />
+}
+else if (projectId == null)
+{
+	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
+	ErrorMessage="プロジェクトを選択してください。"
+	LinkMsg="プロジェクト選択へ"
+	LinkClick=" () => OnNaviClick(projectsUrl)" />
+
+}
+else
+{
+	<RadzenDropZoneContainer TItem="Overlays" Data="data" 
+	ItemSelector="@ItemSelector"
+	Style="height:auto 100%;"
+	CanDrop="@CanDrop"
+	Drop="@OnDrop">
+		<ChildContent>
+			<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
+				<RadzenSplitterPane Size="65%" Resizable="true">
+					<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
+						<ViewSetupSelector 
+						IsCenterLine="centerLine" 
+						IsGridLine="gridLine" 
+						IsStandard="standard" 
+						IsCenterLineChanged="@(value => centerLine = value)" 
+						IsGridChanged="@(value => gridLine = value)" 
+						IsStandardChanged="@(value => standard = value)" />
+						<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
+							<RadzenColorPicker @bind-Value=colorA ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
+							<RadzenDropZone Value="Areas.BoxA" Style="flex: 1; gap: 1rem;" >
+								<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.OverlayA.OverlayBmp)" Height="160" Width="160" IsLoading="false" />
+							</RadzenDropZone>
+						</RadzenStack>
+						<CharaImageCard ImageData="" Height="320" Width="320" IsLoading="false" />
+
+
+						<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
+							<RadzenColorPicker @bind-Value=colorB ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
+							<RadzenDropZone Name="aaa" Value="Areas.BoxB" Style="flex: 1; gap: 1rem;" >
+								<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.OverlayB.OverlayBmp)" Height="160" Width="160" IsLoading="false" />
+							</RadzenDropZone>
+						</RadzenStack>
 					</RadzenStack>
-					<CharaImageCard ImageData="" Height="320" Width="320" IsLoading="false" />
+				</RadzenSplitterPane>
+				<RadzenSplitterPane Size="30%" Resizable="true">
+					<RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
+						<RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
+							Defalut Area
+						</RadzenSplitterPane>
+						<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
+							<RadzenDropZone TItem="Overlays" Value="Areas.Select" class="rz-border-radius-2 rz-p-4" Style="display: flex; flex-wrap: wrap; gap: 1rem;">
 
-
-					<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
-						<RadzenColorPicker @bind-Value=colorB ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton />
-						<RadzenDropZone Name="aaa" Value="Areas.BoxB" Style="flex: 1; gap: 1rem;" >
-							<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.OverlayB.OverlayBmp)" Height="160" Width="160" IsLoading="false" />
-						</RadzenDropZone>
-					</RadzenStack>
-				</RadzenStack>
-			</RadzenSplitterPane>
-			<RadzenSplitterPane Size="30%" Resizable="true">
-				<RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
-					<RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
-						Defalut Area
-					</RadzenSplitterPane>
-					<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
-						<RadzenDropZone TItem="Overlays" Value="Areas.Select" class="rz-border-radius-2 rz-p-4" Style="display: flex; flex-wrap: wrap; gap: 1rem;">
-
-						</RadzenDropZone>	
-					</RadzenSplitterPane>
-				</RadzenSplitter>
-			</RadzenSplitterPane>
-		</RadzenSplitter>
-	</ChildContent>
-	<Template Context="item">
-		<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(item.overlay.OverlayBmp)" Id="@item.Name" Height="80" Width="80" />
-	</Template>
-</RadzenDropZoneContainer>
-
+							</RadzenDropZone>	
+						</RadzenSplitterPane>
+					</RadzenSplitter>
+				</RadzenSplitterPane>
+			</RadzenSplitter>
+		</ChildContent>
+		<Template Context="item">
+			<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(item.overlay.OverlayBmp)" Id="@item.Name" Height="80" Width="80" />
+		</Template>
+	</RadzenDropZoneContainer>
+}
 <style>
 	.rz-can-drop {
 	border: dashed 2px darkorange !important;
@@ -84,8 +115,14 @@ Drop="@OnDrop">
 	private bool showColors = true;
 	private bool showButton = false;
 	private Guid? projectId;
-
+	private Guid? userId;
 	private string? accessToken;
+	private string loginUrl = "./login";
+	private string projectsUrl = "./projects";
+	private bool gridLine = false;
+	private bool centerLine = false;
+	private bool standard = false;
+	private bool isLoading = true;
 
 	string colorA = "rgb(68, 58, 110)";
 	string colorB = "rgb(68, 58, 110)";
@@ -104,7 +141,10 @@ Drop="@OnDrop">
 	//void OnItemRender(RadzenDropZoneItemRenderEventArgs<Overlays> args)
 	//{
 
-
+	private void OnNaviClick(string goTo)
+	{
+		Navi.NavigateTo(goTo);
+	}
 	void OnDrop(RadzenDropZoneItemEventArgs<Overlays> args)
 	{
 		Console.WriteLine($"args (From) = {args.FromZone.Value.ToString()}");
@@ -167,9 +207,60 @@ Drop="@OnDrop">
 
 	protected override async Task OnInitializedAsync()
 	{
+		isLoading = true;
+		await InvokeAsync(StateHasChanged);
+		await UsersViewModel.SetUserInfoToAppState();
 		await ChangeChara("川");
+
+		isLoading = false;
+		await InvokeAsync(StateHasChanged);
 	}
 
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
+
+		try
+		{
+			Console.WriteLine($"userid = {AppState.UserId}");
+			if (!AppState.IsLoggedIn)
+			{
+				isLoading = false;
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
+
+			userId = AppState.UserId;
+			// ユーザ設定の読み込み
+			if (AppState.UserId != null) await UserSettingsViewModel.GetUserSettings((Guid)AppState.UserId);
+			standard = UserSettingsViewModel.UserSettings.IsStandard;
+			centerLine = UserSettingsViewModel.UserSettings.IsCenterLine;
+			gridLine = UserSettingsViewModel.UserSettings.IsGridLine;
+
+			projectId = AppState.CurrentProjectId;
+			if (projectId == null || string.IsNullOrEmpty(projectId.ToString()))
+			{
+				isLoading = false;
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
+
+			// アクセストークンを取得
+			accessToken = await TokenStorage.GetAccessTokenAsync();
+			if (string.IsNullOrEmpty(accessToken))
+			{
+				Navi.NavigateTo("/auth");
+				return;
+			}
+
+      isLoading = false;
+      await InvokeAsync(StateHasChanged);
+    }
+    catch (JSDisconnectedException)
+    {
+    	Console.WriteLine("JavaScript interop failed due to disconnected circuit.");
+    }
+  }
 	public class Overlays
 	{
 		public int Id { get; set; }
