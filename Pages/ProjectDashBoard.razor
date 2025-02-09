@@ -8,6 +8,7 @@
 @inject AppState AppState
 @inject TokenStorage TokenStorage
 @inject UsersViewModel UsersViewModel
+@inject UserSettingsViewModel UserSettingsViewModel
 
 <h3>プロジェクトの管理</h3>
 @if (userId == null)
@@ -66,11 +67,13 @@ else
 		Navi.NavigateTo(goTo);
 	}
 
-	protected override async Task OnInitializedAsync()
+	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
+		if (!firstRender) return;
 		await UsersViewModel.SetUserInfoToAppState();
 
 		userId = AppState.UserId;
+		if (AppState.UserId != null) await UserSettingsViewModel.GetUserSettings((Guid)AppState.UserId);
 		projectId = ProjectsViewModel.GetCurrentProjectId();
 		if (projectId == null)
 		{
