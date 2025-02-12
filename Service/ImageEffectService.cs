@@ -152,7 +152,14 @@ public static class ImageEffectService
 		{
 			return null;
 		}
-
+		if (backBitmap.Width == 0 || backBitmap.Height == 0)
+		{
+			return null;
+		}
+		if (foreBitmap.Width == 0 || foreBitmap.Height == 0)
+		{
+			return null;
+		}
 		// 背景画像と同じサイズでアルファチャンネルを持つ新しいビットマップを作成
 		SKBitmap resultBitmap =
 			new(backBitmap.Width, backBitmap.Height, SKColorType.Rgba8888, SKAlphaType.Premul);

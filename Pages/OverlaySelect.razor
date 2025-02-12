@@ -16,13 +16,7 @@
 
 @namespace CharacomOnline.Page
 
-@if (isLoading)
-{
-	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
-		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-	</RadzenStack>
-}
-else if (userId == null)
+@if (userId == null)
 {
 	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
 	ErrorMessage="ログインできていません。ログインしてください"
@@ -79,9 +73,18 @@ else
 							<CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" SelectedChara="@selectedChara" OnCharacterSelected="OnCharaSelected" />
 						</RadzenSplitterPane>
 						<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
-							<RadzenDropZone TItem="Overlays" Value="Areas.Select" class="rz-border-radius-2 rz-p-4" Style="display: flex; flex-wrap: wrap; gap: 1rem;">
+							@if (isCharaLoading)
+							{
+								<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+									<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+								</RadzenStack>
+							}
+							else
+							{
+								<RadzenDropZone TItem="Overlays" Value="Areas.Select" class="rz-border-radius-2 rz-p-4" Style="display: flex; flex-wrap: wrap; gap: 1rem;">
 
-							</RadzenDropZone>	
+								</RadzenDropZone>
+							}
 						</RadzenSplitterPane>
 					</RadzenSplitter>
 				</RadzenSplitterPane>
@@ -125,6 +128,7 @@ else
 	private bool centerLine = false;
 	private bool standard = false;
 	private bool isLoading = true;
+	private bool isCharaLoading = true;
 	private string selectedChara = "";
 
 	string colorA = "rgb(68, 58, 110)";
@@ -152,6 +156,7 @@ else
 	private async Task onBoxAColorChange(string value)
 	{
 		colorA = value;
+		if (OverlayViewModel.OverlayA == null) return;
 		OverlayViewModel.ChangeOverlayColor(true, colorA);
 		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
 		await InvokeAsync(StateHasChanged);
@@ -160,6 +165,7 @@ else
 	private async Task onBoxBColorChange(string value)
 	{
 		colorB = value;
+		if (OverlayViewModel.OverlayB == null) return;
 		OverlayViewModel.ChangeOverlayColor(false, colorB);
 		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
 		await InvokeAsync(StateHasChanged);
@@ -233,6 +239,8 @@ else
 		projectId = AppState.CurrentProjectId;
 		if (projectId == null) return;
 
+		isCharaLoading = true;
+		await InvokeAsync(StateHasChanged);
 		await OverlayViewModel.InitMaterialsData((Guid)projectId);
 		OverlayViewModel.ClearOverlayBitmapA();
 		OverlayViewModel.ClearOverlayBitmapB();
@@ -250,6 +258,9 @@ else
 			count++;
 			Console.WriteLine($"chara={overlay.CharaName} material={overlay.MaterialName} 個数 = {overlay.SelectedItemCount}");
 		}
+		isCharaLoading = false;
+		await InvokeAsync(StateHasChanged);
+
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -292,9 +303,7 @@ else
 			
 			await CharaDataViewModel.InitCharactersData((Guid)projectId);
 
-			isLoading = false;
-			Console.WriteLine("画面表示");
-
+			isCharaLoading = false;
 			isLoading = false;
 			await InvokeAsync(StateHasChanged);
 		}

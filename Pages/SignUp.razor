@@ -1,7 +1,9 @@
 ﻿@page "/signup"
+@using CharacomOnline.Service.TableService
 @layout EmptyLayout
 @inject Supabase.Client SupabaseClient
 @inject NavigationManager NavigationManager
+@inject UsersTableService UsersTableService
 
 @namespace CharacomOnline.Pages
 
@@ -63,6 +65,9 @@
 			var response = await SupabaseClient.Auth.SignUp(email, password);
 			if (response?.User != null)
 			{
+				if (!string.IsNullOrEmpty(response.User.Id)){
+					await UsersTableService.UpdateUserNameAndEmailAsync(Guid.Parse(response.User.Id), "", email);
+				}
 				Console.WriteLine($"sign up user = {response.User}");
 				NavigationManager.NavigateTo("/");
 			}
