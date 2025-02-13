@@ -117,4 +117,21 @@ public class UsersViewModel
       }
     }
   }
+
+  public async Task SetUserNameAndEmailIfNull(Guid userId, string userName, string email)
+  {
+    var isNameUpdate = await usersTableService.SetNameIfNull(userId, email);
+    var isEmailUpdate = await usersTableService.SetEmailIfNull(userId, email);
+    if (isNameUpdate)
+      Console.WriteLine($"ユーザ名をemailでアップデートしました。{email}");
+    if (isEmailUpdate)
+      Console.WriteLine($"emailアドレスをアップデートしました。{email}");
+  }
+
+  public async Task<bool> ResetPassword(string email)
+  {
+    if (await usersTableService.IsExistEmail(email))
+      return false;
+    return true;
+  }
 }
