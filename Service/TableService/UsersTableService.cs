@@ -206,7 +206,9 @@ public class UsersTableService(Supabase.Client supabaseClient)
   {
     try
     {
+      Console.WriteLine("送信!");
       await _supabaseClient.Auth.ResetPasswordForEmail(email);
+
       return true; // 成功
     }
     catch (Exception ex)
