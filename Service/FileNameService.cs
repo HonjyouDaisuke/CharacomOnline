@@ -1,13 +1,17 @@
 ﻿using System.Text.RegularExpressions;
+using System.Text.Json.Serialization;
 
 namespace CharacomOnline.Service;
 
 public struct FileInformation
 {
+  [JsonPropertyName("chara_name")]
   public string CharaName { get; set; }
 
+  [JsonPropertyName("material_name")]
   public string MaterialName { get; set; }
 
+  [JsonPropertyName("times_name")]
   public string TimesName { get; set; }
 }
 

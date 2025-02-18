@@ -238,25 +238,23 @@ public class ProjectsViewModel
     Guid userId
   )
   {
-    //var imageId = await DataInputAsync(file);
-    //if (imageId == null) return null;
-    Console.WriteLine($"----fileName={fileName}");
     FileInformation? fileInfo = FileNameService.GetDataInfo(fileName);
     if (fileInfo == null)
     {
       Console.WriteLine($"ファイル名が正しくありませんでした。{fileName}");
       return;
     }
-    Console.WriteLine($"ファイルを更新します{fileName}");
+    
     var existFileId = await charaDataTableService.IsCharaDataExists(projectId, fileId);
+    
     if (existFileId)
     {
       var dbInfo = await charaDataTableService.GetFileInformationFromFileIdAsync(projectId, fileId);
       if (isSameFileInfo((FileInformation)fileInfo, (FileInformation)dbInfo))
       {
-        Console.WriteLine($"既に存在していて正しいです。{fileName}");
         return;
       }
+      
       Console.WriteLine($"ファイルの情報を更新します{fileName}");
       await charaDataTableService.UpdateFileInfoAsync(
         projectId,
@@ -307,12 +305,6 @@ public class ProjectsViewModel
     {
       _cts = new CancellationTokenSource();
     }
-
-    Console.WriteLine($"projectId = {projectId}");
-    Console.WriteLine($"charaFolderId = {charaFolderId}");
-    Console.WriteLine($"accessToken = {accessToken}");
-    Console.WriteLine($"files = {files}");
-    Console.WriteLine($"userId = {userId}");
 
     OnProgressUpdated?.Invoke(Progress);
     while (true)

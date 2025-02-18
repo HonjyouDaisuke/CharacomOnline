@@ -63,6 +63,9 @@ else
 
 	private List<ProjectUsers> users = new();
 
+	// ProgressDialog用
+	ProgressDialogParameters? param;
+
 	private void OnNaviClick(string goTo)
 	{
 		Navi.NavigateTo(goTo);
@@ -114,7 +117,7 @@ else
 		var folderId = ProjectsViewModel.GetCurrentProjectCharaFolderId();
 		var accessToken = await TokenStorage.GetAccessTokenAsync();
 		var files = await ProjectsViewModel.GetBoxFileCount(folderId, accessToken);
-		var param = new ProgressDialogParameters
+		param = new ProgressDialogParameters
 			{
 				Message = $"プロジェクト名：{projectName} ファイル数：{files}個",
 				Value = 0,
@@ -137,22 +140,30 @@ else
 			{"parameters", param}
 		});
 
-		Console.WriteLine("スタート");
 		_ = ProjectsViewModel.CreateOrUpdateCharaData((Guid)projectId, folderId, accessToken, files, (Guid)userId);
-
+		
 		// ダイアログが閉じた後に購読解除
 		await dialogTask.ContinueWith((task) =>
 		{
 			// ダイアログが閉じたら購読解除
 			ProjectsViewModel.OnProgressUpdated -= OnProgressUpdated;
 		});
+		
 	}
 
 	// プログレス更新時の処理
 	private void OnProgressUpdated(int progress)
 	{
+		if (param == null) return;
 		// 進行状況更新
-		Console.WriteLine($"更新: {progress}");
+		if (progress >= param.MaxValue) 
+		{
+			DialogService.Close();
+			StateHasChanged();
+			return;	
+		}
+		param.Value = progress;
+		DialogService.Refresh();
 		StateHasChanged(); // ダイアログの再描画を強制
 	}
 	

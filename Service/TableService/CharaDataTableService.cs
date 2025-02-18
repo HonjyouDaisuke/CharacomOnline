@@ -583,27 +583,33 @@ public class CharaDataTableService(
     string fileId
   )
   {
-    FileInformation info = new();
     try
     {
-      var response = await _supabaseClient
-        .From<CharaDataTable>()
-        .Where(x => x.ProjectId == projectId && x.FileId == fileId)
-        .Single();
-      if (response?.CharaName == null)
-        return null;
-      if (response?.MaterialName == null)
-        return null;
-      if (response?.TimesName == null)
-        return null;
-      info.CharaName = response.CharaName;
-      info.MaterialName = response.MaterialName;
-      info.TimesName = response.TimesName;
-      return info;
+      var responseBody = await _supabaseClient
+            .Rpc("get_chara_datainfo", new { project_id = projectId, file_id = fileId });
+
+        if (responseBody == null)
+        {
+            Console.WriteLine($"Error fetching data");
+            return null;
+        }
+        try
+        {
+          var responseList = JsonSerializer.Deserialize<List<FileInformation>>(responseBody.Content);
+          var charaInfo = responseList?.FirstOrDefault();
+          return charaInfo;
+        }
+        catch (JsonException ex)
+        {
+          Console.WriteLine($"JSON Deserialize Error: {ex.Message}");
+          Console.WriteLine($"projectId = {projectId} fileId={fileId}");
+          Console.WriteLine($"Response Body: {responseBody.Content?.FirstOrDefault()}");
+        }
     }
     catch (Exception ex)
     {
-      Console.WriteLine(ex.Message);
+      
+      Console.WriteLine($"----error:{ex}");
     }
     return null;
   }
@@ -615,6 +621,7 @@ public class CharaDataTableService(
     Guid userId
   )
   {
+    Console.WriteLine($"userId-------{userId.ToString()}");
     try
     {
       var response = await _supabaseClient
@@ -623,8 +630,8 @@ public class CharaDataTableService(
         .Set(x => x.CharaName, fileInfo.CharaName) // CharaName を更新
         .Set(x => x.MaterialName, fileInfo.MaterialName) // MaterialName を更新
         .Set(x => x.TimesName, fileInfo.TimesName) // TimesName を更新
-        .Set(x => x.UpdatedBy, userId) // UpdatedBy を更新
         .Set(x => x.UpdatedAt, DateTime.UtcNow) // UpdatedAt を更新
+        .Set(x => x.UpdatedBy, userId) // UpdatedBy を更新
         .Update();
 
       if (response.Models.Count > 0)

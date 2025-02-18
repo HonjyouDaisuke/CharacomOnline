@@ -48,6 +48,9 @@
 
     private List<ProjectViewData>? projects { get; set; } = new List<ProjectViewData>();
 
+    // ProgressDialog用
+	ProgressDialogParameters? param;
+
     private void CheckInitialSelect(Guid? projectId)
     {
         if (projects == null) return;
@@ -171,6 +174,60 @@
         
     }
 
+    	private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId)
+	{
+		var accessToken = await TokenStorage.GetAccessTokenAsync();
+		var files = await ProjectsViewModel.GetBoxFileCount(charaFolderId, accessToken);
+		param = new ProgressDialogParameters
+			{
+				Message = $"プロジェクト名：{projectName} ファイル数：{files}個",
+				Value = 0,
+				MaxValue = files,
+				Unit = $" / {files}",
+				OnCancel = new EventCallback(this, () =>
+				{
+				// ViewModel側でキャンセルを実行
+					ProjectsViewModel.CancelOperation();
+				})
+			};
+		// ViewModelでキャンセル用トークンの初期化
+		ProjectsViewModel.InitializeCancellationToken();
+
+		// 進行状況更新イベントの購読
+		ProjectsViewModel.OnProgressUpdated += OnProgressUpdated;
+
+		var dialogTask = DialogService.OpenAsync<ProgressDialog>("プロジェクトにデータをインストールします", new Dictionary<string, object>
+		{
+			{"parameters", param}
+		});
+
+		_ = ProjectsViewModel.CreateOrUpdateCharaData((Guid)projectId, charaFolderId, accessToken, files, (Guid)userId);
+		
+		// ダイアログが閉じた後に購読解除
+		await dialogTask.ContinueWith((task) =>
+		{
+			// ダイアログが閉じたら購読解除
+			ProjectsViewModel.OnProgressUpdated -= OnProgressUpdated;
+		});
+		
+	}
+
+	// プログレス更新時の処理
+	private void OnProgressUpdated(int progress)
+	{
+		if (param == null) return;
+		// 進行状況更新
+		if (progress >= param.MaxValue) 
+		{
+			DialogService.Close();
+			StateHasChanged();
+			return;	
+		}
+		param.Value = progress;
+		DialogService.Refresh();
+		StateHasChanged(); // ダイアログの再描画を強制
+	}
+	/**
     private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId)
     {
         _cts = new CancellationTokenSource();
@@ -236,4 +293,5 @@
     {
         _cts?.Cancel();
     }
+    **/
 }

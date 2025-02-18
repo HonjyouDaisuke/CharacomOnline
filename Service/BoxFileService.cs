@@ -111,7 +111,6 @@ public class BoxFileService
     string accessToken
   )
   {
-    Console.WriteLine($"folderId = {folderId}");
     var url = $"https://api.box.com/2.0/folders/{folderId}/items?limit={limit}&offset={offset}";
     var request = new HttpRequestMessage(HttpMethod.Get, url);
     request.Headers.Add("Authorization", $"Bearer {accessToken}");
