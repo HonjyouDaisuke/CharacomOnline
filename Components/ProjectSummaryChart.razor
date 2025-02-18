@@ -8,7 +8,7 @@
                 <RadzenProgressBar Value="@CharaDataCount" Max="@BoxFolderFiles" Unit=@($" / {BoxFolderFiles}") />
             </RadzenColumn>
             <RadzenColumn Size="2">
-                <RadzenButton>アップデート</RadzenButton>
+                <RadzenButton Click="@UpdateClick">アップデート</RadzenButton>
             </RadzenColumn>
         </RadzenRow>
     
@@ -33,4 +33,6 @@
     [Parameter]
     public int SelectedCount { get; set; }
 
+		[Parameter]
+    public EventCallback UpdateClick { get; set; }
 }

@@ -18,7 +18,7 @@ public static class FileNameService
     return Path.GetExtension(fileName);
   }
 
-  public static FileInformation GetDataInfo(string fileName)
+  public static FileInformation? GetDataInfo(string fileName)
   {
     FileInformation resData = new();
 
@@ -33,7 +33,15 @@ public static class FileNameService
     else
     {
       Console.WriteLine("ファイル名の形式が正しくありません。");
+      return null;
     }
+
+    if (string.IsNullOrEmpty(resData.CharaName))
+      return null;
+    if (string.IsNullOrEmpty(resData.MaterialName))
+      return null;
+    if (string.IsNullOrEmpty(resData.TimesName))
+      return null;
     return resData;
   }
 }

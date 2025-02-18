@@ -1,7 +1,9 @@
-﻿using CharacomOnline.Entity;
+﻿using CharacomOnline.Components;
+using CharacomOnline.Entity;
 using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
+using Radzen;
 
 namespace CharacomOnline.ViewModel;
 
@@ -15,6 +17,11 @@ public class ProjectsViewModel
   private readonly CharaDataTableService charaDataTableService;
 
   public string? ProjectTitle { get; set; }
+
+  public event Action<int>? OnProgressUpdated;
+  private CancellationTokenSource? _cts = new();
+  public int Progress { get; private set; } = 0;
+  public bool IsCompleted { get; private set; } = false;
 
   // DI コンストラクタ
   public ProjectsViewModel(
@@ -211,5 +218,148 @@ public class ProjectsViewModel
     var selectedCount = await charaDataTableService.GetSelectedCharaCountAsync(projectId);
     projectRepository.SelectedDataCount = selectedCount;
     return selectedCount;
+  }
+
+  public bool isSameFileInfo(FileInformation boxInfo, FileInformation dbInfo)
+  {
+    if (boxInfo.CharaName != dbInfo.CharaName)
+      return false;
+    if (boxInfo.MaterialName != dbInfo.MaterialName)
+      return false;
+    if (boxInfo.TimesName != dbInfo.TimesName)
+      return false;
+    return true;
+  }
+
+  public async Task InsertOrUpdateCharaData(
+    string fileName,
+    Guid projectId,
+    string fileId,
+    Guid userId
+  )
+  {
+    //var imageId = await DataInputAsync(file);
+    //if (imageId == null) return null;
+    Console.WriteLine($"----fileName={fileName}");
+    FileInformation? fileInfo = FileNameService.GetDataInfo(fileName);
+    if (fileInfo == null)
+    {
+      Console.WriteLine($"ファイル名が正しくありませんでした。{fileName}");
+      return;
+    }
+    Console.WriteLine($"ファイルを更新します{fileName}");
+    var existFileId = await charaDataTableService.IsCharaDataExists(projectId, fileId);
+    if (existFileId)
+    {
+      var dbInfo = await charaDataTableService.GetFileInformationFromFileIdAsync(projectId, fileId);
+      if (isSameFileInfo((FileInformation)fileInfo, (FileInformation)dbInfo))
+      {
+        Console.WriteLine($"既に存在していて正しいです。{fileName}");
+        return;
+      }
+      Console.WriteLine($"ファイルの情報を更新します{fileName}");
+      await charaDataTableService.UpdateFileInfoAsync(
+        projectId,
+        fileId,
+        (FileInformation)fileInfo,
+        userId
+      );
+    }
+    else
+    {
+      Console.WriteLine($"新規のファイルです{fileName}");
+      var charaDataId = await charaDataTableService.CreateCharaData(
+        projectId,
+        fileId,
+        (FileInformation)fileInfo
+      );
+    }
+    return;
+  }
+
+  public async Task<int> GetFileCount(string charaFolderId, string accessToken)
+  {
+    var files = await boxFileService.GetFolderFileCountAsync(charaFolderId, accessToken);
+    return files;
+  }
+
+  public void InitializeCancellationToken()
+  {
+    // 以前のトークンをキャンセルし、新しいトークンを作成
+    _cts?.Cancel();
+    _cts?.Dispose();
+    _cts = new CancellationTokenSource();
+  }
+
+  public async Task CreateOrUpdateCharaData(
+    Guid projectId,
+    string charaFolderId,
+    string accessToken,
+    int files,
+    Guid userId
+  )
+  {
+    int offset = 0;
+    int limit = 100;
+    Progress = 0;
+    IsCompleted = false;
+    if (_cts == null)
+    {
+      _cts = new CancellationTokenSource();
+    }
+
+    Console.WriteLine($"projectId = {projectId}");
+    Console.WriteLine($"charaFolderId = {charaFolderId}");
+    Console.WriteLine($"accessToken = {accessToken}");
+    Console.WriteLine($"files = {files}");
+    Console.WriteLine($"userId = {userId}");
+
+    OnProgressUpdated?.Invoke(Progress);
+    while (true)
+    {
+      if (_cts.Token.IsCancellationRequested)
+      {
+        // キャンセルされた場合、ループを抜ける
+        Console.WriteLine("処理がキャンセルされました。");
+        break;
+      }
+
+      var fileList = await boxFileService.GetFolderItemsAsync(
+        charaFolderId,
+        limit,
+        offset,
+        accessToken
+      );
+      if (fileList == null || fileList.Count == 0)
+        break;
+
+      foreach (var item in fileList)
+      {
+        //キャンセルされている場合は例外
+        _cts.Token.ThrowIfCancellationRequested();
+        Progress++;
+
+        OnProgressUpdated?.Invoke(Progress);
+
+        if (item.Type != "file")
+          continue;
+        if (item.Name == "")
+          continue;
+        var extension = FileNameService.GetExtension(item.Name);
+        if (extension != ".jpeg" && extension != ".jpg")
+          continue;
+
+        await InsertOrUpdateCharaData(item.Name, projectId, item.Id, userId);
+      }
+      if (Progress > files)
+        break;
+      offset += limit;
+    }
+  }
+
+  public void CancelOperation()
+  {
+    Console.WriteLine("キャンセルです。");
+    _cts?.Cancel();
   }
 }

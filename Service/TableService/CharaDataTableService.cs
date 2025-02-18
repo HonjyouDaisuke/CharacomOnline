@@ -577,4 +577,71 @@ public class CharaDataTableService(
       Console.WriteLine(ex.Message);
     }
   }
+
+  public async Task<FileInformation?> GetFileInformationFromFileIdAsync(
+    Guid projectId,
+    string fileId
+  )
+  {
+    FileInformation info = new();
+    try
+    {
+      var response = await _supabaseClient
+        .From<CharaDataTable>()
+        .Where(x => x.ProjectId == projectId && x.FileId == fileId)
+        .Single();
+      if (response?.CharaName == null)
+        return null;
+      if (response?.MaterialName == null)
+        return null;
+      if (response?.TimesName == null)
+        return null;
+      info.CharaName = response.CharaName;
+      info.MaterialName = response.MaterialName;
+      info.TimesName = response.TimesName;
+      return info;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
+    return null;
+  }
+
+  public async Task UpdateFileInfoAsync(
+    Guid projectId,
+    string fileId,
+    FileInformation fileInfo,
+    Guid userId
+  )
+  {
+    try
+    {
+      var response = await _supabaseClient
+        .From<CharaDataTable>() // 更新するテーブル
+        .Where(x => x.ProjectId == projectId && x.FileId == fileId) // 条件を LINQ の形で指定
+        .Set(x => x.CharaName, fileInfo.CharaName) // CharaName を更新
+        .Set(x => x.MaterialName, fileInfo.MaterialName) // MaterialName を更新
+        .Set(x => x.TimesName, fileInfo.TimesName) // TimesName を更新
+        .Set(x => x.UpdatedBy, userId) // UpdatedBy を更新
+        .Set(x => x.UpdatedAt, DateTime.UtcNow) // UpdatedAt を更新
+        .Update();
+
+      if (response.Models.Count > 0)
+      {
+        foreach (var model in response.Models)
+        {
+          Console.WriteLine($"Updated record: {model.Id}");
+        }
+      }
+      else
+      {
+        Console.WriteLine("更新されたデータがありません。");
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
+  }
 }
