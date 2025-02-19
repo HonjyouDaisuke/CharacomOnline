@@ -1,8 +1,11 @@
 ﻿@using CharacomOnline.Service
 @using CharacomOnline.Entity
 @using CharacomOnline.Shared
+@using CharacomOnline.ViewModel
+
 @inject DialogService DialogService
 @inject BoxFileService BoxFileService
+@inject GlobalSettingViewModel GlobalSettingViewModel
 @inject SessionStorageService SessionStorage
 @inject TokenStorage TokenStorage
 @inject NavigationManager NavigationManager
@@ -83,7 +86,8 @@
 
 		if (topFolder == null || topFolder == "")
 		{
-			throw new Exception("Boxの初期フォルダが読み取れませんでした");
+			var setting = await GlobalSettingViewModel.GetGlobalSettings();
+			topFolder = setting.TopFolderId;
 		}
 
 		var boxProjectFolders = await BoxFileService.GetFolderItemsAsync(topFolder, 100, 0, accessToken);

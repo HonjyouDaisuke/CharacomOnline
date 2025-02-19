@@ -1,0 +1,56 @@
+@using CharacomOnline.Entity
+@inject DialogService DialogService
+
+@namespace CharacomOnline.Components
+<RadzenStack Gap="1.5rem">
+	<RadzenStack Orientation="Radzen.Orientation.Vertical" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+		<RadzenFormField Text="プロジェクト名" Variant="Variant.Outlined" Style="width: 100%;">
+			<RadzenTextBox @bind-Value="@ProjectName" class="full-width" />
+		</RadzenFormField>
+		<RadzenFormField Text="プロジェクトの説明" Variant="Variant.Outlined" Style="width: 100%;">
+			<RadzenTextArea @bind-Value="@Description" />
+		</RadzenFormField>
+		<RadzenRow>
+			<RadzenColumn>
+				<RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="async () => await OnCancelClick()">キャンセル</RadzenButton>
+				<RadzenButton ButtonStyle="ButtonStyle.Primary" Click="async () => await OnRunClick()">実行</RadzenButton>
+			</RadzenColumn>
+		</RadzenRow>
+	</RadzenStack>
+</RadzenStack>
+
+@code {
+	[Parameter]
+	public string ProjectName { get; set; } = "";
+	[Parameter]
+	public string Description { get; set; } = "";
+	[Parameter]
+	public Guid ProjectId { get; set; }
+
+	[Parameter]
+	public EventCallback<RenameProjectDialogResult?> OnDialogClosed { get; set; }
+
+	private async Task OnCancelClick()
+	{
+		if (OnDialogClosed.HasDelegate)
+		{
+			await OnDialogClosed.InvokeAsync(null);
+		}
+		DialogService.Close();
+	}
+
+	private async Task OnRunClick()
+	{
+		if (OnDialogClosed.HasDelegate)
+		{
+			RenameProjectDialogResult result = new()
+			{
+				ProjectId = ProjectId,
+				ProjectName = ProjectName,
+				ProjectDescription = Description,
+			};
+			await OnDialogClosed.InvokeAsync(result);
+		}
+		DialogService.Close();
+	}
+}	

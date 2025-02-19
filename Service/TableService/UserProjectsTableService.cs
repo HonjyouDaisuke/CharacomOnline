@@ -31,7 +31,7 @@ public class UserProjectsTableService(Client supabaseClient)
     {
       var response = await _supabaseClient
         .From<UserProjectsTable>() // 更新するテーブル
-        .Where(x => x.ProjectId == projectId && x.UserId == userId)  // 条件を LINQ の形で指定
+        .Where(x => x.ProjectId == projectId && x.UserId == userId) // 条件を LINQ の形で指定
         .Single();
 
       return response.RoleId;
@@ -42,6 +42,7 @@ public class UserProjectsTableService(Client supabaseClient)
       return null;
     }
   }
+
   public async Task<List<Guid>?> FetchProjectUsers(Guid projectId)
   {
     try
@@ -59,6 +60,19 @@ public class UserProjectsTableService(Client supabaseClient)
     {
       Console.WriteLine(ex.Message);
       return null;
+    }
+  }
+
+  public async Task DeleteProject(Guid projectId)
+  {
+    try
+    {
+      await _supabaseClient.From<UserProjectsTable>().Where(x => x.ProjectId == projectId).Delete();
+      Console.WriteLine("user_projectsテーブル、削除成功");
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
     }
   }
 }

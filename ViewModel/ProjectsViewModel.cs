@@ -1,4 +1,5 @@
-﻿using CharacomOnline.Components;
+﻿using System.Reflection;
+using CharacomOnline.Components;
 using CharacomOnline.Entity;
 using CharacomOnline.Repositories;
 using CharacomOnline.Service;
@@ -244,17 +245,15 @@ public class ProjectsViewModel
       Console.WriteLine($"ファイル名が正しくありませんでした。{fileName}");
       return;
     }
-    
+
     var existFileId = await charaDataTableService.IsCharaDataExists(projectId, fileId);
-    
+
     if (existFileId)
     {
       var dbInfo = await charaDataTableService.GetFileInformationFromFileIdAsync(projectId, fileId);
       if (isSameFileInfo((FileInformation)fileInfo, (FileInformation)dbInfo))
-      {
         return;
-      }
-      
+
       Console.WriteLine($"ファイルの情報を更新します{fileName}");
       await charaDataTableService.UpdateFileInfoAsync(
         projectId,
@@ -353,5 +352,22 @@ public class ProjectsViewModel
   {
     Console.WriteLine("キャンセルです。");
     _cts?.Cancel();
+  }
+
+  public async Task UpdateProjectNameAsync(
+    Guid projectId,
+    string name,
+    string description,
+    Guid userId
+  )
+  {
+    await projectsTableService.UpdateProjectNameAsync(projectId, name, description, userId);
+  }
+
+  public async Task DeleteProjectAsync(Guid projectId)
+  {
+    await charaDataTableService.DeleteProjectCharaData(projectId);
+    await userProjectsTableService.DeleteProject(projectId);
+    await projectsTableService.DeleteProjectAsync(projectId);
   }
 }

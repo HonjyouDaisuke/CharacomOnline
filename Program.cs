@@ -78,6 +78,7 @@ builder.Services.AddScoped<FileUploadService>();
 builder.Services.AddScoped<FileHandleService>();
 builder.Services.AddScoped<ProjectsTableService>();
 builder.Services.AddScoped<UserProjectsTableService>();
+builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<CharaDataRepository>();
 builder.Services.AddScoped<CharaDataViewModel>();
 builder.Services.AddScoped<ImageProcessRepository>();

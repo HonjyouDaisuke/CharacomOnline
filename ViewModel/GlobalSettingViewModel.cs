@@ -1,15 +1,28 @@
-﻿using CharacomOnline.Repositories;
+﻿using CharacomOnline.Entity;
+using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
 
 namespace CharacomOnline.ViewModel;
 
-public class GlobalSettingViewModel(GlobalSettingRepository globalSettingRepository, StandardTableService standardTableService, StrokeTableService strokeTableService, BoxFileService boxFileService)
+public class GlobalSettingViewModel(
+  GlobalSettingRepository globalSettingRepository,
+  StandardTableService standardTableService,
+  StrokeTableService strokeTableService,
+  BoxFileService boxFileService,
+  GlobalSettingTableService globalSettingTableService
+)
 {
-  public readonly GlobalSettingRepository _globalSettingRepository = globalSettingRepository ?? throw new ArgumentNullException(nameof(globalSettingRepository));
-  private readonly StandardTableService _standardTableService = standardTableService ?? throw new ArgumentNullException(nameof(standardTableService));
-  private readonly StrokeTableService _strokeTableService = strokeTableService ?? throw new ArgumentNullException(nameof(strokeTableService));
-  private readonly BoxFileService _boxFileService = boxFileService ?? throw new ArgumentNullException(nameof(boxFileService));
+  public readonly GlobalSettingRepository _globalSettingRepository =
+    globalSettingRepository ?? throw new ArgumentNullException(nameof(globalSettingRepository));
+  private readonly StandardTableService _standardTableService =
+    standardTableService ?? throw new ArgumentNullException(nameof(standardTableService));
+  private readonly StrokeTableService _strokeTableService =
+    strokeTableService ?? throw new ArgumentNullException(nameof(strokeTableService));
+  private readonly BoxFileService _boxFileService =
+    boxFileService ?? throw new ArgumentNullException(nameof(boxFileService));
+  private readonly GlobalSettingTableService _globalSettingTableService =
+    globalSettingTableService ?? throw new ArgumentNullException(nameof(globalSettingTableService));
 
   public async Task InsertStandardMasterAsync(string charaName, string fileId)
   {
@@ -26,7 +39,6 @@ public class GlobalSettingViewModel(GlobalSettingRepository globalSettingReposit
     _globalSettingRepository.ClearStandard();
     _globalSettingRepository.ClearStroke();
   }
-
 
   public async Task FetchAllMasterAsync()
   {
@@ -47,5 +59,10 @@ public class GlobalSettingViewModel(GlobalSettingRepository globalSettingReposit
       _globalSettingRepository.AddStroke(item);
     }
     Console.WriteLine($"fetch終了 - standard = {standard.Count}  stroke = {stroke.Count}");
+  }
+
+  public async Task<GlobalSetting?> GetGlobalSettings()
+  {
+    return await _globalSettingTableService.FetchGlobalSettings();
   }
 }

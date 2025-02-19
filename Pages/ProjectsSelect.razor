@@ -17,7 +17,7 @@
 
 @if (isStandard)
 {
-    <RadzenButton Click=@(async ()=>
+	<RadzenButton Click=@(async ()=>
               await OnNewButtonClick()) Icon="add_circle" Text="新規作成" ButtonStyle="ButtonStyle.Primary" />
 
 }
@@ -25,156 +25,226 @@
 <RadzenText>@userId</RadzenText>
 
 <RadzenPanel Style="width: 100%; overflow-x: hidden;">
-    <!-- 横幅制限と折り返し対応 -->
-    <div style="display: flex; flex-wrap: wrap; justify-content: start; gap: 16px; max-width: 100%;">
-        @if(projects != null)
-        {
-            @foreach (var project in projects)
-            {
-                <ProjectCard Project="project" CardClick="OnCardClick" />
-            }
-        }
-    </div>
+	<!-- 横幅制限と折り返し対応 -->
+	<div style="display: flex; flex-wrap: wrap; justify-content: start; gap: 16px; max-width: 100%;">
+		@if(projects != null)
+		{
+			@foreach (var project in projects)
+			{
+				<ProjectCard Project="project" CardClick="OnCardClick" RenameClick="OnProjectRenameClick" DeleteClick="OnProjectDeleteClick"/>
+			}
+		}
+	</div>
 </RadzenPanel>
 
 @code {
-    private string? message;
-    private Guid? userId;
-    private Guid? projectId;
-    private bool isStandard;
-    private CancellationTokenSource? _cts = null;
-    [Inject] private ProjectsViewModel ProjectsViewModel { get; set; } = default!;
-    [Inject] private CharaDataViewModel CharaDataViewModel { get; set; } = default!;
+	private string? message;
+	private Guid? userId;
+	private Guid? projectId;
+	private bool isStandard;
+	private CancellationTokenSource? _cts = null;
+	[Inject] private ProjectsViewModel ProjectsViewModel { get; set; } = default!;
+	[Inject] private CharaDataViewModel CharaDataViewModel { get; set; } = default!;
 
-    private List<ProjectViewData>? projects { get; set; } = new List<ProjectViewData>();
+	private List<ProjectViewData>? projects { get; set; } = new List<ProjectViewData>();
 
-    // ProgressDialog用
+	// ProgressDialog用
 	ProgressDialogParameters? param;
 
-    private void CheckInitialSelect(Guid? projectId)
-    {
-        if (projects == null) return;
-        foreach(ProjectViewData p in projects)
-        {
-            if (p.Id == projectId) p.IsSelected = true;
-        }
-    }
+	private void CheckInitialSelect(Guid? projectId)
+	{
+		if (projects == null) return;
+		foreach(ProjectViewData p in projects)
+		{
+			if (p.Id == projectId) p.IsSelected = true;
+		}
+	}
 
-    private bool isStandardUser()
-    {
-        string? userRole = UsersViewModel.GetCurrentUserRole();
-        if (userRole == null) return false;
-        if (userRole == "guest") return false;
-        return true;
-    }
+	private bool isStandardUser()
+	{
+		string? userRole = UsersViewModel.GetCurrentUserRole();
+		if (userRole == null) return false;
+		if (userRole == "guest") return false;
+		return true;
+	}
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-        await UsersViewModel.SetUserInfoToAppState(); 
-        userId = AppState.UserId;
-        var storageProjectId = await LocalStorage.GetCurrentProjectIdAsync();
-        if (storageProjectId != null)
-        {
-            projectId = storageProjectId;
-        }
-        else
-        {
-            projectId = AppState.CurrentProjectId;
-        }
-        
-        isStandard = isStandardUser();
-        if (userId == null) return;
-        projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
-        await InvokeAsync(StateHasChanged);
-        if (projectId == null) return;
-        CheckInitialSelect(projectId);
-        await InvokeAsync(StateHasChanged);
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
+		await UsersViewModel.SetUserInfoToAppState(); 
+		userId = AppState.UserId;
+		var storageProjectId = await LocalStorage.GetCurrentProjectIdAsync();
+		if (storageProjectId != null)
+		{
+			projectId = storageProjectId;
+		}
+		else
+		{
+			projectId = AppState.CurrentProjectId;
+		}
+
+		isStandard = isStandardUser();
+		if (userId == null) return;
+		projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
+		await InvokeAsync(StateHasChanged);
+		if (projectId == null) return;
+		CheckInitialSelect(projectId);
+		await InvokeAsync(StateHasChanged);
 
 
-    }
+	}
 
-    private void OnClick(string text)
-    {
-        message = text;
-    }
+	private void OnClick(string text)
+	{
+		message = text;
+	}
 
-    private async Task OnNewButtonClick()
-    {
-        var result = await DialogService.OpenAsync<CreateProjectDialog>("プロジェクトの新規作成", new Dictionary<string, object>
+	private async Task OnNewButtonClick()
+	{
+		var result = await DialogService.OpenAsync<CreateProjectDialog>("プロジェクトの新規作成", new Dictionary<string, object>
         {
             { nameof(CreateProjectDialog.OnDialogClosed), EventCallback.Factory.Create<CreateProjectDialogResults>(this, OnDialogClosed) }
         });
-    }
+	}
 
-    private void ShowError(string title, string msg)
-    {
-        NotificationService.Notify(new NotificationMessage
+	private void ShowError(string title, string msg)
+	{
+		NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
                 Summary = title,
                 Detail = msg,
                 Duration = 2000
             }
-        );
-    }
+		);
+	}
 
-    private async Task OnDialogClosed(CreateProjectDialogResults result)
-    {
-        if (result.IsCanceled) return;
+	private async Task OnDialogClosed(CreateProjectDialogResults result)
+	{
+		if (result.IsCanceled) return;
 
-        if (result.Title == "" || result.Title == null)
-        {
-            ShowError("タイトル名エラー", "タイトル名が空欄です。タイトルは必須項目です。");
-            return;
-        }
+		if (result.Title == "" || result.Title == null)
+		{
+			ShowError("タイトル名エラー", "タイトル名が空欄です。タイトルは必須項目です。");
+			return;
+		}
 
-        if (await ProjectsViewModel.IsProjectTitleExists(result.Title))
-        {
-            ShowError("プロジェクト重複エラー", $"プロジェクト名「{result.Title}」は既に存在しています。");
-            return;
-        }
+		if (await ProjectsViewModel.IsProjectTitleExists(result.Title))
+		{
+			ShowError("プロジェクト重複エラー", $"プロジェクト名「{result.Title}」は既に存在しています。");
+			return;
+		}
 
-        if (result.FolderId == "" || result.FolderId == null)
-        {
-            ShowError("プロジェクトフォルダエラー", $"プロジェクトフォルダが選択されていません。");
-            return;
-        }
+		if (result.FolderId == "" || result.FolderId == null)
+		{
+			ShowError("プロジェクトフォルダエラー", $"プロジェクトフォルダが選択されていません。");
+			return;
+		}
 
-        if (result.CharaFolderId == "" || result.CharaFolderId == null)
-        {
-            ShowError("切出しフォルダエラー", $"切出しフォルダが選択されていません。");
-            return;
-        }
-        var _userId = await SessionStorage.GetUserIDAsync();
-        if (_userId == null) return;
-        var projectId = await ProjectsViewModel.CreateNewProject(result.Title, result.Description, (Guid)_userId, result.FolderId, result.CharaFolderId);
-        message = $"projectId = {projectId} を新規作成しました。";
+		if (result.CharaFolderId == "" || result.CharaFolderId == null)
+		{
+			ShowError("切出しフォルダエラー", $"切出しフォルダが選択されていません。");
+			return;
+		}
+		var _userId = await SessionStorage.GetUserIDAsync();
+		if (_userId == null) return;
+		userId = _userId;
+		var projectId = await ProjectsViewModel.CreateNewProject(result.Title, result.Description, (Guid)_userId, result.FolderId, result.CharaFolderId);
+		message = $"projectId = {projectId} を新規作成しました。";
 
-        await InstallCharaDataAsync((Guid)projectId, result.Title, result.CharaFolderId);
-        await ProjectsViewModel.SetCurrentProject((Guid)projectId, result.Title);
-        AppState.CurrentProjectId = projectId;
-        AppState.CurrentProjectName = result.Title;
-        StateHasChanged();
-    }
+		await InstallCharaDataAsync((Guid)projectId, result.Title, result.CharaFolderId,(Guid)_userId);
+		await ProjectsViewModel.SetCurrentProject((Guid)projectId, result.Title);
+		AppState.CurrentProjectId = projectId;
+		AppState.CurrentProjectName = result.Title;
+		StateHasChanged();
+	}
 
-    private async Task OnCardClick(ProjectViewData clickedProject)
-    {
-        if (projects == null) return;
-        foreach(ProjectViewData project in projects)
-        {
-            project.IsSelected = false;
-        }
-        clickedProject.IsSelected = true;
-        message = $"プロジェクトが選択されました。件名{clickedProject.Name} id:{clickedProject.Id}";
-        await SessionStorage.SetProjectIDAsync(clickedProject.Id);
-        await ProjectsViewModel.SetCurrentProject(clickedProject.Id, clickedProject.Name);
-        AppState.CurrentProjectId = clickedProject.Id;
-        AppState.CurrentProjectName = clickedProject.Name;
-        
-    }
+	private async Task OnRenameDialogClosed(RenameProjectDialogResult? result)
+	{
+		if (result == null)
+		{
+			OnCancel();
+			return;
+		}
+		await OnRunRename(result);
 
-    	private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId)
+	}
+
+	private async Task OnDeleteDialogClosed(Guid? result)
+	{
+		if (result == null)
+		{
+			OnCancel();
+			return;
+		}
+		await OnRunDelete((Guid)result);
+
+	}
+	private async Task OnRunRename(RenameProjectDialogResult result)
+	{
+		Console.WriteLine("名前の変更です。");
+		Console.WriteLine($"ProjectId = {result.ProjectId}");
+		Console.WriteLine($"Name = {result.ProjectName}");
+		Console.WriteLine($"Description = {result.ProjectDescription}");
+		if (userId == null)
+		{
+			Console.WriteLine("ユーザが不明です。");
+			return;
+		}
+		await ProjectsViewModel.UpdateProjectNameAsync(result.ProjectId, result.ProjectName, result.ProjectDescription, (Guid)userId);
+		//DialogService.Close();
+	}
+	private async Task OnRunDelete(Guid projectId)
+	{
+		Console.WriteLine("削除実行します。");
+		Console.WriteLine($"ProjectId = {projectId}");
+		await ProjectsViewModel.DeleteProjectAsync(projectId);
+	}
+	private void OnCancel()
+	{
+		Console.WriteLine("キャンセルしました");
+		//DialogService.Close();
+	}
+	private async Task OnProjectRenameClick(ProjectViewData clickedProject)
+	{
+		if (projects == null) return;
+		var result = await DialogService.OpenAsync<RenameProjectDialog>("プロジェクトの編集", new Dictionary<string, object>
+				{
+					//{ nameof(RenameProjectDialog.OnRun), EventCallback.Factory.Create<RenameProjectDialogResult>(this, OnRunRename) },
+					{ nameof(RenameProjectDialog.OnDialogClosed), EventCallback.Factory.Create<RenameProjectDialogResult?>(this, OnRenameDialogClosed) },
+					{ nameof(RenameProjectDialog.ProjectId), clickedProject.Id },
+					{ nameof(RenameProjectDialog.ProjectName), clickedProject.Name },
+					{ nameof(RenameProjectDialog.Description), clickedProject.Description },
+				});
+	}
+	private async Task OnProjectDeleteClick(ProjectViewData clickedProject)
+	{
+		if (projects == null) return;
+		var result = await DialogService.OpenAsync<DeleteProjectDialog>("プロジェクトの削除", new Dictionary<string, object>
+			{
+				{ nameof(DeleteProjectDialog.OnDialogClosed), EventCallback.Factory.Create<Guid?>(this, OnDeleteDialogClosed) },
+				{ nameof(DeleteProjectDialog.ProjectId), clickedProject.Id },
+				{ nameof(DeleteProjectDialog.ProjectName), clickedProject.Name },
+			});
+	}
+
+	private async Task OnCardClick(ProjectViewData clickedProject)
+	{
+		if (projects == null) return;
+		foreach (ProjectViewData project in projects)
+		{
+			project.IsSelected = false;
+		}
+		clickedProject.IsSelected = true;
+		message = $"プロジェクトが選択されました。件名{clickedProject.Name} id:{clickedProject.Id}";
+		await SessionStorage.SetProjectIDAsync(clickedProject.Id);
+		await ProjectsViewModel.SetCurrentProject(clickedProject.Id, clickedProject.Name);
+		AppState.CurrentProjectId = clickedProject.Id;
+		AppState.CurrentProjectName = clickedProject.Name;
+
+	}
+
+	private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId, Guid _userId)
 	{
 		var accessToken = await TokenStorage.GetAccessTokenAsync();
 		var files = await ProjectsViewModel.GetBoxFileCount(charaFolderId, accessToken);
@@ -201,15 +271,15 @@
 			{"parameters", param}
 		});
 
-		_ = ProjectsViewModel.CreateOrUpdateCharaData((Guid)projectId, charaFolderId, accessToken, files, (Guid)userId);
-		
+		_ = ProjectsViewModel.CreateOrUpdateCharaData((Guid)projectId, charaFolderId, accessToken, files, (Guid)_userId);
+
 		// ダイアログが閉じた後に購読解除
 		await dialogTask.ContinueWith((task) =>
 		{
 			// ダイアログが閉じたら購読解除
 			ProjectsViewModel.OnProgressUpdated -= OnProgressUpdated;
 		});
-		
+
 	}
 
 	// プログレス更新時の処理

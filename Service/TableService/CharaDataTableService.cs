@@ -585,30 +585,31 @@ public class CharaDataTableService(
   {
     try
     {
-      var responseBody = await _supabaseClient
-            .Rpc("get_chara_datainfo", new { project_id = projectId, file_id = fileId });
+      var responseBody = await _supabaseClient.Rpc(
+        "get_chara_datainfo",
+        new { project_id = projectId, file_id = fileId }
+      );
 
-        if (responseBody == null)
-        {
-            Console.WriteLine($"Error fetching data");
-            return null;
-        }
-        try
-        {
-          var responseList = JsonSerializer.Deserialize<List<FileInformation>>(responseBody.Content);
-          var charaInfo = responseList?.FirstOrDefault();
-          return charaInfo;
-        }
-        catch (JsonException ex)
-        {
-          Console.WriteLine($"JSON Deserialize Error: {ex.Message}");
-          Console.WriteLine($"projectId = {projectId} fileId={fileId}");
-          Console.WriteLine($"Response Body: {responseBody.Content?.FirstOrDefault()}");
-        }
+      if (responseBody == null)
+      {
+        Console.WriteLine($"Error fetching data");
+        return null;
+      }
+      try
+      {
+        var responseList = JsonSerializer.Deserialize<List<FileInformation>>(responseBody.Content);
+        var charaInfo = responseList?.FirstOrDefault();
+        return charaInfo;
+      }
+      catch (JsonException ex)
+      {
+        Console.WriteLine($"JSON Deserialize Error: {ex.Message}");
+        Console.WriteLine($"projectId = {projectId} fileId={fileId}");
+        Console.WriteLine($"Response Body: {responseBody.Content?.FirstOrDefault()}");
+      }
     }
     catch (Exception ex)
     {
-      
       Console.WriteLine($"----error:{ex}");
     }
     return null;
@@ -645,6 +646,20 @@ public class CharaDataTableService(
       {
         Console.WriteLine("更新されたデータがありません。");
       }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
+  }
+
+  public async Task DeleteProjectCharaData(Guid projectId)
+  {
+    try
+    {
+      await _supabaseClient.From<CharaDataTable>().Where(x => x.ProjectId == projectId).Delete();
+
+      Console.WriteLine("chara_dataテーブル、削除成功");
     }
     catch (Exception ex)
     {
