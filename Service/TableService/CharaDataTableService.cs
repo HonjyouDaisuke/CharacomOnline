@@ -4,6 +4,7 @@ using CharacomOnline.Entity;
 using CharacomOnline.ImageProcessing;
 using CharacomOnline.Repositories;
 using Supabase;
+//using Supabase.Gotrue;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -187,7 +188,7 @@ public class CharaDataTableService(
     return response;
   }
 
-  public async Task<Guid?> CreateCharaData(Guid projectId, string fileId, FileInformation fileInfo)
+  public async Task<Guid?> CreateCharaData(Guid projectId, string fileId, FileInformation fileInfo, Guid userId)
   {
     if (await IsCharaDataExists(projectId, fileId))
       return null;
@@ -201,6 +202,8 @@ public class CharaDataTableService(
       MaterialName = fileInfo.MaterialName,
       CharaName = fileInfo.CharaName,
       TimesName = fileInfo.TimesName,
+      UpdatedBy = userId,
+      UpdatedAt = DateTime.Now,
     };
     try
     {

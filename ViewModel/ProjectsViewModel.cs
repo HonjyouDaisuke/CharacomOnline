@@ -268,7 +268,8 @@ public class ProjectsViewModel
       var charaDataId = await charaDataTableService.CreateCharaData(
         projectId,
         fileId,
-        (FileInformation)fileInfo
+        (FileInformation)fileInfo,
+        userId
       );
     }
     return;
