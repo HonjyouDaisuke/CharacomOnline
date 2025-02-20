@@ -132,7 +132,12 @@ public class CharaDataViewModel(
     return true;
   }
 
-  public async Task<Guid?> InsertCharaDataAsync(string fileName, Guid projectId, string fileId, Guid userId)
+  public async Task<Guid?> InsertCharaDataAsync(
+    string fileName,
+    Guid projectId,
+    string fileId,
+    Guid userId
+  )
   {
     //var imageId = await DataInputAsync(file);
     //if (imageId == null) return null;

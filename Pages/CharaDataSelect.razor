@@ -281,7 +281,7 @@ else
         strokeLoading = true;
         await InvokeAsync(StateHasChanged);
         await CharaDataViewModel.GetStandardData(accessToken, selectedChara);
-        standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
+				standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
         stdLoading = false;
         await InvokeAsync(StateHasChanged);
         await CharaDataViewModel.GetStrokeData(accessToken, selectedChara);
@@ -342,7 +342,7 @@ else
         {
 					Console.WriteLine($"GetViewCharaDataAsync");
         
-            await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId, _cts.Token, isStandard, isCenterLine, isGridLine);
+          await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId, _cts.Token, isStandard, isCenterLine, isGridLine);
         }
         catch (OperationCanceledException)
         {
