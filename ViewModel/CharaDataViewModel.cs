@@ -56,7 +56,7 @@ public class CharaDataViewModel(
           continue;
         if (item.ThinImage == null)
           continue;
-        OverlayBmp = ImageEffectService.OverlayBinaryImages(OverlayBmp, item.ThinImage);
+        OverlayBmp = ImageEffectService.OverlayImages(OverlayBmp, item.ThinImage);
       }
       if (OverlayBmp == null)
         return;
@@ -72,7 +72,7 @@ public class CharaDataViewModel(
     ViewBitmap = ImageEffectService.WhiteFilledBitmap(ViewBitmap);
     if (OverlayBmp == null)
       return;
-    ViewBitmap = ImageEffectService.OverlayBinaryImages(ViewBitmap, OverlayBmp);
+    ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, OverlayBmp);
     if (ViewBitmap == null)
       return;
     await Task.Run(() =>
@@ -84,7 +84,7 @@ public class CharaDataViewModel(
           charaDataRepository.StandardThinBmp,
           SKColors.Red
         );
-        ViewBitmap = ImageEffectService.OverlayBinaryImages(ViewBitmap, Standard);
+        ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, Standard);
       }
       if (isGridLine)
       {

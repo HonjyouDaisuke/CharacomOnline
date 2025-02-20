@@ -39,7 +39,7 @@ public class UsersTableService(Supabase.Client supabaseClient)
     }
   }
 
-  public async Task UpdateUserAsync(UsersTable user)
+  public async Task<bool> UpdateUserAsync(UsersTable user)
   {
     try
     {
@@ -47,21 +47,25 @@ public class UsersTableService(Supabase.Client supabaseClient)
         .From<UsersTable>() // 更新するテーブル
         .Where(x => x.Id == user.Id) // 条件を LINQ の形で指定
         .Set(x => x.Name ?? "", user.Name ?? "")
+        .Set(x => x.Email ?? "", user.Email ?? "")
         .Update();
 
       // レスポンスを確認
       if (response != null && response.Models.Count > 0)
       {
         Console.WriteLine("ユーザー情報を更新しました。");
+        return true;
       }
       else
       {
         Console.WriteLine("更新に失敗しました。");
+        return false;
       }
     }
     catch (Exception ex)
     {
       Console.WriteLine(ex.Message);
+      return false;
     }
   }
 

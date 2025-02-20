@@ -1,4 +1,5 @@
 using CharacomOnline.Entity;
+using CharacomOnline.ImageProcessing;
 using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
@@ -39,7 +40,30 @@ public class OverlayViewModel
   public string currentChara = "";
   public string currentMaterial = "";
 
-  public void ClearOverlayData() { }
+  private SKBitmap? standardBitmap;
+
+  private SKBitmap? standardThinBitmap;
+
+  public async Task SetStandardBitmap(string accessToken, string charaName)
+  {
+    var fileId = await _standardTableService.GetFileIdAsync(charaName);
+    Console.WriteLine($"標準ID:{fileId}");
+    if (fileId == null)
+    {
+      Console.WriteLine($"標準字体が見つかりませんでした。{fileId}");
+      return;
+    }
+    var bmp = await _boxFileService.DownloadFileAsSKBitmapAsync(fileId, accessToken);
+    if (bmp == null)
+      return;
+
+    standardBitmap = bmp.Copy();
+    // 細線化
+    var resized = ImageEffectService.ResizeBitmap(bmp.Copy(), 160, 160);
+    var binary = ImageEffectService.GetBinaryBitmap(resized);
+    ThinningProcess thin = new ThinningProcess(binary);
+    standardThinBitmap = thin.ThinBinaryImage();
+  }
 
   public async Task<OverlayDataClass> MakeOverlayDataAsync(
     Guid projectId,
@@ -68,7 +92,7 @@ public class OverlayViewModel
         continue;
       if (item.ThinImage == null)
         continue;
-      overlayBmp = ImageEffectService.OverlayBinaryImages(overlayBmp, item.ThinImage);
+      overlayBmp = ImageEffectService.OverlayImages(overlayBmp, item.ThinImage);
       count++;
     }
     if (overlayBmp == null)
@@ -171,31 +195,33 @@ public class OverlayViewModel
         return;
       ViewBitmap = new SKBitmap(160, 160);
       ViewBitmap = ImageEffectService.WhiteFilledBitmap(ViewBitmap);
-      if (OverlayA == null && OverlayB != null)
+      
+      if (OverlayA.SelectedItemCount == 0 && OverlayB.SelectedItemCount > 0)
       {
-        ViewBitmap = ImageEffectService.OverlayBinaryImages(ViewBitmap, OverlayB.OverlayBmp);
+        ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, OverlayB.OverlayBmp);
       }
-      else if (OverlayA != null && OverlayB == null)
+      else if (OverlayA.SelectedItemCount > 0 && OverlayB.SelectedItemCount == 0)
       {
-        ViewBitmap = ImageEffectService.OverlayBinaryImages(ViewBitmap, OverlayA.OverlayBmp);
+        ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, OverlayA.OverlayBmp);
       }
       else
       {
         if (OverlayA?.SelectedItemCount > OverlayB?.SelectedItemCount)
         {
-          ViewBitmap = ImageEffectService.OverlayBinaryImages(
+          ViewBitmap = ImageEffectService.OverlayImages(
             OverlayA.OverlayBmp,
             OverlayB.OverlayBmp
           );
         }
         else
         {
-          ViewBitmap = ImageEffectService.OverlayBinaryImages(
+          ViewBitmap = ImageEffectService.OverlayImages(
             OverlayB?.OverlayBmp,
             OverlayA?.OverlayBmp
           );
         }
       }
+      setStandard(isStandard);
 
       if (ViewBitmap != null)
       {
@@ -206,23 +232,28 @@ public class OverlayViewModel
     });
   }
 
+  private void setStandard(bool isStandard)
+  {
+    if (!isStandard) return;
+    if (standardThinBitmap == null) return;
+    if (ViewBitmap == null) return;
+    var redThin = ImageEffectService.ColorChangeBitmap(standardThinBitmap, SKColors.Red);
+    ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, redThin);
+  }
   private void setLinesToViewBitmap(bool isCenterLine, bool isGridLine, bool isStandard)
   {
     if (ViewBitmap == null)
       return;
     if (isGridLine)
     {
-      Console.WriteLine("grid");
       ViewBitmap = ImageEffectService.GridLine(ViewBitmap);
     }
     if (isCenterLine)
     {
-      Console.WriteLine("center");
       ViewBitmap = ImageEffectService.CenterLine(ViewBitmap);
     }
     if (isGridLine || isCenterLine)
     {
-      Console.WriteLine("outline");
       ViewBitmap = ImageEffectService.OutlineFrame(ViewBitmap);
     }
   }

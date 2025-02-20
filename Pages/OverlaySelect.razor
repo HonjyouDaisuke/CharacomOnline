@@ -14,7 +14,7 @@
 @inject UserSettingsViewModel UserSettingsViewModel
 @inject CharaDataViewModel CharaDataViewModel
 
-@namespace CharacomOnline.Page
+@namespace CharacomOnline.Pages
 
 @if (userId == null)
 {
@@ -211,7 +211,7 @@ else
 		}
 
 		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
-		StateHasChanged();
+		await InvokeAsync(StateHasChanged);
 	}
 
 	List<Overlays> data = new ();
@@ -258,6 +258,8 @@ else
 			count++;
 			Console.WriteLine($"chara={overlay.CharaName} material={overlay.MaterialName} 個数 = {overlay.SelectedItemCount}");
 		}
+		await OverlayViewModel.SetStandardBitmap(accessToken, charaName);
+
 		isCharaLoading = false;
 		await InvokeAsync(StateHasChanged);
 

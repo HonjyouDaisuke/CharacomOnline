@@ -56,12 +56,12 @@ public class UsersViewModel
     return userRepository.CurrentUser();
   }
 
-  public async Task UpdateCurrentUserAsync(UsersTable user)
+  public async Task<bool> UpdateCurrentUserAsync(UsersTable user)
   {
     if (user == null)
-      return;
+      return false;
     userRepository.SetCurrentUser(user);
-    await usersTableService.UpdateUserAsync(user);
+    return await usersTableService.UpdateUserAsync(user);
   }
 
   public async Task FetchAllUsersAsync()
