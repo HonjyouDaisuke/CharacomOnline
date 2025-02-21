@@ -110,7 +110,8 @@ public class ProjectsViewModel
       projectName,
       description,
       folderId,
-      charaFolderId
+      charaFolderId,
+      userId
     );
     if (result != null)
     {

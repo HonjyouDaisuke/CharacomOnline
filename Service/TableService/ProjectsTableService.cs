@@ -12,7 +12,8 @@ public class ProjectsTableService(Client supabaseClient)
     string title,
     string description,
     string folderId,
-    string charaFolderId
+    string charaFolderId,
+    Guid userId
   )
   {
     if (await IsProjectTitleExists(title))
@@ -29,6 +30,10 @@ public class ProjectsTableService(Client supabaseClient)
       Description = description,
       FolderId = folderId,
       CharaFolderId = charaFolderId,
+      CreatedAt = DateTime.Now,
+      CreatedBy = userId,
+      UpdatedAt = DateTime.Now,
+      UpdatedBy = userId,
     };
 
     // データベースに挿入
