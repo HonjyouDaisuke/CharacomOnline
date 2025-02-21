@@ -10,6 +10,7 @@
 @inject UsersViewModel UsersViewModel
 @inject UserSettingsViewModel UserSettingsViewModel
 @inject DialogService DialogService
+@inject NotificationService NotificationService
 
 <h3>プロジェクトの管理</h3>
 @if (userId == null)
@@ -147,6 +148,14 @@ else
 		{
 			// ダイアログが閉じたら購読解除
 			ProjectsViewModel.OnProgressUpdated -= OnProgressUpdated;
+			NotificationService.Notify(new NotificationMessage
+      {
+        Severity = NotificationSeverity.Success,
+        Summary = "プロジェクトアップデート",
+        Detail = "プロジェクトをアップデートしました。",
+        Duration = 2000
+      }
+    );
 		});
 		
 	}

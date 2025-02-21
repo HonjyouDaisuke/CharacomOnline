@@ -156,6 +156,14 @@
 		await ProjectsViewModel.SetCurrentProject((Guid)projectId, result.Title);
 		AppState.CurrentProjectId = projectId;
 		AppState.CurrentProjectName = result.Title;
+		NotificationService.Notify(new NotificationMessage
+      {
+        Severity = NotificationSeverity.Success,
+        Summary = "プロジェクト作成完了",
+        Detail = "プロジェクトを作成しデータをインストールしました。",
+        Duration = 2000
+      }
+    );
 		StateHasChanged();
 	}
 
@@ -199,6 +207,14 @@
 		Console.WriteLine("削除実行します。");
 		Console.WriteLine($"ProjectId = {projectId}");
 		await ProjectsViewModel.DeleteProjectAsync(projectId);
+		NotificationService.Notify(new NotificationMessage
+      {
+        Severity = NotificationSeverity.Success,
+        Summary = "プロジェクト削除完了",
+        Detail = "プロジェクトを削除しました。",
+        Duration = 2000
+      }
+    );
 	}
 	private void OnCancel()
 	{
@@ -297,71 +313,4 @@
 		DialogService.Refresh();
 		StateHasChanged(); // ダイアログの再描画を強制
 	}
-	/**
-    private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId)
-    {
-        _cts = new CancellationTokenSource();
-
-        // ファイルを確認
-        var accessToken = await TokenStorage.GetAccessTokenAsync();
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            throw new Exception("Access token not found. Please authenticate first.");
-        }
-        var files = await BoxFileService.GetFolderFileCountAsync(charaFolderId, accessToken);
-        int offset = 0;
-        int limit = 100;
-        var param = new ProgressDialogParameters
-            {
-                Message = $"プロジェクト名：{projectName} <br>ファイル数：{10}個",
-                Value = 0,
-                MaxValue = files,
-                Unit = $" / {files}",
-                OnCancel = EventCallback.Factory.Create(this, CancelOperation),
-                Token = _cts.Token,
-            };
-
-        DialogService.Open<ProgressDialog>("プロジェクトにデータをインストールします", new Dictionary<string, object>
-        {
-            {"parameters", param}
-        });
-
-        await InvokeAsync(StateHasChanged);
-
-        while (true)
-        {
-            var fileList = await BoxFileService.GetFolderItemsAsync(charaFolderId, limit, offset, accessToken);
-            if (fileList == null || fileList.Count == 0) break;
-
-            foreach (var item in fileList)
-            {
-                // キャンセルされている場合は例外をスロー
-                _cts.Token.ThrowIfCancellationRequested();
-                param.Value++;
-                DialogService.Refresh();
-                await InvokeAsync(StateHasChanged);
-
-                if (item.Type != "file") continue;
-                if (item.Name == "") continue;
-                var extension = FileNameService.GetExtension(item.Name);
-                if (extension != ".jpeg" && extension != ".jpg") continue;
-
-                var charaId = await CharaDataViewModel.InsertCharaDataAsync(item.Name, projectId, item.Id);
-                Console.WriteLine($"installing... No.{(int)param.Value} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}");
-                DialogService.Refresh();
-                await InvokeAsync(StateHasChanged);
-            }
-
-            if (param.Value > files) break;
-            offset += limit;
-        }
-        DialogService.Close();
-    }
-
-
-    private void CancelOperation()
-    {
-        _cts?.Cancel();
-    }
-    **/
 }
