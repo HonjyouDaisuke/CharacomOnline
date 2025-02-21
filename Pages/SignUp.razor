@@ -1,5 +1,6 @@
 ﻿@page "/signup"
 @using CharacomOnline.Service.TableService
+@using CharacomOnline.Utils
 @layout EmptyLayout
 @inject Supabase.Client SupabaseClient
 @inject NavigationManager NavigationManager
@@ -20,9 +21,19 @@
 					<RadzenTextBox Placeholder="E-mail" @bind-Value="email" />
 				</RadzenStack>
 				<RadzenStack Class="full-width">
-					<RadzenText>password</RadzenText>
+					<RadzenText>パスワード</RadzenText>
 					<RadzenPassword Placeholder="password" @bind-Value="password" />
 				</RadzenStack>
+				<RadzenStack Class="full-width">
+					<RadzenText>パスワード(確認用)</RadzenText>
+					<RadzenPassword Placeholder="password" @bind-Value="passwordConfirm" />
+				</RadzenStack>
+				@if (!string.IsNullOrEmpty(errorMessage))
+				{
+					<RadzenRow Gap="10" JustifyContent="JustifyContent.Center">
+						<RadzenText class="rz-color-danger">@errorMessage</RadzenText>
+					</RadzenRow>
+				}
 				<RadzenRow Gap="10" JustifyContent="JustifyContent.Center">
 					<RadzenButton Click=@(async () => await Signup()) >新規登録</RadzenButton>
 				</RadzenRow>
@@ -51,17 +62,53 @@
 @code {
 	private string? email;
 	private string? password;
+	private string? passwordConfirm;
 
+	private string? errorMessage;
+
+	private async Task<bool> isCorrectEmailPass()
+	{
+		if (string.IsNullOrWhiteSpace(email))
+		{
+			Console.WriteLine("email empty");
+			errorMessage = "emailの欄が入力されていません。";
+			await InvokeAsync(StateHasChanged);
+			return false;
+		}
+
+		if (string.IsNullOrWhiteSpace(password))
+		{
+			Console.WriteLine("password empty");
+			errorMessage = "passwordが入力されていません。";
+			await InvokeAsync(StateHasChanged);
+			return false;
+		}
+
+		if (!EmailValidator.IsValidEmail(email))
+		{
+			errorMessage = "Emailが正しく入力されていません。実際のemailアドレスを入力してください";
+			await InvokeAsync(StateHasChanged);
+			return false;
+		}
+
+		if (password != passwordConfirm)
+		{
+			errorMessage = "passwordが確認用と一致しません。";
+			await InvokeAsync(StateHasChanged);
+			return false;
+		}
+		return true;
+	}
 	private async Task Signup()
 	{
 		Console.WriteLine("signup start ---- >");
-		if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-		{
-			Console.WriteLine("email or password empty");
-			return;
-		}
+		errorMessage = "";
+		await InvokeAsync(StateHasChanged);
+		if (await isCorrectEmailPass()) return;
+
 		try
 		{
+			if (email == null || password == null) return;
 			var response = await SupabaseClient.Auth.SignUp(email, password);
 			if (response?.User != null)
 			{

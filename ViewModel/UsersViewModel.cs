@@ -130,6 +130,7 @@ public class UsersViewModel
 
   public async Task<bool> ResetPassword(string email)
   {
+    Console.WriteLine("リセットするよ");
     if (!await usersTableService.IsExistEmail(email))
       return false;
     if (!await usersTableService.SendPasswordResetEmail(email))

@@ -1,4 +1,7 @@
 ﻿using CharacomOnline.Entity;
+using Microsoft.AspNetCore.Mvc;
+using Supabase;
+using Supabase.Gotrue;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -211,8 +214,13 @@ public class UsersTableService(Supabase.Client supabaseClient)
     try
     {
       Console.WriteLine("送信!");
-      await _supabaseClient.Auth.ResetPasswordForEmail(email);
+      var options = new ResetPasswordForEmailOptions(email)
+      {
+        RedirectTo = $"https://localhost:7241/reset-password&email={email}",
+      };
 
+      //await _supabaseClient.Auth.ResetPasswordForEmail(email, new SignInOptions { RedirectTo = "https://localhost:7421/reset-password" });
+      await _supabaseClient.Auth.ResetPasswordForEmail(options);
       return true; // 成功
     }
     catch (Exception ex)
