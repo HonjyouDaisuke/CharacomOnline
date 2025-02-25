@@ -216,9 +216,9 @@ public class UsersTableService(Supabase.Client supabaseClient)
       Console.WriteLine("送信!");
       var options = new ResetPasswordForEmailOptions(email)
       {
-        RedirectTo = $"https://localhost:7241/reset-password&email={email}",
+        RedirectTo = $"https://localhost:7241/reset-password",
       };
-
+      Console.WriteLine($"redirectTo = {options.RedirectTo}");
       //await _supabaseClient.Auth.ResetPasswordForEmail(email, new SignInOptions { RedirectTo = "https://localhost:7421/reset-password" });
       await _supabaseClient.Auth.ResetPasswordForEmail(options);
       return true; // 成功

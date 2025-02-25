@@ -43,13 +43,13 @@ else
 				<RadzenSplitterPane Size="65%" Resizable="true">
 					<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
 						<ViewSetupSelector 
-							IsCenterLine="centerLine" 
-							IsGridLine="gridLine" 
-							IsStandard="standard"
-							Changed="@EventCallback.Factory.Create(this, async () => await OnSetupChanged())"
-							IsCenterLineChanged="@(value => centerLine = value)" 
-							IsGridChanged="@(value => gridLine = value)" 
-							IsStandardChanged="@(value => standard = value)" />
+						IsCenterLine="centerLine" 
+						IsGridLine="gridLine" 
+						IsStandard="standard"
+						Changed="@EventCallback.Factory.Create(this, async () => await OnSetupChanged())"
+						IsCenterLineChanged="@(value => centerLine = value)" 
+						IsGridChanged="@(value => gridLine = value)" 
+						IsStandardChanged="@(value => standard = value)" />
 						<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
 							<RadzenColorPicker @bind-Value=colorA ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton Change="onBoxAColorChange" />
 							<RadzenDropZone Value="Areas.BoxA" Style="flex: 1; gap: 1rem;" >
@@ -157,6 +157,7 @@ else
 	{
 		colorA = value;
 		if (OverlayViewModel.OverlayA == null) return;
+		if (OverlayViewModel.OverlayA.OverlayBmp == null) return;
 		OverlayViewModel.ChangeOverlayColor(true, colorA);
 		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
 		await InvokeAsync(StateHasChanged);
@@ -166,6 +167,7 @@ else
 	{
 		colorB = value;
 		if (OverlayViewModel.OverlayB == null) return;
+		if (OverlayViewModel.OverlayB.OverlayBmp == null) return;
 		OverlayViewModel.ChangeOverlayColor(false, colorB);
 		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
 		await InvokeAsync(StateHasChanged);
@@ -174,6 +176,11 @@ else
 	private async Task OnSetupChanged()
 	{
 		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
+		if (AppState.UserId == null) return;
+		await UserSettingsViewModel.UpdateIsStandard((Guid)AppState.UserId, standard);
+		await UserSettingsViewModel.UpdateIsCenterLine((Guid)AppState.UserId, centerLine);
+		await UserSettingsViewModel.UpdateIsGridLine((Guid)AppState.UserId, gridLine);
+		await InvokeAsync(StateHasChanged);
 	}
 
 	private async Task OnCharaSelected(string? _selectedChara)
