@@ -35,81 +35,81 @@
 
 
 @code {
-    private IBrowserFile? selectedFile;
-    private string? fileNameString;
-    private string? userEmail;
-    private string? userId;
+	private IBrowserFile? selectedFile;
+	private string? fileNameString;
+	private string? userEmail;
+	private string? userId;
 
 
-    // ファイル選択時の処理
-    private void HandleFileSelected(InputFileChangeEventArgs e)
-    {
-        selectedFile = e.File;
-    }
+	// ファイル選択時の処理
+	private void HandleFileSelected(InputFileChangeEventArgs e)
+	{
+		selectedFile = e.File;
+	}
 
-    // 通知
-    void ShowNotification(NotificationMessage message)
-    {
-        NotificationService.Notify(message);
-    }
+	// 通知
+	void ShowNotification(NotificationMessage message)
+	{
+		NotificationService.Notify(message);
+	}
 
-    protected override async Task OnInitializedAsync()
-    {
-        // var client = await SupabaseService.GetClientAsync();
+	protected override async Task OnInitializedAsync()
+	{
+		// var client = await SupabaseService.GetClientAsync();
 
-        // セッション情報を再取得
-        var session = SupabaseClient.Auth.CurrentSession;
-        if (session != null && session.User != null)
-        {
-            userEmail = session.User.Email;
-        }
-        else
-        {
-            userEmail = "セッション情報がありません。ログインしてください。";
-        }
+		// セッション情報を再取得
+		var session = SupabaseClient.Auth.CurrentSession;
+		if (session != null && session.User != null)
+		{
+			userEmail = session.User.Email;
+		}
+		else
+		{
+			userEmail = "セッション情報がありません。ログインしてください。";
+		}
 
-        var _userId = await SessionStorage.GetUserIDAsync();
-        if (_userId == null) return;
-        userId = ((Guid)_userId).ToString();
-    }
+		var _userId = await SessionStorage.GetUserIDAsync();
+		if (_userId == null) return;
+		userId = ((Guid)_userId).ToString();
+	}
 
-    private async Task AddImageData(string fileName, long size)
-    {
-        string Message = string.Empty;
-        try
-        {
-            await ImagesTableService.AddImageFile(fileName, "Images/", size, "");
-            Message = "User added successfully!";
-        }
-        catch (Exception ex)
-        {
-            Message = $"Error: {ex.Message}";
-        }
+	private async Task AddImageData(string fileName, long size)
+	{
+		string Message = string.Empty;
+		try
+		{
+			await ImagesTableService.AddImageFile(fileName, "Images/", size, "");
+			Message = "User added successfully!";
+		}
+		catch (Exception ex)
+		{
+			Message = $"Error: {ex.Message}";
+		}
 
-        Console.WriteLine(Message);
-    }
+		Console.WriteLine(Message);
+	}
 
-    // アップロード処理
-    private async Task UploadFile()
-    {
-        Console.WriteLine("アップロードスタート");
-        if (selectedFile == null || string.IsNullOrEmpty(selectedFile.Name))
-        {
-            // 通知を表示
-            ShowNotification(new NotificationMessage
+	// アップロード処理
+	private async Task UploadFile()
+	{
+		Console.WriteLine("アップロードスタート");
+		if (selectedFile == null || string.IsNullOrEmpty(selectedFile.Name))
+		{
+			// 通知を表示
+			ShowNotification(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
                     Summary = "アップロード エラー",
                     Detail = $"ファイルが選択されていません。<br>ファイルを選択してください。",
                     Duration = 2000
                 }
-            );
-            Console.WriteLine("ファイルが選択されていません");
-            return;
-        }
+			);
+			Console.WriteLine("ファイルが選択されていません");
+			return;
+		}
 
-        var uniqueFileName = RandomStringMaker.MakeString(10) + Path.GetExtension(selectedFile.Name);
-        Console.WriteLine($"アップロード準備完了{uniqueFileName}");
+		var uniqueFileName = ""; // RandomStringMaker.MakeString(10) + Path.GetExtension(selectedFile.Name);
+		Console.WriteLine($"アップロード準備完了{uniqueFileName}");
 
         await StorageService.UploadFileAsync(selectedFile, uniqueFileName);
         Console.WriteLine("アップロード終了");

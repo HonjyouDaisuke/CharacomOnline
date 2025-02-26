@@ -139,9 +139,6 @@ public class CharaDataViewModel(
     Guid userId
   )
   {
-    //var imageId = await DataInputAsync(file);
-    //if (imageId == null) return null;
-
     var fileInfo = FileNameService.GetDataInfo(fileName);
     if (fileInfo == null)
     {
@@ -155,31 +152,6 @@ public class CharaDataViewModel(
       userId
     );
     return charaDataId;
-  }
-
-  public async Task<Guid?> DataInputAsync(IBrowserFile file)
-  {
-    // ファイルをStorageに保存
-    var uniqueFileName = RandomStringMaker.MakeString(10) + Path.GetExtension(file.Name);
-    await _storageService.UploadFileAsync(file, uniqueFileName);
-    var bmp = await ImageEffectService.LoadImageFileAsync(file);
-    if (bmp == null)
-      return null;
-    var thumbnailBmp = ImageEffectService.ResizeBitmap(bmp, 50, 50);
-    if (thumbnailBmp == null)
-      return null;
-    var thumbnailBmpString = ImageEffectService.GetBinaryImageData(thumbnailBmp);
-    if (thumbnailBmpString == null)
-      return null;
-    // CharaImage情報をDBに保存
-    var imageId = await _imagesTableService.AddImageFile(
-      uniqueFileName,
-      "Images/",
-      file.Size,
-      thumbnailBmpString
-    );
-
-    return imageId;
   }
 
   public async Task FetchCharaDataAsync(Guid projectId, Guid modelId)

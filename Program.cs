@@ -4,11 +4,42 @@ using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
 using CharacomOnline.ViewModel;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
+using Microsoft.Extensions.Hosting;
 using Radzen;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 using Supabase;
 
 var builder = WebApplication.CreateBuilder(args);
+string logTemplate = "| {Timestamp:HH:mm:ss} | {Level:u4} | {Message:j}{NewLine}";
+
+string logFilePathHead = $"logs\\{nameof(CharacomOnline)}";
+
+// Serilog の設定
+Log.Logger = new LoggerConfiguration()
+  .MinimumLevel.Information()
+  .WriteTo.Console()
+  .WriteTo.File(
+    $"{logFilePathHead}.txt",
+    LogEventLevel.Information,
+    outputTemplate: logTemplate,
+    rollingInterval: RollingInterval.Day
+  )
+  .WriteTo.File(
+    new CompactJsonFormatter(),
+    $"{logFilePathHead}_comapct.json",
+    LogEventLevel.Information,
+    rollingInterval: RollingInterval.Day
+  )
+  .Enrich.FromLogContext()
+  .CreateLogger();
+
+// Serilog を ASP.NET Core のロガーとして使用
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -153,4 +184,11 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-app.Run();
+try
+{
+  app.Run();
+}
+finally
+{
+  Log.CloseAndFlush();
+}

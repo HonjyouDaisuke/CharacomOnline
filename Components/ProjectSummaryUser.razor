@@ -1,5 +1,9 @@
 ﻿@using CharacomOnline.Entity
+@using CharacomOnline.ViewModel
+@using System.Collections
 @inject TooltipService tooltipService
+@inject UsersViewModel UsersViewModel
+@inject ILogger<Index> Logger
 
 <RadzenCard>
 	<RadzenRow>
@@ -25,9 +29,22 @@
 @code {
 	[Parameter]
 	public List<ProjectUsers> ProjectUsers { get; set; } = new();
+
+	[Parameter]
+	public EventCallback<Guid> InviteUser { get; set; }
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
+		await UsersViewModel.FetchAllUsersAsync();
+		var users = UsersViewModel.GetAllUserList();
+		foreach(var user in users) {
+			Logger.LogInformation($"add User = {user.Name}");
+		}
+	}
 	void ShowTooltip(ElementReference elementReference, string tooltipText, TooltipOptions? options = null)
-    {
-        tooltipService.Open(elementReference, tooltipText, options);
-    }
+	{
+		tooltipService.Open(elementReference, tooltipText, options);
+	}
 
 }
