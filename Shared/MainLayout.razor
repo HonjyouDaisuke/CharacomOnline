@@ -14,7 +14,7 @@
 <PageTitle>CharacomOnline</PageTitle>
 <RadzenComponents @rendermode="InteractiveServer" />
 <RadzenLayout>
-	<MainHeader @bind-SidebarExpanded="parentSidebarExpanded" />
+	<MainHeader @bind-SidebarExpanded="parentSidebarExpanded" @bind-PanelExpanded="notificationsPanelExpanded"/>
 	<NavMenu @bind-SidebarExpanded="parentSidebarExpanded" />
 	<!-- NotificationManagerを配置 -->
 	<NotificationManager />
@@ -23,13 +23,23 @@
 			@Body
 		</div>
 	</RadzenBody>
+
+	<!-- 通知パネルを設置 -->
+	<NotificationsPanel @bind-PanelExpanded="notificationsPanelExpanded" />
+
 	<RadzenFooter>
 		Characom Imager Pro Online ©2025 鈴木・三崎法科学研究所
 	</RadzenFooter>
+
+	
 </RadzenLayout>
+
+
+
 
 @code {
 	private bool parentSidebarExpanded = true;
+	private bool notificationsPanelExpanded = false;
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{

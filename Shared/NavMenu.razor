@@ -33,6 +33,7 @@
 	// RadzenSidebarの状態変更をSidebarExpandedプロパティに反映
 	private async Task ToggleSidebar()
 	{
+
 		bool newValue = !SidebarExpanded;
 		await SidebarExpandedChanged.InvokeAsync(newValue);
 	}
