@@ -15,8 +15,9 @@
     private void RedirectToBoxLogin()
     {
         var clientId = OAuthService.GetBoxClientId();
-        var redirectUri = "https://localhost:7241/box-callback";
-
+        var redirectUri = Environment.GetEnvironmentVariable("BOX_REDIRECT_URL") 
+						  ?? "https://localhost:7241/box-callback"; // デフォルトはローカル 
+        
         // Boxの認証URL
         var authUrl = $"https://account.box.com/api/oauth2/authorize?response_type=code&client_id={clientId}&redirect_uri={redirectUri}";
 
