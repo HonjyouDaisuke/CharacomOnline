@@ -82,7 +82,9 @@
 		try
 		{
 			Console.WriteLine($"to try Login with provider:{provider}");
-			var redirectUrl = "https://localhost:7241/callback";  // 認証後に戻るURL
+			// 認証後に戻るURL
+			var redirectUrl = Environment.GetEnvironmentVariable("SUPABASE_REDIRECT_URL") 
+						  ?? "https://localhost:7241/callback"; // デフォルトはローカル 
 
 			// GitHub認証用のOAuth URLを作成
 			var signingUrl = $"https://imrymolanolzitkwcnhz.supabase.co/auth/v1/authorize?provider={provider}&redirect_to={Uri.EscapeDataString(redirectUrl)}";
