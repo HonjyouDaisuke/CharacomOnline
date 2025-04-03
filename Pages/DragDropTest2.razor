@@ -66,7 +66,6 @@ Drop="@OnDrop">
 </style>
 
 @code {
-	private bool isHovering = false;
 	private bool showHSV = false;
 	private bool showRGBA = false;
 	private bool showColors = true;
@@ -79,7 +78,7 @@ Drop="@OnDrop">
 	{
 		return item.Area == (Areas)zone.Value;
 	};
-  //Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
+	//Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
 	Func<RadzenDropZoneItemEventArgs<Overlays>, bool> CanDrop = request => {
 		if (request.ToZone.Value.ToString() == "Select") return false;
 		return true;
@@ -174,13 +173,13 @@ Drop="@OnDrop">
 			Name = "C",
 			Area = Areas.Select,
 		});
-  }
+	}
 
-    public class Overlays
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public Areas Area { get; set; } = Areas.Select;
+	public class Overlays
+	{
+		public int Id { get; set; }
+		public string Name { get; set; } = "";
+		public Areas Area { get; set; } = Areas.Select;
     }
 
     public enum Areas

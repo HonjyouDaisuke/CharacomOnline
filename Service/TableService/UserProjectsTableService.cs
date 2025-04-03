@@ -33,7 +33,11 @@ public class UserProjectsTableService(Client supabaseClient)
         .From<UserProjectsTable>() // 更新するテーブル
         .Where(x => x.ProjectId == projectId && x.UserId == userId) // 条件を LINQ の形で指定
         .Single();
-
+      if (response == null)
+      {
+        Console.WriteLine("responseがnullでした");
+        return null;
+      }
       return response.RoleId;
     }
     catch (Exception ex)

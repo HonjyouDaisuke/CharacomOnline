@@ -35,8 +35,6 @@ AllowPaging="true">
 
 	private List<string> roleStrings = new();
 
-	private string? selectedRoleString;
-
 	protected override void OnInitialized()
 	{
 		roleStrings = UserRoleTypeHelper.GetAllStrings().ToList();

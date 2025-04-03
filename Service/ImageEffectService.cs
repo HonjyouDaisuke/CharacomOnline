@@ -142,71 +142,96 @@ public static class ImageEffectService
     return bitmap; // 塗りつぶしたBitmapを返す
   }
 
-/// <summary>
-    /// 2つの画像を重ねて、白を透明にする
-    /// </summary>
-    /// <param name="baseImage">背景画像</param>
-    /// <param name="overlayImage">重ねる画像</param>
-    /// <returns>合成後の SKBitmap</returns>
-    static public SKBitmap OverlayImages(SKBitmap baseImage, SKBitmap overlayImage)
+  /// <summary>
+  /// 2つの画像を重ねて、白を透明にする
+  /// </summary>
+  /// <param name="baseImage">背景画像</param>
+  /// <param name="overlayImage">重ねる画像</param>
+  /// <returns>合成後の SKBitmap</returns>
+  static public SKBitmap OverlayImages(SKBitmap baseImage, SKBitmap overlayImage)
+  {
+    if (baseImage == null || overlayImage == null)
     {
-        if (baseImage == null || overlayImage == null)
-        {
-            throw new ArgumentNullException("画像が null です。");
-        }
-
-        int width = Math.Max(baseImage.Width, overlayImage.Width);
-        int height = Math.Max(baseImage.Height, overlayImage.Height);
-
-        // 合成用のキャンバスを作成
-        SKBitmap resultBitmap = new SKBitmap(width, height);
-        using (SKCanvas canvas = new SKCanvas(resultBitmap))
-        {
-            // 透明な背景を作成
-            canvas.Clear(SKColors.Transparent);
-
-            // 白色を透明にした背景画像を描画
-            using (SKPaint paint = new SKPaint())
-            {
-                paint.FilterQuality = SKFilterQuality.High;
-                paint.IsAntialias = true;
-            }
-            canvas.DrawBitmap(MakeWhiteTransparent(baseImage), 0, 0);
-
-            // 重ねる画像を描画
-            canvas.DrawBitmap(MakeWhiteTransparent(overlayImage), 0, 0);
-        }
-
-        return resultBitmap;
+      throw new ArgumentNullException("画像が null です。");
     }
 
-    /// <summary>
-    /// 白色を透明にする
-    /// </summary>
-    /// <param name="bitmap">元画像</param>
-    /// <returns>白を透明化した SKBitmap</returns>
-    static private SKBitmap MakeWhiteTransparent(SKBitmap bitmap)
-    {
-        SKBitmap newBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
+    int width = Math.Max(baseImage.Width, overlayImage.Width);
+    int height = Math.Max(baseImage.Height, overlayImage.Height);
 
-        for (int y = 0; y < bitmap.Height; y++)
-        {
-            for (int x = 0; x < bitmap.Width; x++)
-            {
-                SKColor color = bitmap.GetPixel(x, y);
-                if (color.Red > 200 && color.Green > 200 && color.Blue > 200)
-                {
-                    // 白を透明にする
-                    newBitmap.SetPixel(x, y, new SKColor(0, 0, 0, 0));
-                }
-                else
-                {
-                    newBitmap.SetPixel(x, y, color);
-                }
-            }
-        }
-        return newBitmap;
+    // 合成用のキャンバスを作成
+    SKBitmap resultBitmap = new SKBitmap(width, height);
+    using (SKCanvas canvas = new SKCanvas(resultBitmap))
+    {
+      // 透明な背景を作成
+      canvas.Clear(SKColors.Transparent);
+
+      // 白色を透明にした背景画像を描画
+      using (SKPaint paint = new())
+      {
+        // paint.FilterQuality = SKFilterQuality.High;
+        paint.IsAntialias = true;
+        // 畳み込みフィルタのサイズとカーネルを設定
+        SKSizeI kernelSize = new SKSizeI(3, 3); // 3x3 カーネル
+        float[] kernelArray = new float[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+
+        ReadOnlySpan<float> kernel = kernelArray;
+        float gain = 1.0f;
+        float bias = 0.0f;
+        SKPointI kernelOffset = new SKPointI(1, 1); // カーネルのオフセット
+        SKShaderTileMode tileMode = SKShaderTileMode.Clamp; // タイルモード
+        bool convolveAlpha = true; // アルファチャンネルを畳み込む
+
+        // SKImageFilterを使って畳み込み処理を設定
+        SKImageFilter filter = SKImageFilter.CreateMatrixConvolution(
+          kernelSize,
+          kernel,
+          gain,
+          bias,
+          kernelOffset,
+          tileMode,
+          convolveAlpha
+        );
+
+        // 作成したフィルターをSKPaintに設定
+        paint.ImageFilter = filter;
+      }
+      canvas.DrawBitmap(MakeWhiteTransparent(baseImage), 0, 0);
+
+      // 重ねる画像を描画
+      canvas.DrawBitmap(MakeWhiteTransparent(overlayImage), 0, 0);
     }
+
+    return resultBitmap;
+  }
+
+  /// <summary>
+  /// 白色を透明にする
+  /// </summary>
+  /// <param name="bitmap">元画像</param>
+  /// <returns>白を透明化した SKBitmap</returns>
+  static private SKBitmap MakeWhiteTransparent(SKBitmap bitmap)
+  {
+    SKBitmap newBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
+
+    for (int y = 0; y < bitmap.Height; y++)
+    {
+      for (int x = 0; x < bitmap.Width; x++)
+      {
+        SKColor color = bitmap.GetPixel(x, y);
+        if (color.Red > 200 && color.Green > 200 && color.Blue > 200)
+        {
+          // 白を透明にする
+          newBitmap.SetPixel(x, y, new SKColor(0, 0, 0, 0));
+        }
+        else
+        {
+          newBitmap.SetPixel(x, y, color);
+        }
+      }
+    }
+    return newBitmap;
+  }
+
   public static SKBitmap? OverlayBinaryImages(SKBitmap? backBitmap, SKBitmap? foreBitmap)
   {
     if (backBitmap == null)
