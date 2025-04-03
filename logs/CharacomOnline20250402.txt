@@ -1,0 +1,144 @@
+| 17:51:23 | INFO | User profile is available. Using '"C:\\Users\\02322\\AppData\\Local\\ASP.NET\\DataProtection-Keys"' as key repository and Windows DPAPI to encrypt keys at rest.
+| 17:51:23 | INFO | Now listening on: "https://localhost:7241"
+| 17:51:23 | INFO | Now listening on: "http://localhost:5055"
+| 17:51:23 | INFO | Application started. Press Ctrl+C to shut down.
+| 17:51:23 | INFO | Hosting environment: "Development"
+| 17:51:23 | INFO | Content root path: "C:\\MyProject\\CharacomOnline"
+| 17:51:23 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/""" - null null
+| 17:51:24 | INFO | Executing endpoint '"/_Host"'
+| 17:51:24 | INFO | Route matched with "{page = \"/_Host\"}". Executing page "/_Host"
+| 17:51:24 | INFO | Executing an implicit handler method - ModelState is "Valid"
+| 17:51:24 | INFO | Executed an implicit handler method, returned result "Microsoft.AspNetCore.Mvc.RazorPages.PageResult".
+| 17:51:24 | INFO | Executed page "/_Host" in 660.7167ms
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/css/site.css""" - null null
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/CharacomOnline.styles.css""" - null null
+| 17:51:24 | INFO | Executed endpoint '"/_Host"'
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard-base.css""?v=5.9.2.0" - null null
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard-base.css""" - null null
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard.css""" - null null
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard-dark-base.css""" - null null
+| 17:51:24 | INFO | Sending file. Request path: '"/css/site.css"'. Physical path: '"C:\\MyProject\\CharacomOnline\\wwwroot\\css\\site.css"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/css/site.css""" - 200 2978 "text/css" 20.7377ms
+| 17:51:24 | INFO | Sending file. Request path: '"/CharacomOnline.styles.css"'. Physical path: '"C:\\MyProject\\CharacomOnline\\obj\\Debug\\net8.0\\scopedcss\\bundle\\CharacomOnline.styles.css"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/CharacomOnline.styles.css""" - 200 6653 "text/css" 21.4176ms
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard-dark.css""" - null null
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/""" - 200 null "text/html; charset=utf-8" 757.3738ms
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/css/open-iconic/font/css/open-iconic-bootstrap.min.css""" - null null
+| 17:51:24 | INFO | Sending file. Request path: '"/css/open-iconic/font/css/open-iconic-bootstrap.min.css"'. Physical path: '"C:\\MyProject\\CharacomOnline\\wwwroot\\css\\open-iconic\\font\\css\\open-iconic-bootstrap.min.css"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/css/open-iconic/font/css/open-iconic-bootstrap.min.css""" - 200 9395 "text/css" 6.0678ms
+| 17:51:24 | INFO | Sending file. Request path: '"/_content/Radzen.Blazor/css/standard-dark.css"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\radzen.blazor\\5.9.2\\staticwebassets\\css\\standard-dark.css"'
+| 17:51:24 | INFO | Sending file. Request path: '"/_content/Radzen.Blazor/css/standard-base.css"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\radzen.blazor\\5.9.2\\staticwebassets\\css\\standard-base.css"'
+| 17:51:24 | INFO | Sending file. Request path: '"/_content/Radzen.Blazor/css/standard-base.css"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\radzen.blazor\\5.9.2\\staticwebassets\\css\\standard-base.css"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard-base.css""?v=5.9.2.0" - 200 645446 "text/css" 97.5617ms
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard-dark.css""" - 200 647893 "text/css" 78.6993ms
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard-base.css""" - 200 645446 "text/css" 93.0497ms
+| 17:51:24 | INFO | Sending file. Request path: '"/_content/Radzen.Blazor/css/standard-dark-base.css"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\radzen.blazor\\5.9.2\\staticwebassets\\css\\standard-dark-base.css"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard-dark-base.css""" - 200 645052 "text/css" 87.7188ms
+| 17:51:24 | INFO | Sending file. Request path: '"/_content/Radzen.Blazor/css/standard.css"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\radzen.blazor\\5.9.2\\staticwebassets\\css\\standard.css"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/css/standard.css""" - 200 648287 "text/css" 96.054ms
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/images/no_user_icon.png""" - null null
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/blazor.server.js""" - null null
+| 17:51:24 | INFO | Executing endpoint '"Blazor static files"'
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/Radzen.Blazor.js""?v=5.9.2.0" - null null
+| 17:51:24 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/aspnetcore-browser-refresh.js""" - null null
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/aspnetcore-browser-refresh.js""" - 200 16481 "application/javascript; charset=utf-8" 8.3877ms
+| 17:51:24 | INFO | Sending file. Request path: '"/_framework/blazor.server.js"'. Physical path: '"N/A"'
+| 17:51:24 | INFO | Executed endpoint '"Blazor static files"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/blazor.server.js""" - 200 151672 "text/javascript" 22.5883ms
+| 17:51:24 | INFO | Sending file. Request path: '"/images/no_user_icon.png"'. Physical path: '"C:\\MyProject\\CharacomOnline\\wwwroot\\images\\no_user_icon.png"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/images/no_user_icon.png""" - 200 134097 "image/png" 27.5799ms
+| 17:51:24 | INFO | Sending file. Request path: '"/_content/Radzen.Blazor/Radzen.Blazor.js"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\radzen.blazor\\5.9.2\\staticwebassets\\Radzen.Blazor.js"'
+| 17:51:24 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/Radzen.Blazor.js""?v=5.9.2.0" - 200 90980 "text/javascript" 62.5757ms
+| 17:51:25 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2""" - null null
+| 17:51:25 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2""" - null null
+| 17:51:25 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/css/open-iconic/font/fonts/open-iconic.woff""" - null null
+| 17:51:25 | INFO | Sending file. Request path: '"/css/open-iconic/font/fonts/open-iconic.woff"'. Physical path: '"C:\\MyProject\\CharacomOnline\\wwwroot\\css\\open-iconic\\font\\fonts\\open-iconic.woff"'
+| 17:51:25 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/css/open-iconic/font/fonts/open-iconic.woff""" - 200 14984 "application/font-woff" 4.753ms
+| 17:51:25 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_blazor/initializers""" - null null
+| 17:51:25 | INFO | Executing endpoint '"Blazor initializers"'
+| 17:51:25 | INFO | Sending file. Request path: '"/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\radzen.blazor\\5.9.2\\staticwebassets\\fonts\\SourceSans3VF-Upright.ttf.woff2"'
+| 17:51:25 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2""" - 200 170188 "font/woff2" 23.2254ms
+| 17:51:25 | INFO | Executed endpoint '"Blazor initializers"'
+| 17:51:25 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_blazor/initializers""" - 200 null "application/json; charset=utf-8" 27.0376ms
+| 17:51:25 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Toolbelt.Blazor.GetProperty.Script/Toolbelt.Blazor.GetProperty.Script.lib.module.js""" - null null
+| 17:51:25 | INFO | Sending file. Request path: '"/_content/Toolbelt.Blazor.GetProperty.Script/Toolbelt.Blazor.GetProperty.Script.lib.module.js"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\toolbelt.blazor.getproperty.script\\1.2.0\\staticwebassets\\Toolbelt.Blazor.GetProperty.Script.lib.module.js"'
+| 17:51:25 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Toolbelt.Blazor.GetProperty.Script/Toolbelt.Blazor.GetProperty.Script.lib.module.js""" - 200 183 "text/javascript" 3.2069ms
+| 17:51:25 | INFO | Request starting "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/negotiate""?negotiateVersion=1" - null 0
+| 17:51:25 | INFO | Executing endpoint '"/_blazor/negotiate"'
+| 17:51:25 | INFO | Executed endpoint '"/_blazor/negotiate"'
+| 17:51:25 | INFO | Request finished "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/negotiate""?negotiateVersion=1" - 200 316 "application/json" 22.9757ms
+| 17:51:25 | INFO | Request starting "HTTP/2" "CONNECT" "https"://"localhost:7241""""/_blazor""?id=IT53XGYxvUEa2Oh03PS3hA" - null null
+| 17:51:25 | INFO | Executing endpoint '"/_blazor"'
+| 17:51:25 | INFO | Sending file. Request path: '"/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2"'. Physical path: '"C:\\Users\\02322\\.nuget\\packages\\radzen.blazor\\5.9.2\\staticwebassets\\fonts\\MaterialSymbolsOutlined.woff2"'
+| 17:51:25 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2""" - 200 3208232 "font/woff2" 213.7341ms
+| 17:51:25 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/images/characomIcon.png""" - null null
+| 17:51:25 | INFO | Sending file. Request path: '"/images/characomIcon.png"'. Physical path: '"C:\\MyProject\\CharacomOnline\\wwwroot\\images\\characomIcon.png"'
+| 17:51:25 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/images/characomIcon.png""" - 200 15398 "image/png" 1.9891ms
+| 17:51:31 | INFO | Request starting "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/disconnect""" - "multipart/form-data; boundary=----WebKitFormBoundaryIHY5ZRcOG0dFEPoR" 359
+| 17:51:31 | INFO | Executing endpoint '"Blazor disconnect"'
+| 17:51:31 | INFO | Executed endpoint '"/_blazor"'
+| 17:51:31 | INFO | Request finished "HTTP/2" "CONNECT" "https"://"localhost:7241""""/_blazor""?id=IT53XGYxvUEa2Oh03PS3hA" - 200 null null 6063.6837ms
+| 17:51:31 | INFO | Executed endpoint '"Blazor disconnect"'
+| 17:51:31 | INFO | Request finished "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/disconnect""" - 200 0 null 20.8683ms
+| 17:51:34 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/callback""" - null null
+| 17:51:34 | INFO | Executing endpoint '"/_Host"'
+| 17:51:34 | INFO | Route matched with "{page = \"/_Host\"}". Executing page "/_Host"
+| 17:51:34 | INFO | Executing an implicit handler method - ModelState is "Valid"
+| 17:51:34 | INFO | Executed an implicit handler method, returned result "Microsoft.AspNetCore.Mvc.RazorPages.PageResult".
+| 17:51:34 | INFO | Executed page "/_Host" in 25.1302ms
+| 17:51:34 | INFO | Executed endpoint '"/_Host"'
+| 17:51:34 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/callback""" - 200 null "text/html; charset=utf-8" 28.8256ms
+| 17:51:34 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/blazor.server.js""" - null null
+| 17:51:34 | INFO | Executing endpoint '"Blazor static files"'
+| 17:51:34 | INFO | The file "/_framework/blazor.server.js" was not modified
+| 17:51:34 | INFO | Executed endpoint '"Blazor static files"'
+| 17:51:34 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/blazor.server.js""" - 304 null "text/javascript" 11.681ms
+| 17:51:34 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/aspnetcore-browser-refresh.js""" - null null
+| 17:51:34 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/aspnetcore-browser-refresh.js""" - 200 16481 "application/javascript; charset=utf-8" 1.7593ms
+| 17:51:34 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_blazor/initializers""" - null null
+| 17:51:34 | INFO | Executing endpoint '"Blazor initializers"'
+| 17:51:34 | INFO | Executed endpoint '"Blazor initializers"'
+| 17:51:34 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_blazor/initializers""" - 200 null "application/json; charset=utf-8" 7.2977ms
+| 17:51:35 | INFO | Request starting "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/negotiate""?negotiateVersion=1" - null 0
+| 17:51:35 | INFO | Executing endpoint '"/_blazor/negotiate"'
+| 17:51:35 | INFO | Executed endpoint '"/_blazor/negotiate"'
+| 17:51:35 | INFO | Request finished "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/negotiate""?negotiateVersion=1" - 200 316 "application/json" 2.0771ms
+| 17:51:35 | INFO | Request starting "HTTP/2" "CONNECT" "https"://"localhost:7241""""/_blazor""?id=38PGVVo44aQ0ekCdfDQ7_A" - null null
+| 17:51:35 | INFO | Executing endpoint '"/_blazor"'
+| 17:51:35 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/projects""" - null null
+| 17:51:35 | INFO | Executing endpoint '"/_Host"'
+| 17:51:35 | INFO | Route matched with "{page = \"/_Host\"}". Executing page "/_Host"
+| 17:51:35 | INFO | Executing an implicit handler method - ModelState is "Valid"
+| 17:51:35 | INFO | Executed an implicit handler method, returned result "Microsoft.AspNetCore.Mvc.RazorPages.PageResult".
+| 17:51:35 | INFO | Executed page "/_Host" in 23.2035ms
+| 17:51:35 | INFO | Executed endpoint '"/_Host"'
+| 17:51:35 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/projects""" - 200 null "text/html; charset=utf-8" 24.9217ms
+| 17:51:35 | INFO | Request starting "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/disconnect""" - "multipart/form-data; boundary=----WebKitFormBoundarye1Ef3QLo6Py6cqMU" 359
+| 17:51:35 | INFO | Executing endpoint '"Blazor disconnect"'
+| 17:51:35 | INFO | Executed endpoint '"Blazor disconnect"'
+| 17:51:35 | INFO | Request finished "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/disconnect""" - 200 0 null 3.7667ms
+| 17:51:35 | INFO | Executed endpoint '"/_blazor"'
+| 17:51:35 | INFO | Request finished "HTTP/2" "CONNECT" "https"://"localhost:7241""""/_blazor""?id=38PGVVo44aQ0ekCdfDQ7_A" - 200 null null 631.9268ms
+| 17:51:35 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/aspnetcore-browser-refresh.js""" - null null
+| 17:51:35 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/blazor.server.js""" - null null
+| 17:51:35 | INFO | Executing endpoint '"Blazor static files"'
+| 17:51:35 | INFO | The file "/_framework/blazor.server.js" was not modified
+| 17:51:35 | INFO | Executed endpoint '"Blazor static files"'
+| 17:51:35 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/blazor.server.js""" - 304 null "text/javascript" 1.7438ms
+| 17:51:35 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_framework/aspnetcore-browser-refresh.js""" - 200 16481 "application/javascript; charset=utf-8" 3.5906ms
+| 17:51:35 | INFO | Request starting "HTTP/2" "GET" "https"://"localhost:7241""""/_blazor/initializers""" - null null
+| 17:51:35 | INFO | Executing endpoint '"Blazor initializers"'
+| 17:51:35 | INFO | Executed endpoint '"Blazor initializers"'
+| 17:51:35 | INFO | Request finished "HTTP/2" "GET" "https"://"localhost:7241""""/_blazor/initializers""" - 200 null "application/json; charset=utf-8" 0.8871ms
+| 17:51:35 | INFO | Request starting "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/negotiate""?negotiateVersion=1" - null 0
+| 17:51:35 | INFO | Executing endpoint '"/_blazor/negotiate"'
+| 17:51:35 | INFO | Executed endpoint '"/_blazor/negotiate"'
+| 17:51:35 | INFO | Request finished "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/negotiate""?negotiateVersion=1" - 200 316 "application/json" 2.7203ms
+| 17:51:35 | INFO | Request starting "HTTP/2" "CONNECT" "https"://"localhost:7241""""/_blazor""?id=kWGBFhQwHusWiJ5SFOVRUQ" - null null
+| 17:51:35 | INFO | Executing endpoint '"/_blazor"'
+| 17:51:42 | INFO | Request starting "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/disconnect""" - "multipart/form-data; boundary=----WebKitFormBoundaryVmqmLYABmNcY7lZj" 359
+| 17:51:42 | INFO | Executing endpoint '"Blazor disconnect"'
+| 17:51:42 | INFO | Executed endpoint '"Blazor disconnect"'
+| 17:51:42 | INFO | Request finished "HTTP/2" "POST" "https"://"localhost:7241""""/_blazor/disconnect""" - 200 0 null 3.8755ms
+| 17:51:42 | INFO | Executed endpoint '"/_blazor"'
+| 17:51:42 | INFO | Request finished "HTTP/2" "CONNECT" "https"://"localhost:7241""""/_blazor""?id=kWGBFhQwHusWiJ5SFOVRUQ" - 200 null null 6703.3128ms
