@@ -24,13 +24,15 @@ public class OAuthService
   // 1. 初回のアクセストークン取得
   public async Task<OAuthTokenResponse> GetAccessTokenAsync(string code)
   {
+    var _redirectUrl = Environment.GetEnvironmentVariable("BOX_REDIRECT_URL") 
+						  ?? "https://localhost:7241/box-callback"; // デフォルトはローカル 
     var requestBody = new Dictionary<string, string>
         {
             { "grant_type", "authorization_code" },
             { "code", code },
             { "client_id", _clientId },
             { "client_secret", _clientSecret },
-            { "redirect_uri", "https://localhost:7241/box-callback" } // 必ず設定されているリダイレクトURIを使用
+            { "redirect_uri", _redirectUrl } // 必ず設定されているリダイレクトURIを使用
         };
 
     var requestContent = new FormUrlEncodedContent(requestBody);

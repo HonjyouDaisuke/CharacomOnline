@@ -59,30 +59,61 @@ builder.Configuration.AddJsonFile(
   optional: true
 );
 
-// Azure App Configurationを追加
-var appConfig =
-  Environment.GetEnvironmentVariable("ASPNETCORE_APPCONFIG") ?? builder.Configuration["APPCONFIG"]; // 環境変数が優先
-if (string.IsNullOrEmpty(appConfig))
+// Azure App Configurationの接続
+var appConfig = Environment.GetEnvironmentVariable("ASPNETCORE_APPCONFIG") ?? builder.Configuration["APPCONFIG"];
+if (!string.IsNullOrEmpty(appConfig))
 {
-  Console.WriteLine("Azure App Configuration connection string is missing.");
+    Console.WriteLine("Using Azure App Configuration connection.");
+    builder.Configuration.AddAzureAppConfiguration(options =>
+    {
+        options
+            .Connect(appConfig)
+            .Select(KeyFilter.Any, builder.Environment.EnvironmentName)
+            .Select(KeyFilter.Any);
+    });
 }
 else
 {
-  Console.WriteLine("Using Azure App Configuration connection.");
-  builder.Configuration.AddAzureAppConfiguration(options =>
-  {
-    options
-      .Connect(appConfig)
-      .Select(KeyFilter.Any, builder.Environment.EnvironmentName)
-      .Select(KeyFilter.Any);
-  });
+    Console.WriteLine("Azure App Configuration connection string is missing.");
 }
 
-// Supabaseの接続情報をAzure App Configurationから取得
-var supabaseUrl = builder.Configuration["SUPABASE_URL"];
-var supabaseAnonKey = builder.Configuration["ANON_KEY"];
-var boxClientId = builder.Configuration["BOX_CLIENT_ID"];
-var boxClientSecret = builder.Configuration["BOX_CLIENT_SECRET"];
+// Supabaseの接続情報を取得（環境変数が優先）
+var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL") ?? builder.Configuration["SUPABASE_URL"];
+var supabaseAnonKey = Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY") ?? builder.Configuration["ANON_KEY"];
+var boxClientId = Environment.GetEnvironmentVariable("BOX_CLIENT_ID") ?? builder.Configuration["BOX_CLIENT_ID"];
+var boxClientSecret = Environment.GetEnvironmentVariable("BOX_CLIENT_SECRET") ?? builder.Configuration["BOX_CLIENT_SECRET"];
+
+// デバッグ用ログ
+Console.WriteLine($"設定読み込みをデバッグ");
+Console.WriteLine($"Supabase URL: {supabaseUrl}");
+Console.WriteLine($"Supabase AnonKey: {supabaseAnonKey}");
+Console.WriteLine($"Box Client ID: {boxClientId}");
+Console.WriteLine($"Box Client Secret: {boxClientSecret}");
+
+// // Azure App Configurationを追加
+// var appConfig =
+// 	Environment.GetEnvironmentVariable("ASPNETCORE_APPCONFIG") ?? builder.Configuration["APPCONFIG"]; // 環境変数が優先
+// if (string.IsNullOrEmpty(appConfig))
+// {
+// 	Console.WriteLine("Azure App Configuration connection string is missing.");
+// }
+// else
+// {
+// 	Console.WriteLine("Using Azure App Configuration connection.");
+// 	builder.Configuration.AddAzureAppConfiguration(options =>
+// 	{
+// 		options
+// 			.Connect(appConfig)
+// 			.Select(KeyFilter.Any, builder.Environment.EnvironmentName)
+// 			.Select(KeyFilter.Any);
+// 	});
+// }
+
+// // Supabaseの接続情報をAzure App Configurationから取得
+// var supabaseUrl = builder.Configuration["SUPABASE_URL"];
+// var supabaseAnonKey = builder.Configuration["ANON_KEY"];
+// var boxClientId = builder.Configuration["BOX_CLIENT_ID"];
+// var boxClientSecret = builder.Configuration["BOX_CLIENT_SECRET"];
 
 if (string.IsNullOrEmpty(supabaseUrl) || string.IsNullOrEmpty(supabaseAnonKey))
 {
