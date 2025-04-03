@@ -6,7 +6,7 @@
 @inject SessionStorageService SessionStorage
 @inject CharaDataViewModel CharaDataViewModel
 
-@if (IsLoading)
+@if (isLoading)
 {
 	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
 		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
@@ -66,7 +66,7 @@ else
 
 	protected override void OnInitialized()
 	{
-		isLoading = true;
+		isLoading = IsLoading;
 
 	}
 

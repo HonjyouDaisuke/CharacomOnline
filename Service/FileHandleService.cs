@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components.Forms;
-using SixLabors.ImageSharp;
+
+//using SixLabors.ImageSharp;
 
 namespace CharacomOnline.Service;
-
 
 public struct SizeInformation
 {
@@ -12,10 +12,10 @@ public struct SizeInformation
 
 public class FileHandleService
 {
-  public async Task<FileInformation> GetDataInfo(IBrowserFile file)
+  public FileInformation GetDataInfo(IBrowserFile file)
   {
     FileInformation resData = new();
-    SizeInformation resSize = await GetImageSizeAsync(file);
+    SizeInformation resSize = GetImageSizeAsync(file);
 
     resData.CharaName = GetCharaNameFromFileName(file.Name);
     resData.MaterialName = GetMaterialNameFromFileName(file.Name);
@@ -24,15 +24,15 @@ public class FileHandleService
   }
 
   // ImageSharp を使って画像サイズを取得
-  public async Task<SizeInformation> GetImageSizeAsync(IBrowserFile file)
+  public SizeInformation GetImageSizeAsync(IBrowserFile file)
   {
     using var stream = file.OpenReadStream();
     SizeInformation size = new();
 
     // ImageSharp で画像を読み込み、画像情報から幅と高さを取得
-    var image = await Image.LoadAsync(stream);
-    size.Width = image.Width;
-    size.Height = image.Height;
+    //var image = await Image.LoadAsync(stream);
+    size.Width = 10; //image.Width;
+    size.Height = 10; //image.Height;
     return size;
   }
 

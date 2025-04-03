@@ -163,7 +163,7 @@
         Detail = "プロジェクトを作成しデータをインストールしました。",
         Duration = 2000
       }
-    );
+		);
 		StateHasChanged();
 	}
 
@@ -214,7 +214,7 @@
         Detail = "プロジェクトを削除しました。",
         Duration = 2000
       }
-    );
+		);
 	}
 	private void OnCancel()
 	{
@@ -229,8 +229,8 @@
 					//{ nameof(RenameProjectDialog.OnRun), EventCallback.Factory.Create<RenameProjectDialogResult>(this, OnRunRename) },
 					{ nameof(RenameProjectDialog.OnDialogClosed), EventCallback.Factory.Create<RenameProjectDialogResult?>(this, OnRenameDialogClosed) },
 					{ nameof(RenameProjectDialog.ProjectId), clickedProject.Id },
-					{ nameof(RenameProjectDialog.ProjectName), clickedProject.Name },
-					{ nameof(RenameProjectDialog.Description), clickedProject.Description },
+					{ nameof(RenameProjectDialog.ProjectName), clickedProject.Name! },
+					{ nameof(RenameProjectDialog.Description), clickedProject.Description! },
 				});
 	}
 	private async Task OnProjectDeleteClick(ProjectViewData clickedProject)
@@ -240,7 +240,7 @@
 			{
 				{ nameof(DeleteProjectDialog.OnDialogClosed), EventCallback.Factory.Create<Guid?>(this, OnDeleteDialogClosed) },
 				{ nameof(DeleteProjectDialog.ProjectId), clickedProject.Id },
-				{ nameof(DeleteProjectDialog.ProjectName), clickedProject.Name },
+				{ nameof(DeleteProjectDialog.ProjectName), clickedProject.Name! },
 			});
 	}
 
@@ -254,7 +254,7 @@
 		clickedProject.IsSelected = true;
 		message = $"プロジェクトが選択されました。件名{clickedProject.Name} id:{clickedProject.Id}";
 		await SessionStorage.SetProjectIDAsync(clickedProject.Id);
-		await ProjectsViewModel.SetCurrentProject(clickedProject.Id, clickedProject.Name);
+		await ProjectsViewModel.SetCurrentProject(clickedProject.Id, clickedProject.Name!);
 		AppState.CurrentProjectId = clickedProject.Id;
 		AppState.CurrentProjectName = clickedProject.Name;
 
@@ -263,6 +263,7 @@
 	private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId, Guid _userId)
 	{
 		var accessToken = await TokenStorage.GetAccessTokenAsync();
+		if (string.IsNullOrEmpty(accessToken)) return;
 		var files = await ProjectsViewModel.GetBoxFileCount(charaFolderId, accessToken);
 		param = new ProgressDialogParameters
 			{

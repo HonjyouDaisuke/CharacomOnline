@@ -4,7 +4,8 @@ using CharacomOnline.Entity;
 using CharacomOnline.ImageProcessing;
 using CharacomOnline.Repositories;
 using Supabase;
-//using Supabase.Gotrue;
+
+// using Supabase.Gotrue;
 
 namespace CharacomOnline.Service.TableService;
 
@@ -36,7 +37,7 @@ public class CharaDataTableService(
 
   public List<CharaDataRecode>? DeserializeJson(string json)
   {
-    if (json == null)
+    if (string.IsNullOrEmpty(json))
       return null;
     var options = new JsonSerializerOptions
     {
@@ -94,6 +95,8 @@ public class CharaDataTableService(
             item.FileId,
             accessToken
           );
+          if (charaData.SrcImage == null)
+            return null;
           var resize = ImageEffectService.ResizeBitmap(charaData.SrcImage, 160, 160);
           var binary = ImageEffectService.GetBinaryBitmap(resize);
           var thinning = new ThinningProcess(binary);
@@ -129,7 +132,7 @@ public class CharaDataTableService(
       "get_chara_data_from_project_id",
       new { project_id_input = projectId, model_id_input = modelId }
     );
-    List<CharaDataClass>? resultCharaData = new List<CharaDataClass>();
+    List<CharaDataClass> resultCharaData = new List<CharaDataClass>();
 
     if (string.IsNullOrEmpty(response.Content))
       return null;
@@ -165,7 +168,12 @@ public class CharaDataTableService(
       );
 
       // 全タスクを実行して結果を収集
-      CharaDataClass[] charaDataClasses = (await Task.WhenAll(tasks));
+      CharaDataClass?[] charaDataClasses = (await Task.WhenAll(tasks));
+      if (charaDataClasses == null)
+      {
+        Console.WriteLine("charaDataClassesが空です");
+        return null;
+      }
       resultCharaData = charaDataClasses.ToList();
     }
     catch (JsonException ex)
@@ -188,7 +196,12 @@ public class CharaDataTableService(
     return response;
   }
 
-  public async Task<Guid?> CreateCharaData(Guid projectId, string fileId, FileInformation fileInfo, Guid userId)
+  public async Task<Guid?> CreateCharaData(
+    Guid projectId,
+    string fileId,
+    FileInformation fileInfo,
+    Guid userId
+  )
   {
     if (await IsCharaDataExists(projectId, fileId))
       return null;
@@ -550,8 +563,8 @@ public class CharaDataTableService(
         .From<CharaDataClass>() // 更新するテーブル
         .Where(x => x.Id == charaId) // 条件を LINQ の形で指定
         .Set(x => x.IsSelected, isSelected) // IsSelected を更新
-        .Set(x => x.UpdatedBy, userId) // UpdatedBy を更新
-        .Set(x => x.UpdatedAt, DateTime.UtcNow) // UpdatedAt を更新
+        .Set(x => x.UpdatedBy!, userId) // UpdatedBy を更新
+        .Set(x => x.UpdatedAt!, DateTime.UtcNow) // UpdatedAt を更新
         .Update();
 
       if (response.Models.Count > 0)
@@ -600,7 +613,7 @@ public class CharaDataTableService(
       }
       try
       {
-        var responseList = JsonSerializer.Deserialize<List<FileInformation>>(responseBody.Content);
+        var responseList = JsonSerializer.Deserialize<List<FileInformation>>(responseBody.Content!);
         var charaInfo = responseList?.FirstOrDefault();
         return charaInfo;
       }
@@ -631,11 +644,11 @@ public class CharaDataTableService(
       var response = await _supabaseClient
         .From<CharaDataTable>() // 更新するテーブル
         .Where(x => x.ProjectId == projectId && x.FileId == fileId) // 条件を LINQ の形で指定
-        .Set(x => x.CharaName, fileInfo.CharaName) // CharaName を更新
-        .Set(x => x.MaterialName, fileInfo.MaterialName) // MaterialName を更新
-        .Set(x => x.TimesName, fileInfo.TimesName) // TimesName を更新
+        .Set(x => x.CharaName!, fileInfo.CharaName) // CharaName を更新
+        .Set(x => x.MaterialName!, fileInfo.MaterialName) // MaterialName を更新
+        .Set(x => x.TimesName!, fileInfo.TimesName) // TimesName を更新
         .Set(x => x.UpdatedAt, DateTime.UtcNow) // UpdatedAt を更新
-        .Set(x => x.UpdatedBy, userId) // UpdatedBy を更新
+        .Set(x => x.UpdatedBy!, userId) // UpdatedBy を更新
         .Update();
 
       if (response.Models.Count > 0)

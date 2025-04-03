@@ -70,7 +70,7 @@ public class CharaDataViewModel(
   {
     ViewBitmap = new SKBitmap(160, 160);
     ViewBitmap = ImageEffectService.WhiteFilledBitmap(ViewBitmap);
-    if (OverlayBmp == null)
+    if (OverlayBmp == null || ViewBitmap == null)
       return;
     ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, OverlayBmp);
     if (ViewBitmap == null)

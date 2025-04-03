@@ -107,7 +107,7 @@ public class OverlayViewModel
     return overlay;
   }
 
-  private void ClearOverlayBitmap(SKBitmap bmp)
+  private void ClearOverlayBitmap(SKBitmap? bmp)
   {
     bmp = new SKBitmap(160, 160);
     bmp = ImageEffectService.WhiteFilledBitmap(bmp);
@@ -179,7 +179,7 @@ public class OverlayViewModel
     var toColor = ImageEffectService.ConvertRgbStringToSKColor(color);
     var target = (isBoxA) ? OverlayA : OverlayB;
 
-    Console.WriteLine($"target = {target.MaterialName} itemCount = {target.SelectedItemCount}");
+    Console.WriteLine($"target = {target!.MaterialName} itemCount = {target.SelectedItemCount}");
     if (target == null)
       return;
     if (target.OverlayBmp == null)
@@ -195,30 +195,24 @@ public class OverlayViewModel
         return;
       ViewBitmap = new SKBitmap(160, 160);
       ViewBitmap = ImageEffectService.WhiteFilledBitmap(ViewBitmap);
-      
-      if (OverlayA.SelectedItemCount == 0 && OverlayB.SelectedItemCount > 0)
+
+      if (OverlayA!.SelectedItemCount == 0 && OverlayB!.SelectedItemCount > 0)
       {
-        ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, OverlayB.OverlayBmp);
+        ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap!, OverlayB.OverlayBmp);
       }
-      else if (OverlayA.SelectedItemCount > 0 && OverlayB.SelectedItemCount == 0)
+      else if (OverlayA.SelectedItemCount > 0 && OverlayB!.SelectedItemCount == 0)
       {
-        ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, OverlayA.OverlayBmp);
+        ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap!, OverlayA.OverlayBmp);
       }
       else
       {
         if (OverlayA?.SelectedItemCount > OverlayB?.SelectedItemCount)
         {
-          ViewBitmap = ImageEffectService.OverlayImages(
-            OverlayA.OverlayBmp,
-            OverlayB.OverlayBmp
-          );
+          ViewBitmap = ImageEffectService.OverlayImages(OverlayA.OverlayBmp, OverlayB.OverlayBmp);
         }
         else
         {
-          ViewBitmap = ImageEffectService.OverlayImages(
-            OverlayB?.OverlayBmp,
-            OverlayA?.OverlayBmp
-          );
+          ViewBitmap = ImageEffectService.OverlayImages(OverlayB!.OverlayBmp, OverlayA!.OverlayBmp);
         }
       }
       setStandard(isStandard);
@@ -234,12 +228,16 @@ public class OverlayViewModel
 
   private void setStandard(bool isStandard)
   {
-    if (!isStandard) return;
-    if (standardThinBitmap == null) return;
-    if (ViewBitmap == null) return;
+    if (!isStandard)
+      return;
+    if (standardThinBitmap == null)
+      return;
+    if (ViewBitmap == null)
+      return;
     var redThin = ImageEffectService.ColorChangeBitmap(standardThinBitmap, SKColors.Red);
     ViewBitmap = ImageEffectService.OverlayImages(ViewBitmap, redThin);
   }
+
   private void setLinesToViewBitmap(bool isCenterLine, bool isGridLine, bool isStandard)
   {
     if (ViewBitmap == null)

@@ -16,7 +16,13 @@
 
 @namespace CharacomOnline.Pages
 
-@if (userId == null)
+@if (isLoading)
+{
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
+}
+else if (userId == null)
 {
 	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
 	ErrorMessage="ログインできていません。ログインしてください"

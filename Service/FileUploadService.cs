@@ -29,7 +29,7 @@ public class FileUploadService
 
     FileInformation fileInfo;
 
-    fileInfo = await _fileHandleService.GetDataInfo(file);
+    fileInfo = _fileHandleService.GetDataInfo(file);
     CharaDataClass uploadData = new();
     //{
     //  //Id = 0,
