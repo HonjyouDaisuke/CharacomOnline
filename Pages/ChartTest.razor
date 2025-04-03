@@ -56,8 +56,8 @@
 
 	public class Team
 	{
-		public string Name { get; set; }
-		public int Points { get; set; }
+		public string Name { get; set; } = "";
+		public int Points { get; set; } = 0;
 	}
 
 	private string GetColor(DataPoint data)
@@ -72,7 +72,7 @@
 	{
 		public decimal X { get; set; }
 		public decimal Y { get; set; }
-		public string Color { get; set; }
+		public string? Color { get; set; }
 	}
 
 }

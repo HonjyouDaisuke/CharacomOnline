@@ -6,9 +6,9 @@ public class ProjectsRepository
 {
   private ProjectsTable? currentProject;
 
-  // private string? _projectName;
-  // private string? _projectDescription;
-  private Guid? _projectId;
+	// private string? _projectName;
+	// private string? _projectDescription;
+	// private Guid? _projectId;
 
   // private string? _folderId;
   private List<ProjectUsers> _currentUsers = new();

@@ -88,9 +88,10 @@ else
         // アクセストークンを取得
         var accessToken = await TokenStorage.GetAccessTokenAsync();
 
-        // 標準書体のファイル数を取得
-        var standardFiles = await BoxFileService.GetFolderFileCountAsync(standardFolder, accessToken);
-
+		// 標準書体のファイル数を取得
+		if (string.IsNullOrEmpty(standardFolder) || string.IsNullOrEmpty(accessToken))
+			return;
+		var standardFiles = await BoxFileService.GetFolderFileCountAsync(standardFolder, accessToken);
 
         Console.WriteLine($"TotalFileCount = {standardFiles}");
         isProgress = true;

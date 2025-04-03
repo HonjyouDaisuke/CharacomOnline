@@ -38,13 +38,13 @@
 </RadzenPanel>
 
 @code {
-    private string? message;
-    private Guid? userId;
-    private Guid? projectId;
-    private bool isStandard;
-    private CancellationTokenSource? _cts = null;
-    [Inject] private ProjectsViewModel ProjectsViewModel { get; set; } = default!;
-    [Inject] private CharaDataViewModel CharaDataViewModel { get; set; } = default!;
+	private string? message;
+	private Guid? userId;
+	private Guid? projectId;
+	private bool isStandard;
+	private CancellationTokenSource? _cts = null;
+	[Inject] private ProjectsViewModel ProjectsViewModel { get; set; } = default!;
+	[Inject] private CharaDataViewModel CharaDataViewModel { get; set; } = default!;
 
     private List<ProjectViewData>? projects { get; set; } = new List<ProjectViewData>();
 
