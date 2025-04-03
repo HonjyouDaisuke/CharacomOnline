@@ -2,6 +2,7 @@
 @using CharacomOnline.Entity
 @using CharacomOnline.ViewModel
 @using CharacomOnline.Service
+@using CharacomOnline.Repositories
 @using CharacomOnline.Components
 @using Microsoft.AspNetCore.WebUtilities
 @inject CharaDataViewModel CharaDataViewModel
@@ -41,20 +42,13 @@ else
 	<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
 		<RadzenSplitterPane Size="35%" Resizable="true">
 			<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
-				<RadzenStack AlignItems="AlignItems.End" Orientation="Radzen.Orientation.Vertical" Gap="3" >
-					<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
-						<RadzenLabel>グリッドライン</RadzenLabel>
-						<RadzenSwitch @bind-Value="isGridLine" Change="@(async () => await OnSetupChanged())"/>
-					</RadzenStack>
-					<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
-						<RadzenLabel>センターライン</RadzenLabel>
-						<RadzenSwitch @bind-Value="isCenterLine" Change="@(async () => await OnSetupChanged())"/>
-					</RadzenStack>
-					<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
-						<RadzenLabel>標準文字</RadzenLabel>
-						<RadzenSwitch @bind-Value="isStandard" Change="@(async () => await OnSetupChanged())"/>
-					</RadzenStack>
-				</RadzenStack>
+				<ViewSetupSelector IsCenterLine="isCenterLine"
+								   IsGridLine="isGridLine"
+								   IsStandard="isStandard"
+								   IsCenterLineChanged="@(value => isCenterLine = value)"
+								   IsGridChanged="@(value => isGridLine = value)"
+								   IsStandardChanged="@(value => isStandard = value)"
+								   Changed="@EventCallback.Factory.Create(this, async () => await OnSetupChanged())" />
 				<CharaImageCard ImageData="@standardImage" Height="160" Width="160" IsLoading="@stdLoading" />
 				<CharaImageCard IsLoading="@isThinLoading" ImageData="@ImageEffectService.GetBinaryImageData(CharaDataViewModel.ViewBitmap)" Height="160" Width="160" />
 				<CharaImageCard ImageData="@strokeImage" Height="160" Width="160" IsLoading="@strokeLoading" />
@@ -137,7 +131,7 @@ else
 		isLoading = true;
 		await InvokeAsync(StateHasChanged);
 		await UsersViewModel.SetUserInfoToAppState();
-		
+
 		await CharaDataViewModel.ClearViewCharaData();
 		selectedChara = "";
 		selectedMaterial = "";
@@ -198,7 +192,8 @@ else
 		stdLoading = true;
 		strokeLoading = true;
 		await InvokeAsync(StateHasChanged);
-		
+
+		if (string.IsNullOrEmpty(accessToken)) return;
 		// 標準ファイルの読み込み
 		await CharaDataViewModel.GetStandardData(accessToken, selectedChara);
 		standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
@@ -225,7 +220,7 @@ else
 
 		try
 		{
-			Console.WriteLine($"userid = {AppState.UserId}");
+			Console.WriteLine($"userId = {AppState.UserId}");
 			if (!AppState.IsLoggedIn)
 			{
 				isLoading = false;
@@ -266,8 +261,7 @@ else
 			{
 				Console.WriteLine($"クエリパラメータが来ました。chara={selectedChara} material={selectedMaterial}");
 				await OnInitialRenderAsync();
-				//await OnMaterialChanged(selectedMaterial);
-				//await OnCharaSelected(selectedChara);
+				
 			}
       isLoading = false;
       await InvokeAsync(StateHasChanged);
@@ -287,7 +281,7 @@ else
         strokeLoading = true;
         await InvokeAsync(StateHasChanged);
         await CharaDataViewModel.GetStandardData(accessToken, selectedChara);
-        standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
+				standardImage = ImageEffectService.GetBinaryImageData(CharaDataViewModel._charaDataRepository.StandardBmp);
         stdLoading = false;
         await InvokeAsync(StateHasChanged);
         await CharaDataViewModel.GetStrokeData(accessToken, selectedChara);
@@ -348,7 +342,7 @@ else
         {
 					Console.WriteLine($"GetViewCharaDataAsync");
         
-            await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId, _cts.Token, isStandard, isCenterLine, isGridLine);
+          await CharaDataViewModel.GetViewCharaDataAsync(accessToken, (Guid)projectId, _cts.Token, isStandard, isCenterLine, isGridLine);
         }
         catch (OperationCanceledException)
         {

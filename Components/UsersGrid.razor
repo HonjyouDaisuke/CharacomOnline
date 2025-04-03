@@ -29,7 +29,7 @@ AllowPaging="true">
 
 @code {
 	[Parameter]
-	public List<UsersTable> Users { get; set; }
+	public List<UsersTable> Users { get; set; } = new();
 	[Parameter]
 	public EventCallback<(Guid UserId, string? NewRole)> OnRoleChanged { get; set; }
 

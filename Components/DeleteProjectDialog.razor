@@ -1,0 +1,51 @@
+@using CharacomOnline.Entity
+@inject DialogService DialogService
+
+@namespace CharacomOnline.Components
+
+<RadzenStack Gap="1.5rem">
+	<RadzenStack Orientation="Radzen.Orientation.Vertical" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+		<RadzenRow>
+			プロジェクト名：@ProjectName
+		</RadzenRow>
+		<RadzenRow>
+			を削除します。本当によろしいですか？
+		</RadzenRow>
+		<RadzenRow>
+			※プロジェクトを削除しても、boxサイト内のファイルは削除されません。
+		</RadzenRow>
+		<RadzenRow>
+			<RadzenColumn>
+				<RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="async () => await OnRunClick()">実行</RadzenButton>
+				<RadzenButton ButtonStyle="ButtonStyle.Primary" Click="async () => await OnCancelClick()">キャンセル</RadzenButton>
+			</RadzenColumn>
+		</RadzenRow>
+	</RadzenStack>
+</RadzenStack>
+
+@code {
+	[Parameter]
+	public string ProjectName { get; set; } = "";
+	[Parameter]
+	public Guid ProjectId { get; set; }
+	[Parameter]
+	public EventCallback<Guid?> OnDialogClosed { get; set; }
+
+	private async Task OnCancelClick()
+	{
+		if (OnDialogClosed.HasDelegate)
+		{
+			await OnDialogClosed.InvokeAsync(null);
+		}
+		DialogService.Close();
+	}
+
+	private async Task OnRunClick()
+	{
+		if (OnDialogClosed.HasDelegate)
+		{
+			await OnDialogClosed.InvokeAsync(ProjectId);
+		}
+		DialogService.Close();
+	}
+}

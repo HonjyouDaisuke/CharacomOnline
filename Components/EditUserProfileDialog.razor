@@ -14,7 +14,14 @@
 		<RadzenImage Path="@User?.PictureUrl" class="rz-gravatar" AlternateText="UserName" />
 	}
 
-	<RadzenTextBox @bind-Value="User.Name" Name="UserName" />
+	<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+		<RadzenText Text="　　　　表示名" />
+		<RadzenTextBox @bind-Value="User!.Name" Name="UserName" Style="width: 250px;" />
+	</RadzenStack>
+	<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+		<RadzenText Text="メールアドレス" />
+		<RadzenTextBox @bind-Value="User!.Email" Name="EmailAddr" Style="width: 250px;" Placeholder="xxx@xxxx.co.jp" />
+	</RadzenStack>
 	<RadzenStack Orientation="Radzen.Orientation.Horizontal">
 		<RadzenButton Text="キャンセル" Click="OnCancelClick" />
 		<RadzenButton Text="OK" Click="OnOKClick" />

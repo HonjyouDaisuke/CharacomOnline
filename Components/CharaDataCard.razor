@@ -3,46 +3,46 @@
 
 @if(IsLoading)
 {
-    <RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
-        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-    </RadzenStack>
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
 }
 else
 {
-    <RadzenCard @onclick="HandleClick" Style="@CharaData.GetCardStyle()">
-        <RadzenStack AlignItems="AlignItems.Center" Orientation="Radzen.Orientation.Vertical" >
-            @if (string.IsNullOrEmpty(ImageData))
-            {
-                <RadzenImage Path="images/no_image.png" height="@Height" width="@Width" />
-            }
-            else
-            {
-                <img src="@ImageData" alt="Downloaded Image" height="@Height" width="@Width" />
-            }
-        
-            @if (!string.IsNullOrEmpty(Id))
-            {
-                <p>@Id</p>
-            }
-        </RadzenStack>
-    </RadzenCard>
+	<RadzenCard @onclick="HandleClick" Style="@CharaData.GetCardStyle()">
+		<RadzenStack AlignItems="AlignItems.Center" Orientation="Radzen.Orientation.Vertical" >
+			@if (string.IsNullOrEmpty(ImageData))
+			{
+				<RadzenImage Path="images/no_image.png" height="@Height" width="@Width" />
+			}
+			else
+			{
+				<img src="@ImageData" alt="Downloaded Image" height="@Height" width="@Width" />
+			}
+
+			@if (!string.IsNullOrEmpty(Id))
+			{
+				<p>@Id</p>
+			}
+		</RadzenStack>
+	</RadzenCard>
 }
 
 @code {
-    [Inject]
-    public DialogService DialogService { get; set; } = default!;
+	[Inject]
+	public DialogService DialogService { get; set; } = default!;
 
-    [Parameter]
-    public CharaDataClass? CharaData { get; set; }
+	[Parameter]
+	public CharaDataClass? CharaData { get; set; }
 
-    [Parameter]
-    public string? Height{ get; set; }
+	[Parameter]
+	public string? Height{ get; set; }
 
-    [Parameter]
-    public string? Width { get; set; }
+	[Parameter]
+	public string? Width { get; set; }
 
-    [Parameter]
-    public bool IsLoading { get; set; }
+	[Parameter]
+	public bool IsLoading { get; set; } = false;
 
     [Parameter]
     public EventCallback<CharaDataClass> CardClick { get; set; }
@@ -83,7 +83,7 @@ else
             {
                 if (!_isDoubleClick)
                 {
-                    OnClick(); // シングルクリックイベントを発火
+                  OnClick(); // シングルクリックイベントを発火
                 }
                 _clickTimer?.Dispose();
                 _clickTimer = null;

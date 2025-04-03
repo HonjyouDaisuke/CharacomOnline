@@ -10,11 +10,7 @@ public class StandardTableService(Client supabaseClient)
 
   public async Task AddRecodeAsync(string charaName, string fileId)
   {
-    var newItem = new StandardMaster
-    {
-      CharaName = charaName,
-      FileId = fileId,
-    };
+    var newItem = new StandardMaster { CharaName = charaName, FileId = fileId };
     try
     {
       var response = await _supabaseClient.From<StandardMaster>().Insert(newItem);
@@ -52,14 +48,17 @@ public class StandardTableService(Client supabaseClient)
     try
     {
       // Supabaseからデータを取得
-      var response = await _supabaseClient.From<StandardMaster>().Select("chara_name, file_id").Get();
+      var response = await _supabaseClient
+        .From<StandardMaster>()
+        .Select("chara_name, file_id")
+        .Get();
       Console.WriteLine($"(Standard){response.ToString()}");
 
       // エラーチェック
       if (response == null)
       {
         Console.WriteLine($"エラーが発生しました");
-        return new List<StandardMaster>();  // エラーがあれば空のリストを返す
+        return new List<StandardMaster>(); // エラーがあれば空のリストを返す
       }
 
       // 取得したデータを返す
@@ -68,7 +67,7 @@ public class StandardTableService(Client supabaseClient)
     catch (Exception ex)
     {
       Console.WriteLine($"例外が発生しました: {ex.Message}");
-      return new List<StandardMaster>();  // 例外が発生した場合も空のリストを返す
+      return new List<StandardMaster>(); // 例外が発生した場合も空のリストを返す
     }
   }
 
@@ -77,10 +76,10 @@ public class StandardTableService(Client supabaseClient)
     try
     {
       var standardResponse = await _supabaseClient
-            .From<StandardMaster>()
-            .Select("file_id")
-            .Filter("chara_name", Supabase.Postgrest.Constants.Operator.Equals, charaName)
-            .Get();
+        .From<StandardMaster>()
+        .Select("file_id")
+        .Filter("chara_name", Supabase.Postgrest.Constants.Operator.Equals, charaName)
+        .Get();
 
       return standardResponse.Models.FirstOrDefault()?.FileId;
     }
@@ -91,4 +90,3 @@ public class StandardTableService(Client supabaseClient)
     }
   }
 }
-

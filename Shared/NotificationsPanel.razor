@@ -1,0 +1,58 @@
+﻿<div Class="@(PanelExpanded ? "notifications-panel open" : "notifications-panel")">
+	<RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+	<RadzenCard>
+		<h3>test notification</h3>
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	<RadzenCard>
+		<h3>Radzen CardTest</h3>
+		test anthing todo ...
+	</RadzenCard>
+	</RadzenStack>
+</div>
+
+@code {
+    [Parameter]
+    public bool PanelExpanded { get; set; } = false;
+	// バインディングのためのイベントコールバック
+	[Parameter]
+	public EventCallback<bool> PanelExpandedChanged { get; set; }
+
+	// RadzenSidebarの状態変更をSidebarExpandedプロパティに反映
+	private async Task ToggleSidebar()
+	{
+		bool newValue = !PanelExpanded;
+		await PanelExpandedChanged.InvokeAsync(newValue);
+	}
+}

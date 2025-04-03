@@ -36,7 +36,7 @@ public class UserRepository
   {
     // 指定した userId を持つユーザーを検索
     var user = users.FirstOrDefault(u => u.Id == userId);
-    if (user.Id == currentUser.Id)
+    if (user?.Id == currentUser.Id)
     {
       currentUser.UserRole = newRole;
     }

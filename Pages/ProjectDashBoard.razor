@@ -8,6 +8,9 @@
 @inject AppState AppState
 @inject TokenStorage TokenStorage
 @inject UsersViewModel UsersViewModel
+@inject UserSettingsViewModel UserSettingsViewModel
+@inject DialogService DialogService
+@inject NotificationService NotificationService
 
 <h3>プロジェクトの管理</h3>
 @if (userId == null)
@@ -36,7 +39,7 @@ else
 	<RadzenStack Gap="10">
 		<ProjectSummary ProjectName="@projectName" ProjectDescription="@projectDescription" CreatedUserName="@createdUserName" CreatedAt="@createdAt"/>
 		<ProjectSummaryUser ProjectUsers="@users" />
-		<ProjectSummaryChart CharaDataCount="@charaDataCount" BoxFolderFiles="@boxFileCount" SelectedCount="@selectedCharaCount" />
+		<ProjectSummaryChart CharaDataCount="@charaDataCount" BoxFolderFiles="@boxFileCount" SelectedCount="@selectedCharaCount" UpdateClick="@projectUpdate"/>
 		<ProjectSummaryProgress ProgressData="@progressData" />
 	</RadzenStack>
 }
@@ -61,16 +64,21 @@ else
 
 	private List<ProjectUsers> users = new();
 
+	// ProgressDialog用
+	ProgressDialogParameters? param;
+
 	private void OnNaviClick(string goTo)
 	{
 		Navi.NavigateTo(goTo);
 	}
 
-	protected override async Task OnInitializedAsync()
+	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
+		if (!firstRender) return;
 		await UsersViewModel.SetUserInfoToAppState();
 
 		userId = AppState.UserId;
+		if (AppState.UserId != null) await UserSettingsViewModel.GetUserSettings((Guid)AppState.UserId);
 		projectId = ProjectsViewModel.GetCurrentProjectId();
 		if (projectId == null)
 		{
@@ -102,6 +110,70 @@ else
 		// 個別文字の選択状況
 		progressData = await ProjectsViewModel.GetCurrentProjectCharaCount((Guid)projectId);
 		isLoading = false;
-        await InvokeAsync(StateHasChanged);
-    }
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task projectUpdate()
+	{
+		var folderId = ProjectsViewModel.GetCurrentProjectCharaFolderId();
+		var accessToken = await TokenStorage.GetAccessTokenAsync();
+		var files = await ProjectsViewModel.GetBoxFileCount(folderId, accessToken);
+		param = new ProgressDialogParameters
+			{
+				Message = $"プロジェクト名：{projectName} ファイル数：{files}個",
+				Value = 0,
+				MaxValue = files,
+				Unit = $" / {files}",
+				OnCancel = new EventCallback(this, () =>
+				{
+				// ViewModel側でキャンセルを実行
+					ProjectsViewModel.CancelOperation();
+				})
+			};
+		// ViewModelでキャンセル用トークンの初期化
+		ProjectsViewModel.InitializeCancellationToken();
+
+		// 進行状況更新イベントの購読
+		ProjectsViewModel.OnProgressUpdated += OnProgressUpdated;
+
+		var dialogTask = DialogService.OpenAsync<ProgressDialog>("データをアップデートします", new Dictionary<string, object>
+		{
+			{"parameters", param}
+		});
+
+		_ = ProjectsViewModel.CreateOrUpdateCharaData((Guid)projectId, folderId, accessToken, files, (Guid)userId);
+		
+		// ダイアログが閉じた後に購読解除
+		await dialogTask.ContinueWith((task) =>
+		{
+			// ダイアログが閉じたら購読解除
+			ProjectsViewModel.OnProgressUpdated -= OnProgressUpdated;
+			NotificationService.Notify(new NotificationMessage
+      {
+        Severity = NotificationSeverity.Success,
+        Summary = "プロジェクトアップデート",
+        Detail = "プロジェクトをアップデートしました。",
+        Duration = 2000
+      }
+    );
+		});
+		
+	}
+
+	// プログレス更新時の処理
+	private void OnProgressUpdated(int progress)
+	{
+		if (param == null) return;
+		// 進行状況更新
+		if (progress >= param.MaxValue) 
+		{
+			DialogService.Close();
+			StateHasChanged();
+			return;	
+		}
+		param.Value = progress;
+		DialogService.Refresh();
+		StateHasChanged(); // ダイアログの再描画を強制
+	}
+	
 }

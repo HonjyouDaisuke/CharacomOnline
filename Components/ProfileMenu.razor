@@ -5,11 +5,12 @@
 @using CharacomOnline.ViewModel
 @inject Supabase.Client SupabaseClient
 @inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject UsersViewModel UsersViewModel
 @inject AppState AppState
 
-<RadzenProfileMenu Click="@(args => HandleMenu(args))">
+<RadzenProfileMenu Click="HandleMenu">
 	<Template>
 		<RadzenImage Path="@(UserPicture ?? "/images/no_user_icon.png")" class="rz-gravatar" AlternateText="UserName" />
 	</Template>
@@ -66,7 +67,7 @@
 </style>
 @code {
 	[Parameter]
-	public string UserPicture { get; set; }
+	public string UserPicture { get; set; } = "";
 	[Parameter]
 	public string? UserName { get; set; }
 
@@ -108,7 +109,29 @@
 				if (result is UsersTable updateUser)
 				{
 					Console.WriteLine($"updateUser = {updateUser.ToString()}");
-					await UsersViewModel.UpdateCurrentUserAsync(updateUser);
+					var isUpdated = await UsersViewModel.UpdateCurrentUserAsync(updateUser);
+					if (isUpdated)
+					{
+						NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "更新完了",
+                    Detail = "ユーザー情報を更新しました。",
+                    Duration = 2000
+                }
+            );
+					}
+					else
+					{
+						NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "更新失敗",
+                    Detail = $"ユーザー情報の更新に失敗しました。",
+                    Duration = 2000
+                }
+            );
+					}
 				}
 				else
 				{

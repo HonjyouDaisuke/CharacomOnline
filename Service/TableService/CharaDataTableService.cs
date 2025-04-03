@@ -5,6 +5,8 @@ using CharacomOnline.ImageProcessing;
 using CharacomOnline.Repositories;
 using Supabase;
 
+// using Supabase.Gotrue;
+
 namespace CharacomOnline.Service.TableService;
 
 public class CharaDataRecode
@@ -35,7 +37,7 @@ public class CharaDataTableService(
 
   public List<CharaDataRecode>? DeserializeJson(string json)
   {
-    if (json == null)
+    if (string.IsNullOrEmpty(json))
       return null;
     var options = new JsonSerializerOptions
     {
@@ -46,13 +48,91 @@ public class CharaDataTableService(
     return JsonSerializer.Deserialize<List<CharaDataRecode>>(json, options);
   }
 
+  public async Task<List<CharaDataClass>?> FetchSelectedCharaData(
+    Guid projectId,
+    string charaName,
+    string materialName,
+    string accessToken
+  )
+  {
+    List<CharaDataClass>? result = new();
+    // Supabase から RPC を呼び出す
+    Console.WriteLine($"start fetch ProjectId:{projectId}");
+    var response = await _supabaseClient.Rpc(
+      "get_selected_chara_data_by_project_and_name",
+      new
+      {
+        input_project_id = projectId,
+        input_chara_name = charaName,
+        input_material_name = materialName,
+      }
+    );
+
+    if (!string.IsNullOrEmpty(response.Content))
+    {
+      try
+      {
+        // JSON を List に変換
+        var charas = JsonSerializer.Deserialize<List<CharaImageListClass>>(response.Content);
+        if (charas == null)
+          return null;
+
+        int totalTasks = charas.Count;
+        // int progress = 0;
+
+        foreach (var item in charas)
+        {
+          if (item.Id == null || item.FileId == null)
+            continue;
+          CharaDataClass charaData = new();
+
+          // token.ThrowIfCancellationRequested();
+          charaData.CharaName = charaName;
+          charaData.MaterialName = materialName;
+          charaData.Id = (Guid)item.Id;
+          charaData.IsSelected = true;
+          charaData.SrcImage = await _boxFileService.DownloadFileAsSKBitmapAsync(
+            item.FileId,
+            accessToken
+          );
+          if (charaData.SrcImage == null)
+            return null;
+          var resize = ImageEffectService.ResizeBitmap(charaData.SrcImage, 160, 160);
+          var binary = ImageEffectService.GetBinaryBitmap(resize);
+          var thinning = new ThinningProcess(binary);
+          charaData.ThinImage = await thinning.ThinBinaryImageAsync();
+
+          result.Add(charaData);
+          // 新しいデータを挿入する処理
+          //await ProcessCharaDataAsync(item, charaName, materialName, accessToken);
+
+          //progress++;
+          //onProgress?.Invoke((progress * 100) / totalTasks);
+        }
+
+        return result;
+      }
+      catch (JsonException ex)
+      {
+        // デシリアライズエラー処理
+        Console.WriteLine("JSON Parsing Error: " + ex.Message);
+      }
+    }
+    else
+    {
+      // レスポンスエラー処理
+      Console.WriteLine("Error: No content returned");
+    }
+    return null;
+  }
+
   public async Task<List<CharaDataClass>?> FetchCharaDataFromProject(Guid projectId, Guid modelId)
   {
     var response = await _supabaseClient.Rpc(
       "get_chara_data_from_project_id",
       new { project_id_input = projectId, model_id_input = modelId }
     );
-    List<CharaDataClass>? resultCharaData = new List<CharaDataClass>();
+    List<CharaDataClass> resultCharaData = new List<CharaDataClass>();
 
     if (string.IsNullOrEmpty(response.Content))
       return null;
@@ -88,7 +168,12 @@ public class CharaDataTableService(
       );
 
       // 全タスクを実行して結果を収集
-      CharaDataClass[] charaDataClasses = (await Task.WhenAll(tasks));
+      CharaDataClass?[] charaDataClasses = (await Task.WhenAll(tasks));
+      if (charaDataClasses == null)
+      {
+        Console.WriteLine("charaDataClassesが空です");
+        return null;
+      }
       resultCharaData = charaDataClasses.ToList();
     }
     catch (JsonException ex)
@@ -111,7 +196,12 @@ public class CharaDataTableService(
     return response;
   }
 
-  public async Task<Guid?> CreateCharaData(Guid projectId, string fileId, FileInformation fileInfo)
+  public async Task<Guid?> CreateCharaData(
+    Guid projectId,
+    string fileId,
+    FileInformation fileInfo,
+    Guid userId
+  )
   {
     if (await IsCharaDataExists(projectId, fileId))
       return null;
@@ -125,6 +215,8 @@ public class CharaDataTableService(
       MaterialName = fileInfo.MaterialName,
       CharaName = fileInfo.CharaName,
       TimesName = fileInfo.TimesName,
+      UpdatedBy = userId,
+      UpdatedAt = DateTime.Now,
     };
     try
     {
@@ -471,8 +563,8 @@ public class CharaDataTableService(
         .From<CharaDataClass>() // 更新するテーブル
         .Where(x => x.Id == charaId) // 条件を LINQ の形で指定
         .Set(x => x.IsSelected, isSelected) // IsSelected を更新
-        .Set(x => x.UpdatedBy, userId) // UpdatedBy を更新
-        .Set(x => x.UpdatedAt, DateTime.UtcNow) // UpdatedAt を更新
+        .Set(x => x.UpdatedBy!, userId) // UpdatedBy を更新
+        .Set(x => x.UpdatedAt!, DateTime.UtcNow) // UpdatedAt を更新
         .Update();
 
       if (response.Models.Count > 0)
@@ -495,6 +587,95 @@ public class CharaDataTableService(
       {
         Console.WriteLine($"更新に失敗しました。{charaId}");
       }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
+  }
+
+  public async Task<FileInformation?> GetFileInformationFromFileIdAsync(
+    Guid projectId,
+    string fileId
+  )
+  {
+    try
+    {
+      var responseBody = await _supabaseClient.Rpc(
+        "get_chara_datainfo",
+        new { project_id = projectId, file_id = fileId }
+      );
+
+      if (responseBody == null)
+      {
+        Console.WriteLine($"Error fetching data");
+        return null;
+      }
+      try
+      {
+        var responseList = JsonSerializer.Deserialize<List<FileInformation>>(responseBody.Content!);
+        var charaInfo = responseList?.FirstOrDefault();
+        return charaInfo;
+      }
+      catch (JsonException ex)
+      {
+        Console.WriteLine($"JSON Deserialize Error: {ex.Message}");
+        Console.WriteLine($"projectId = {projectId} fileId={fileId}");
+        Console.WriteLine($"Response Body: {responseBody.Content?.FirstOrDefault()}");
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"----error:{ex}");
+    }
+    return null;
+  }
+
+  public async Task UpdateFileInfoAsync(
+    Guid projectId,
+    string fileId,
+    FileInformation fileInfo,
+    Guid userId
+  )
+  {
+    Console.WriteLine($"userId-------{userId.ToString()}");
+    try
+    {
+      var response = await _supabaseClient
+        .From<CharaDataTable>() // 更新するテーブル
+        .Where(x => x.ProjectId == projectId && x.FileId == fileId) // 条件を LINQ の形で指定
+        .Set(x => x.CharaName!, fileInfo.CharaName) // CharaName を更新
+        .Set(x => x.MaterialName!, fileInfo.MaterialName) // MaterialName を更新
+        .Set(x => x.TimesName!, fileInfo.TimesName) // TimesName を更新
+        .Set(x => x.UpdatedAt, DateTime.UtcNow) // UpdatedAt を更新
+        .Set(x => x.UpdatedBy!, userId) // UpdatedBy を更新
+        .Update();
+
+      if (response.Models.Count > 0)
+      {
+        foreach (var model in response.Models)
+        {
+          Console.WriteLine($"Updated record: {model.Id}");
+        }
+      }
+      else
+      {
+        Console.WriteLine("更新されたデータがありません。");
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
+  }
+
+  public async Task DeleteProjectCharaData(Guid projectId)
+  {
+    try
+    {
+      await _supabaseClient.From<CharaDataTable>().Where(x => x.ProjectId == projectId).Delete();
+
+      Console.WriteLine("chara_dataテーブル、削除成功");
     }
     catch (Exception ex)
     {

@@ -1,4 +1,5 @@
-﻿using Blazored.LocalStorage;
+﻿using System.Runtime.CompilerServices;
+using Blazored.LocalStorage;
 using Supabase;
 
 namespace CharacomOnline.Service;
@@ -53,7 +54,8 @@ public class SupabaseService
   {
     // 現在の認証済みユーザーを取得
     var user = _supabaseClient.Auth.CurrentUser;
-    Console.WriteLine($"ユーザ情報習得 {user.Email}");
+    Console.WriteLine($"ユーザ情報取得 {user?.Email}");
+
     if (user == null)
       return null;
     // ユーザーのメタデータからプロフィール画像を取得

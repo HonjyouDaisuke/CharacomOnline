@@ -6,7 +6,7 @@
 @inject SessionStorageService SessionStorage
 @inject CharaDataViewModel CharaDataViewModel
 
-@if (IsLoading)
+@if (isLoading)
 {
 	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
 		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
@@ -15,7 +15,8 @@
 else
 {
 	<div style="max-height: calc(100% - 55px);">
-		@if (isProgressShow){
+		@if (isProgressShow)
+		{
 			<RadzenProgressBar Value="@progress" Max="100" ShowValue="true" Mode="ProgressBarMode.Determinate" />
 		}
 		<div style="height: 100%; overflow-y: auto;">
@@ -60,39 +61,37 @@ else
 	[Parameter]
 	public bool IsLoading { get; set; }
 	private bool isLoading = true;
-    private int progress = 0;
-    private bool isProgressShow = false;
-    private string? prevChara;
-    private string? prevMaterial;
+	private int progress = 0;
+	private bool isProgressShow = false;
 
-    protected override void OnInitialized()
-    {
-        isLoading = true;
+	protected override void OnInitialized()
+	{
+		isLoading = IsLoading;
 
-    }
+	}
 
-    private async Task OnCardClick(CharaDataClass clickedCard)
-    {
-        clickedCard.IsSelected = !clickedCard.IsSelected;
-        await InvokeAsync(StateHasChanged);
-        await CardClick.InvokeAsync(clickedCard);
-    }
+	private async Task OnCardClick(CharaDataClass clickedCard)
+	{
+		clickedCard.IsSelected = !clickedCard.IsSelected;
+		await InvokeAsync(StateHasChanged);
+		await CardClick.InvokeAsync(clickedCard);
+	}
 
-    private void OnProgressChanged(int value)
-    {
-        progress = value;
-        Console.WriteLine($"Page Progress : {value}");
-        isLoading = false;
-        InvokeAsync(() =>
-        {
-            StateHasChanged();
-            return Task.CompletedTask;
-        });
-    }
+	private void OnProgressChanged(int value)
+	{
+		progress = value;
+		Console.WriteLine($"Page Progress : {value}");
+		isLoading = false;
+		InvokeAsync(() =>
+		{
+			StateHasChanged();
+			return Task.CompletedTask;
+		});
+	}
 
-    public void Dispose()
-    {
-        Console.WriteLine("Disposing CharaImageList component.");
-        CharaDataViewModel.ProgressChanged -= OnProgressChanged;
-    }
+	public void Dispose()
+	{
+		Console.WriteLine("Disposing CharaImageList component.");
+		CharaDataViewModel.ProgressChanged -= OnProgressChanged;
+	}
 }

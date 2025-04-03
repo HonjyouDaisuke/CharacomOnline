@@ -29,6 +29,7 @@
 		<RadzenColumn >
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End" Style="padding-right: 1rem;">
 				<RadzenAppearanceToggle />
+				<RadzenSidebarToggle Click="@ChangePanelExpand" Icon="notifications"/>
 				<ProfileMenu UserPicture="@userPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName" />
 			</RadzenStack>
 		</RadzenColumn>
@@ -38,10 +39,14 @@
 @code {
 	[Parameter]
 	public bool SidebarExpanded { get; set; } = true;
+	[Parameter]
+	public bool PanelExpanded { get; set; } = false;
 
 	// 変更イベントのためのEventCallbackプロパティ
 	[Parameter]
 	public EventCallback<bool> SidebarExpandedChanged { get; set; }
+	[Parameter]
+	public EventCallback<bool> PanelExpandedChanged { get; set; }
 
 	private string? userPictureUrl;
 	private string? userName;
@@ -75,6 +80,11 @@
 		await SidebarExpandedChanged.InvokeAsync(newValue);  // 親に新しい値を送信
 	}
 
+	private async Task ChangePanelExpand()
+	{
+		bool newValue = !PanelExpanded;
+		await PanelExpandedChanged.InvokeAsync(newValue); // 親に新しい値を送信
+	}
 	private async Task Logout(ProfileMenuItemType menu)
 	{
 		Console.WriteLine($"Logout {menu}");

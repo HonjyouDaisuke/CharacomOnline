@@ -10,8 +10,9 @@ public class FileUploadService
   private readonly FileHandleService _fileHandleService;
 
   public FileUploadService(
-      IWebHostEnvironment webHostEnvironment,
-      FileHandleService fileHandleService)
+    IWebHostEnvironment webHostEnvironment,
+    FileHandleService fileHandleService
+  )
   {
     _webHostEnvironment = webHostEnvironment;
     _fileHandleService = fileHandleService;
@@ -28,15 +29,15 @@ public class FileUploadService
 
     FileInformation fileInfo;
 
-    fileInfo = await _fileHandleService.GetDataInfo(file);
-    CharaDataClass uploadData = new()
-    {
-      //Id = 0,
-      CharaName = fileInfo.CharaName,
-      MaterialName = fileInfo.MaterialName,
-      TimesName = fileInfo.TimesName,
-      // ImageUrl = imageUrl,
-    };
+    fileInfo = _fileHandleService.GetDataInfo(file);
+    CharaDataClass uploadData = new();
+    //{
+    //  //Id = 0,
+    //  CharaName = (FileInformation)fileInfo.CharaName,
+    //  MaterialName = fileInfo.MaterialName,
+    //  TimesName = fileInfo.TimesName,
+    //  // ImageUrl = imageUrl,
+    //};
     return uploadData;
   }
 
@@ -50,7 +51,7 @@ public class FileUploadService
     var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "images");
     Directory.CreateDirectory(uploadPath);
 
-    var uniqueFileName = RandomStringMaker.MakeString(10) + Path.GetExtension(file.Name);
+    var uniqueFileName = ""; // RandomStringMaker.MakeString(10) + Path.GetExtension(file.Name);
     var filePath = Path.Combine(uploadPath, uniqueFileName);
 
     using var stream = new FileStream(filePath, FileMode.Create);

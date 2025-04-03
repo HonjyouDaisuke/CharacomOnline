@@ -1,7 +1,10 @@
-﻿using CharacomOnline.Entity;
+﻿using System.Reflection;
+using CharacomOnline.Components;
+using CharacomOnline.Entity;
 using CharacomOnline.Repositories;
 using CharacomOnline.Service;
 using CharacomOnline.Service.TableService;
+using Radzen;
 
 namespace CharacomOnline.ViewModel;
 
@@ -15,6 +18,11 @@ public class ProjectsViewModel
   private readonly CharaDataTableService charaDataTableService;
 
   public string? ProjectTitle { get; set; }
+
+  public event Action<int>? OnProgressUpdated;
+  private CancellationTokenSource? _cts = new();
+  public int Progress { get; private set; } = 0;
+  public bool IsCompleted { get; private set; } = false;
 
   // DI コンストラクタ
   public ProjectsViewModel(
@@ -46,20 +54,28 @@ public class ProjectsViewModel
     if (projectId == null)
       return;
     var users = await userProjectsTableService.FetchProjectUsers((Guid)projectId);
-    Console.WriteLine($"projectId = {projectId} users = {users.Count}");
+    Console.WriteLine($"projectId = {projectId} users = {users?.Count}");
     List<UsersTable> usersList = new List<UsersTable>();
     projectRepository.ClearCurrentProjectUsers();
+    if (users == null)
+      return;
     foreach (var user in users)
     {
       var userInfo = await usersTableService.GetProjectUserAsync((Guid)user);
-      Console.WriteLine($"userId = {userInfo.Id} Name = {userInfo.Name}");
-      if (string.IsNullOrEmpty(userInfo.PictureUrl))
+      Console.WriteLine($"userId = {userInfo?.Id} Name = {userInfo?.Name}");
+      if (userInfo == null)
+        continue;
+      if (string.IsNullOrEmpty(userInfo?.PictureUrl))
       {
-        userInfo.PictureUrl = "/images/no_user_icon.png";
+        if (userInfo != null)
+          userInfo.PictureUrl = "/images/no_user_icon.png";
       }
       // if (userInfo.Role == null) continue;
-      userInfo.Role = "guest";
-      projectRepository.AddCurrentProjectUsers(userInfo);
+      if (userInfo != null)
+      {
+        userInfo.Role = "guest";
+        projectRepository.AddCurrentProjectUsers(userInfo);
+      }
     }
     return;
   }
@@ -94,7 +110,8 @@ public class ProjectsViewModel
       projectName,
       description,
       folderId,
-      charaFolderId
+      charaFolderId,
+      userId
     );
     if (result != null)
     {
@@ -203,5 +220,156 @@ public class ProjectsViewModel
     var selectedCount = await charaDataTableService.GetSelectedCharaCountAsync(projectId);
     projectRepository.SelectedDataCount = selectedCount;
     return selectedCount;
+  }
+
+  public bool isSameFileInfo(FileInformation boxInfo, FileInformation dbInfo)
+  {
+    if (boxInfo.CharaName != dbInfo.CharaName)
+      return false;
+    if (boxInfo.MaterialName != dbInfo.MaterialName)
+      return false;
+    if (boxInfo.TimesName != dbInfo.TimesName)
+      return false;
+    return true;
+  }
+
+  public async Task InsertOrUpdateCharaData(
+    string fileName,
+    Guid projectId,
+    string fileId,
+    Guid userId
+  )
+  {
+    FileInformation? fileInfo = FileNameService.GetDataInfo(fileName);
+    if (fileInfo == null)
+    {
+      Console.WriteLine($"ファイル名が正しくありませんでした。{fileName}");
+      return;
+    }
+
+    var existFileId = await charaDataTableService.IsCharaDataExists(projectId, fileId);
+
+    if (existFileId)
+    {
+      var dbInfo = await charaDataTableService.GetFileInformationFromFileIdAsync(projectId, fileId);
+      if (isSameFileInfo((FileInformation)fileInfo, (FileInformation)dbInfo))
+        return;
+
+      Console.WriteLine($"ファイルの情報を更新します{fileName}");
+      await charaDataTableService.UpdateFileInfoAsync(
+        projectId,
+        fileId,
+        (FileInformation)fileInfo,
+        userId
+      );
+    }
+    else
+    {
+      Console.WriteLine($"新規のファイルです{fileName}");
+      var charaDataId = await charaDataTableService.CreateCharaData(
+        projectId,
+        fileId,
+        (FileInformation)fileInfo,
+        userId
+      );
+    }
+    return;
+  }
+
+  public async Task<int> GetFileCount(string charaFolderId, string accessToken)
+  {
+    var files = await boxFileService.GetFolderFileCountAsync(charaFolderId, accessToken);
+    return files;
+  }
+
+  public void InitializeCancellationToken()
+  {
+    // 以前のトークンをキャンセルし、新しいトークンを作成
+    _cts?.Cancel();
+    _cts?.Dispose();
+    _cts = new CancellationTokenSource();
+  }
+
+  public async Task CreateOrUpdateCharaData(
+    Guid projectId,
+    string charaFolderId,
+    string accessToken,
+    int files,
+    Guid userId
+  )
+  {
+    int offset = 0;
+    int limit = 100;
+    Progress = 0;
+    IsCompleted = false;
+    if (_cts == null)
+    {
+      _cts = new CancellationTokenSource();
+    }
+
+    OnProgressUpdated?.Invoke(Progress);
+    while (true)
+    {
+      if (_cts.Token.IsCancellationRequested)
+      {
+        // キャンセルされた場合、ループを抜ける
+        Console.WriteLine("処理がキャンセルされました。");
+        break;
+      }
+
+      var fileList = await boxFileService.GetFolderItemsAsync(
+        charaFolderId,
+        limit,
+        offset,
+        accessToken
+      );
+      if (fileList == null || fileList.Count == 0)
+        break;
+
+      foreach (var item in fileList)
+      {
+        //キャンセルされている場合は例外
+        _cts.Token.ThrowIfCancellationRequested();
+        Progress++;
+
+        OnProgressUpdated?.Invoke(Progress);
+
+        if (item.Type != "file")
+          continue;
+        if (item.Name == "")
+          continue;
+        var extension = FileNameService.GetExtension(item.Name);
+        if (extension != ".jpeg" && extension != ".jpg")
+          continue;
+
+        await InsertOrUpdateCharaData(item.Name, projectId, item.Id, userId);
+      }
+      if (Progress > files)
+        break;
+      offset += limit;
+    }
+  }
+
+  public void CancelOperation()
+  {
+    Console.WriteLine("キャンセルです。");
+    _cts?.Cancel();
+  }
+
+  public async Task UpdateProjectNameAsync(
+    Guid projectId,
+    string name,
+    string description,
+    Guid userId
+  )
+  {
+    await projectsTableService.UpdateProjectNameAsync(projectId, name, description, userId);
+  }
+
+  public async Task DeleteProjectAsync(Guid projectId)
+  {
+    await charaDataTableService.DeleteProjectCharaData(projectId);
+    await userProjectsTableService.DeleteProject(projectId);
+    await projectsTableService.DeleteProjectAsync(projectId);
   }
 }

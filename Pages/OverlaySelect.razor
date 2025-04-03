@@ -1,0 +1,344 @@
+@page "/overlay"
+@using Radzen
+@using Radzen.Blazor
+@using CharacomOnline.Entity
+@using CharacomOnline.Service
+@using CharacomOnline.ViewModel
+@using CharacomOnline.Components
+@inject OverlayViewModel OverlayViewModel
+@inject TokenStorage TokenStorage
+@inject BoxFileService BoxFileService
+@inject NavigationManager Navi
+@inject AppState AppState
+@inject UsersViewModel UsersViewModel
+@inject UserSettingsViewModel UserSettingsViewModel
+@inject CharaDataViewModel CharaDataViewModel
+
+@namespace CharacomOnline.Pages
+
+@if (isLoading)
+{
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
+}
+else if (userId == null)
+{
+	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
+	ErrorMessage="ログインできていません。ログインしてください"
+	LinkMsg="ログインへ"
+	LinkClick="@(() => OnNaviClick(loginUrl))" />
+}
+else if (projectId == null)
+{
+	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
+	ErrorMessage="プロジェクトを選択してください。"
+	LinkMsg="プロジェクト選択へ"
+	LinkClick=" () => OnNaviClick(projectsUrl)" />
+
+}
+else
+{
+	<RadzenDropZoneContainer TItem="Overlays" Data="data" 
+	ItemSelector="@ItemSelector"
+	Style="height:auto 100%;"
+	CanDrop="@CanDrop"
+	Drop="@OnDrop">
+		<ChildContent>
+			<RadzenSplitter class="full-height-splitter" Orientation="Radzen.Orientation.Vertical">
+				<RadzenSplitterPane Size="65%" Resizable="true">
+					<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal">
+						<ViewSetupSelector 
+						IsCenterLine="centerLine" 
+						IsGridLine="gridLine" 
+						IsStandard="standard"
+						Changed="@EventCallback.Factory.Create(this, async () => await OnSetupChanged())"
+						IsCenterLineChanged="@(value => centerLine = value)" 
+						IsGridChanged="@(value => gridLine = value)" 
+						IsStandardChanged="@(value => standard = value)" />
+						<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
+							<RadzenColorPicker @bind-Value=colorA ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton Change="onBoxAColorChange" />
+							<RadzenDropZone Value="Areas.BoxA" Style="flex: 1; gap: 1rem;" >
+								<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.OverlayA?.OverlayBmp)" Height="160" Width="160" IsLoading="false" />
+							</RadzenDropZone>
+						</RadzenStack>
+
+						<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.ViewBitmap)" Height="320" Width="320" IsLoading="false" />
+
+						<RadzenStack Orientation="Orientation.Vertical" Style="gap: 1rem;">
+							<RadzenColorPicker @bind-Value=colorB ShowHSV=@showHSV ShowRGBA=@showRGBA ShowColors=@showColors ShowButton=@showButton Change="onBoxBColorChange" />
+							<RadzenDropZone Name="aaa" Value="Areas.BoxB" Style="flex: 1; gap: 1rem;" >
+								<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(OverlayViewModel.OverlayB?.OverlayBmp)" Height="160" Width="160" IsLoading="false" />
+							</RadzenDropZone>
+						</RadzenStack>
+					</RadzenStack>
+				</RadzenSplitterPane>
+				<RadzenSplitterPane Size="30%" Resizable="true">
+					<RadzenSplitter Orientation="Radzen.Orientation.Horizontal">
+						<RadzenSplitterPane Size="30%" MinSize="10%" Resizable="true">
+							<CharaSelectButtons Characters="CharaDataViewModel._selectingItemsRepository.Characters" SelectedChara="@selectedChara" OnCharacterSelected="OnCharaSelected" />
+						</RadzenSplitterPane>
+						<RadzenSplitterPane Size="70%" MinSize="10%" Resizable="true">
+							@if (isCharaLoading)
+							{
+								<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+									<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+								</RadzenStack>
+							}
+							else
+							{
+								<RadzenDropZone TItem="Overlays" Value="Areas.Select" class="rz-border-radius-2 rz-p-4" Style="display: flex; flex-wrap: wrap; gap: 1rem;">
+
+								</RadzenDropZone>
+							}
+						</RadzenSplitterPane>
+					</RadzenSplitter>
+				</RadzenSplitterPane>
+			</RadzenSplitter>
+		</ChildContent>
+		<Template Context="item">
+			<CharaImageCard ImageData="@ImageEffectService.GetBinaryImageData(item.overlay.OverlayBmp)" Id="@item.Name" Height="80" Width="80" />
+		</Template>
+	</RadzenDropZoneContainer>
+}
+<style>
+	.rz-can-drop {
+	border: dashed 2px darkorange !important;
+	}
+
+
+	.drop-zone {
+	padding: 2px;
+	border: dashed 2px transparent;
+	transition: border linear 0.2s;
+	}
+
+	.drop-zone.hover , .drop-zone:hover {
+	border: dashed 2px darkorange;
+	cursor: pointer;
+	}
+</style>
+
+@code {
+	private bool isHovering = false;
+	private bool showHSV = false;
+	private bool showRGBA = false;
+	private bool showColors = true;
+	private bool showButton = false;
+	private Guid? projectId;
+	private Guid? userId;
+	private string? accessToken;
+	private string loginUrl = "./login";
+	private string projectsUrl = "./projects";
+	private bool gridLine = false;
+	private bool centerLine = false;
+	private bool standard = false;
+	private bool isLoading = true;
+	private bool isCharaLoading = true;
+	private string selectedChara = "";
+
+	string colorA = "rgb(68, 58, 110)";
+	string colorB = "rgb(68, 58, 110)";
+	// Filter items by zone value
+	Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) =>
+	{
+		return item.Area == (Areas)zone.Value;
+	};
+	//Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
+	Func<RadzenDropZoneItemEventArgs<Overlays>, bool> CanDrop = request =>
+	{
+		if (request.ToZone.Value.ToString() == "Select") return false;
+		return true;
+	};
+
+	//void OnItemRender(RadzenDropZoneItemRenderEventArgs<Overlays> args)
+	//{
+
+	private void OnNaviClick(string goTo)
+	{
+		Navi.NavigateTo(goTo);
+	}
+
+	private async Task onBoxAColorChange(string value)
+	{
+		colorA = value;
+		if (OverlayViewModel.OverlayA == null) return;
+		if (OverlayViewModel.OverlayA.OverlayBmp == null) return;
+		OverlayViewModel.ChangeOverlayColor(true, colorA);
+		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task onBoxBColorChange(string value)
+	{
+		colorB = value;
+		if (OverlayViewModel.OverlayB == null) return;
+		if (OverlayViewModel.OverlayB.OverlayBmp == null) return;
+		OverlayViewModel.ChangeOverlayColor(false, colorB);
+		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task OnSetupChanged()
+	{
+		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
+		if (AppState.UserId == null) return;
+		await UserSettingsViewModel.UpdateIsStandard((Guid)AppState.UserId, standard);
+		await UserSettingsViewModel.UpdateIsCenterLine((Guid)AppState.UserId, centerLine);
+		await UserSettingsViewModel.UpdateIsGridLine((Guid)AppState.UserId, gridLine);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task OnCharaSelected(string? _selectedChara)
+	{
+		if (_selectedChara == null) return;
+		if (accessToken == null) return;
+
+		isLoading = true;
+		await InvokeAsync(StateHasChanged);
+
+		Console.WriteLine("クリアします");
+		OverlayViewModel.ClearOverlayA();
+		OverlayViewModel.ClearOverlayB();
+		OverlayViewModel.ViewBitmap = null;
+		await ChangeChara(_selectedChara);
+
+		isLoading = false;
+		await InvokeAsync(StateHasChanged);
+	}
+	private async Task OnDrop(RadzenDropZoneItemEventArgs<Overlays> args)
+	{
+		Console.WriteLine($"args (From) = {args.FromZone.Value.ToString()}");
+		Console.WriteLine($"args (To) = {args.ToZone.Value.ToString()}");
+		Console.WriteLine($"args (Item) = {args.Item.Name}");
+		if (args.ToZone.Value.ToString() == "BoxA") {
+			OverlayViewModel.OverlayA = new OverlayDataClass(args.Item.overlay);
+			var toColor = ImageEffectService.ConvertRgbStringToSKColor(colorA);
+			OverlayViewModel.OverlayA.OverlayBmp = ImageEffectService.ColorChangeBitmap(OverlayViewModel.OverlayA.OverlayBmp, toColor);
+
+		}
+		if (args.ToZone.Value.ToString() == "BoxB") {
+			OverlayViewModel.OverlayB = new OverlayDataClass(args.Item.overlay);
+			var toColor = ImageEffectService.ConvertRgbStringToSKColor(colorB);
+			OverlayViewModel.OverlayB.OverlayBmp = ImageEffectService.ColorChangeBitmap(OverlayViewModel.OverlayB.OverlayBmp, toColor);
+		}
+
+		await OverlayViewModel.MakeViewBitmap(centerLine, gridLine, standard);
+		await InvokeAsync(StateHasChanged);
+	}
+
+	List<Overlays> data = new ();
+	List<OverlayDataClass> overlayItems = new ();
+
+	private async Task ChangeChara(string charaName)
+	{
+		// アクセストークンを取得
+		accessToken = await TokenStorage.GetAccessTokenAsync();
+		Console.WriteLine($"accessToken = {accessToken}");
+		if (string.IsNullOrEmpty(accessToken))
+		{
+			Navi.NavigateTo("/auth");
+			return;
+		}
+
+		Console.WriteLine("accessTokenCheck...");
+		if (!(await BoxFileService.IsTokenValidAsync(accessToken)))
+		{
+			Navi.NavigateTo("/auth");
+			return;
+		}
+		if (AppState.UserId != null) await UserSettingsViewModel.GetUserSettings((Guid)AppState.UserId);
+
+		projectId = AppState.CurrentProjectId;
+		if (projectId == null) return;
+
+		isCharaLoading = true;
+		await InvokeAsync(StateHasChanged);
+		await OverlayViewModel.InitMaterialsData((Guid)projectId);
+		OverlayViewModel.ClearOverlayBitmapA();
+		OverlayViewModel.ClearOverlayBitmapB();
+		data.Clear();
+		int count = 0;
+		foreach (var material in OverlayViewModel.GetMaterials())
+		{
+			var overlay = await OverlayViewModel.MakeOverlayDataAsync((Guid)projectId, charaName, material, accessToken);
+			Overlays newItem = new();
+			newItem.Id = count;
+			newItem.Area = Areas.Select;
+			newItem.Name = overlay.MaterialName;
+			newItem.overlay = overlay;
+			data.Add(newItem);
+			count++;
+			Console.WriteLine($"chara={overlay.CharaName} material={overlay.MaterialName} 個数 = {overlay.SelectedItemCount}");
+		}
+		await OverlayViewModel.SetStandardBitmap(accessToken, charaName);
+
+		isCharaLoading = false;
+		await InvokeAsync(StateHasChanged);
+
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
+
+		try
+		{
+			Console.WriteLine($"userId = {AppState.UserId}");
+			if (!AppState.IsLoggedIn)
+			{
+				isLoading = false;
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
+
+			userId = AppState.UserId;
+			// ユーザ設定の読み込み
+			if (AppState.UserId != null) await UserSettingsViewModel.GetUserSettings((Guid)AppState.UserId);
+			standard = UserSettingsViewModel.UserSettings.IsStandard;
+			centerLine = UserSettingsViewModel.UserSettings.IsCenterLine;
+			gridLine = UserSettingsViewModel.UserSettings.IsGridLine;
+
+			projectId = AppState.CurrentProjectId;
+			if (projectId == null || string.IsNullOrEmpty(projectId.ToString()))
+			{
+				isLoading = false;
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
+
+			// アクセストークンを取得
+			accessToken = await TokenStorage.GetAccessTokenAsync();
+			if (string.IsNullOrEmpty(accessToken))
+			{
+				Navi.NavigateTo("/auth");
+				return;
+			}
+			await UsersViewModel.SetUserInfoToAppState();
+			
+			await CharaDataViewModel.InitCharactersData((Guid)projectId);
+
+			isCharaLoading = false;
+			isLoading = false;
+			await InvokeAsync(StateHasChanged);
+		}
+		catch (JSDisconnectedException)
+		{
+    		Console.WriteLine("JavaScript interop failed due to disconnected circuit.");
+		}
+	}
+	public class Overlays
+	{
+		public int Id { get; set; }
+		public string Name { get; set; } = "";
+		public Areas Area { get; set; } = Areas.Select;
+		public OverlayDataClass overlay { get; set; } = new();
+	}
+
+    public enum Areas
+    {
+        BoxA,
+        BoxB,
+        Select,
+    }
+}

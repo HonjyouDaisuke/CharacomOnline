@@ -1,13 +1,17 @@
 ﻿using System.Text.RegularExpressions;
+using System.Text.Json.Serialization;
 
 namespace CharacomOnline.Service;
 
 public struct FileInformation
 {
+  [JsonPropertyName("chara_name")]
   public string CharaName { get; set; }
 
+  [JsonPropertyName("material_name")]
   public string MaterialName { get; set; }
 
+  [JsonPropertyName("times_name")]
   public string TimesName { get; set; }
 }
 
@@ -18,7 +22,7 @@ public static class FileNameService
     return Path.GetExtension(fileName);
   }
 
-  public static FileInformation GetDataInfo(string fileName)
+  public static FileInformation? GetDataInfo(string fileName)
   {
     FileInformation resData = new();
 
@@ -33,7 +37,15 @@ public static class FileNameService
     else
     {
       Console.WriteLine("ファイル名の形式が正しくありません。");
+      return null;
     }
+
+    if (string.IsNullOrEmpty(resData.CharaName))
+      return null;
+    if (string.IsNullOrEmpty(resData.MaterialName))
+      return null;
+    if (string.IsNullOrEmpty(resData.TimesName))
+      return null;
     return resData;
   }
 }

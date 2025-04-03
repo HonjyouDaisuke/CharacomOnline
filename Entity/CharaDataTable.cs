@@ -26,4 +26,11 @@ public class CharaDataTable : BaseModel
 
   [Column("times_name")]
   public string? TimesName { get; set; }
+
+  [Column("updated_at")]
+  public DateTime UpdatedAt { get; set; }
+
+  [Column("updated_by")]
+  public Guid? UpdatedBy { get; set; }
+
 }

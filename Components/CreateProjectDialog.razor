@@ -1,193 +1,197 @@
 ﻿@using CharacomOnline.Service
 @using CharacomOnline.Entity
 @using CharacomOnline.Shared
+@using CharacomOnline.ViewModel
+
 @inject DialogService DialogService
 @inject BoxFileService BoxFileService
+@inject GlobalSettingViewModel GlobalSettingViewModel
 @inject SessionStorageService SessionStorage
 @inject TokenStorage TokenStorage
 @inject NavigationManager NavigationManager
 
 @namespace CharacomOnline.Components
 <RadzenStack Gap="1.5rem">
-    <RadzenStack Orientation="Radzen.Orientation.Vertical" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-        <RadzenFormField Text="プロジェクト名" Variant="Variant.Outlined" Style="width: 100%;">
-            <RadzenTextBox @bind-Value="@projectName" class="full-width" />
-        </RadzenFormField>
-        <RadzenFormField Text="プロジェクトの説明" Variant="Variant.Outlined" Style="width: 100%;">
-            <RadzenTextArea @bind-Value="@description" />
-        </RadzenFormField>
-        <RadzenRow>
-            <RadzenColumn>
-                <RadzenLabel Text="プロジェクトフォルダ" Component="DropDownBindValue" />
-                <RadzenDropDown Value="projectFolderId"
-                                TValue="string"
-                                Data="projectFolderCandidates"
-                                TextProperty="Name"
-                                ValueProperty="Id"
-                                Style="width: 100%;"
-                                ValueChanged="async (value) => await OnProjectFolderSelected(value)"
-                                Name="DropDownBindValue" />
-            </RadzenColumn>
-        </RadzenRow>
-        <p>@projectFolderId</p>
-        <RadzenRow>
-            <RadzenColumn>
-                <RadzenLabel Text="切出しフォルダ" Component="CharaDropDownBindValue" />
-                <RadzenDropDown @bind-Value="charaFolderId"
-                                Data="charaFolderCandidates"
-                                TextProperty="Name"
-                                ValueProperty="Id"
-                                Style="width: 100%;"
-                                Name="CharaDropDownBindValue" />
-            </RadzenColumn>
-        </RadzenRow>
-        <RadzenRow>
-            <RadzenColumn>
-                <RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="async () => await OnCancel()">キャンセル</RadzenButton>
-                <RadzenButton ButtonStyle="ButtonStyle.Primary" Click="async () => await OnCreate()">作成</RadzenButton>
-            </RadzenColumn>
-        </RadzenRow>
-    </RadzenStack>
+	<RadzenStack Orientation="Radzen.Orientation.Vertical" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+		<RadzenFormField Text="プロジェクト名" Variant="Variant.Outlined" Style="width: 100%;">
+			<RadzenTextBox @bind-Value="@projectName" class="full-width" />
+		</RadzenFormField>
+		<RadzenFormField Text="プロジェクトの説明" Variant="Variant.Outlined" Style="width: 100%;">
+			<RadzenTextArea @bind-Value="@description" />
+		</RadzenFormField>
+		<RadzenRow>
+			<RadzenColumn>
+				<RadzenLabel Text="プロジェクトフォルダ" Component="DropDownBindValue" />
+				<RadzenDropDown Value="projectFolderId"
+				TValue="string"
+				Data="projectFolderCandidates"
+				TextProperty="Name"
+				ValueProperty="Id"
+				Style="width: 100%;"
+				ValueChanged="async (value) => await OnProjectFolderSelected(value)"
+				Name="DropDownBindValue" />
+			</RadzenColumn>
+		</RadzenRow>
+		<p>@projectFolderId</p>
+		<RadzenRow>
+			<RadzenColumn>
+				<RadzenLabel Text="切出しフォルダ" Component="CharaDropDownBindValue" />
+				<RadzenDropDown @bind-Value="charaFolderId"
+				Data="charaFolderCandidates"
+				TextProperty="Name"
+				ValueProperty="Id"
+				Style="width: 100%;"
+				Name="CharaDropDownBindValue" />
+			</RadzenColumn>
+		</RadzenRow>
+		<RadzenRow>
+			<RadzenColumn>
+				<RadzenButton ButtonStyle="ButtonStyle.Secondary" Click="async () => await OnCancel()">キャンセル</RadzenButton>
+				<RadzenButton ButtonStyle="ButtonStyle.Primary" Click="async () => await OnCreate()">作成</RadzenButton>
+			</RadzenColumn>
+		</RadzenRow>
+	</RadzenStack>
 </RadzenStack>
 
 @code {
 
-    [Parameter]
-    public EventCallback<CreateProjectDialogResults> OnDialogClosed { get; set; }
-    private string projectName = "";
-    private string description = "";
-    private string projectFolderId = "";
-    private string charaFolderId = "";
-    private string? topFolder = "";
+	[Parameter]
+	public EventCallback<CreateProjectDialogResults> OnDialogClosed { get; set; }
+	private string projectName = "";
+	private string description = "";
+	private string projectFolderId = "";
+	private string charaFolderId = "";
+	private string? topFolder = "";
 
-    List<Folders> projectFolderCandidates = new ();
-    List<Folders> charaFolderCandidates = new();
+	List<Folders> projectFolderCandidates = new ();
+	List<Folders> charaFolderCandidates = new();
 
-    public class Folders
-    {
-        public string? Name { get; set; }
-        public string? Id { get; set; }
-    }
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-        // アクセストークンを取得
-        var accessToken = await TokenStorage.GetAccessTokenAsync();
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            throw new Exception("Access token not found. Please authenticate first.");
-        }
+	public class Folders
+	{
+		public string? Name { get; set; }
+		public string? Id { get; set; }
+	}
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
+		// アクセストークンを取得
+		var accessToken = await TokenStorage.GetAccessTokenAsync();
+		if (string.IsNullOrEmpty(accessToken))
+		{
+			throw new Exception("Access token not found. Please authenticate first.");
+		}
 
-        topFolder = await SessionStorage.GetTopFolderId();
+		topFolder = await SessionStorage.GetTopFolderId();
 
 
-        if (topFolder == "")
-        {
-            throw new Exception("Boxの初期フォルダが読み取れませんでした");
-        }
+		if (topFolder == null || topFolder == "")
+		{
+			var setting = await GlobalSettingViewModel.GetGlobalSettings();
+			topFolder = setting.TopFolderId;
+		}
 
-        var boxProjectFolders = await BoxFileService.GetFolderItemsAsync(topFolder, 100, 0, accessToken);
+		var boxProjectFolders = await BoxFileService.GetFolderItemsAsync(topFolder, 100, 0, accessToken);
 
-        if (boxProjectFolders == null || boxProjectFolders.Count <= 0)
-        {
-            NavigationManager.NavigateTo("/auth/");
-            return;
-        }
-        foreach(var item in boxProjectFolders)
-        {
-            if (item.Type != "folder") continue;
-            Folders newItem = new Folders{
+		if (boxProjectFolders == null || boxProjectFolders.Count <= 0)
+		{
+			NavigationManager.NavigateTo("/auth/");
+			return;
+		}
+		foreach(var item in boxProjectFolders)
+		{
+			if (item.Type != "folder") continue;
+			Folders newItem = new Folders{
                 Name=item.Name,
                 Id=item.Id
             };
 
-            projectFolderCandidates.Add(newItem);
-        }
-        
-        await InvokeAsync(StateHasChanged);
-    }
+			projectFolderCandidates.Add(newItem);
+		}
 
-    private async Task OnProjectFolderSelected(object value)
-    {
-        projectFolderId = value.ToString();
+		await InvokeAsync(StateHasChanged);
+	}
 
-        if (!string.IsNullOrEmpty(projectFolderId))
-        {
-            await OnChangeProject(); // 値が設定された後に呼び出す
-        }
-    }
+	private async Task OnProjectFolderSelected(object value)
+	{
+		projectFolderId = value.ToString() ?? "";
 
-    private async Task<string?> getFolderName(string folderId)
-    {
-        foreach(var item in projectFolderCandidates)
-        {
-            if (item.Id == folderId)
-            {
-                return item.Name;
-            }
-        }
-        return null;
-    }
-    private async Task OnChangeProject()
-    {
-        projectName = await getFolderName(projectFolderId);
-        var accessToken = await TokenStorage.GetAccessTokenAsync();
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            throw new Exception("Access token not found. Please authenticate first.");
-        }
+		if (!string.IsNullOrEmpty(projectFolderId))
+		{
+			await OnChangeProject(); // 値が設定された後に呼び出す
+		}
+	}
 
-        Console.WriteLine($"OnChange folderId={projectFolderId}");
-        var boxCharaFolders = await BoxFileService.GetFolderItemsAsync(projectFolderId, 100, 0, accessToken);
+	private string? getFolderName(string folderId)
+	{
+		foreach(var item in projectFolderCandidates)
+		{
+			if (item.Id == folderId)
+			{
+				return item.Name;
+			}
+		}
+		return null;
+	}
+	private async Task OnChangeProject()
+	{
+		projectName = getFolderName(projectFolderId) ?? "";
+		var accessToken = await TokenStorage.GetAccessTokenAsync();
+		if (string.IsNullOrEmpty(accessToken))
+		{
+			throw new Exception("Access token not found. Please authenticate first.");
+		}
 
-        foreach (var item in boxCharaFolders)
-        {
-            if (item.Type != "folder") continue;
-            Folders newItem = new Folders
-                {
-                    Name = item.Name,
-                    Id = item.Id
-                };
+		Console.WriteLine($"OnChange folderId={projectFolderId}");
+		var boxCharaFolders = await BoxFileService.GetFolderItemsAsync(projectFolderId, 100, 0, accessToken);
+		if (boxCharaFolders == null) return;
+		foreach (var item in boxCharaFolders)
+		{
+			if (item.Type != "folder") continue;
+			Folders newItem = new Folders
+			{
+				Name = item.Name,
+				Id = item.Id
+			};
 
-            charaFolderCandidates.Add(newItem);
-        }
-        await InvokeAsync(StateHasChanged);
-    }
+			charaFolderCandidates.Add(newItem);
+		}
+		await InvokeAsync(StateHasChanged);
+	}
 
 
-    private async Task OnCreate()
-    {
-        if (OnDialogClosed.HasDelegate)
-        {
-            
-            var result = new CreateProjectDialogResults
-                {
-                    IsCanceled = false,
-                    Title = projectName,
-                    Description = description,
-                    FolderId = projectFolderId,
-                    CharaFolderId = charaFolderId,
-                };
-            Console.WriteLine($"Title = {result.Title} Description = {result.Description}");
-            await OnDialogClosed.InvokeAsync(result);
-        }
-        DialogService.Close();
-    }
+	private async Task OnCreate()
+	{
+		if (OnDialogClosed.HasDelegate)
+		{
 
-    private async Task OnCancel()
-    {
-        if (OnDialogClosed.HasDelegate)
-        {
-            var result = new CreateProjectDialogResults
-                {
-                    IsCanceled = true,
-                    Title = "",
-                    Description = "",
-                    FolderId = "",
-                    CharaFolderId = "",
-                };
-            await OnDialogClosed.InvokeAsync(result);
-        }
-        DialogService.Close();
-    }
+			var result = new CreateProjectDialogResults
+			{
+				IsCanceled = false,
+				Title = projectName,
+				Description = description,
+				FolderId = projectFolderId,
+				CharaFolderId = charaFolderId,
+			};
+			Console.WriteLine($"Title = {result.Title} Description = {result.Description}");
+			await OnDialogClosed.InvokeAsync(result);
+		}
+		DialogService.Close();
+	}
+
+	private async Task OnCancel()
+	{
+		if (OnDialogClosed.HasDelegate)
+		{
+			var result = new CreateProjectDialogResults
+			{
+				IsCanceled = true,
+				Title = "",
+				Description = "",
+				FolderId = "",
+				CharaFolderId = "",
+			};
+			await OnDialogClosed.InvokeAsync(result);
+		}
+		DialogService.Close();
+	}
 }

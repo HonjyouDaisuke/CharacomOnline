@@ -1,0 +1,46 @@
+@namespace CharacomOnline.Components
+
+<RadzenCard>
+	<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.End" Gap="4">
+		<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
+			<RadzenLabel>グリッドライン</RadzenLabel>
+			<RadzenSwitch @bind-Value="IsGridLine" Change="@(async (arg) => {
+				await IsGridChanged.InvokeAsync(arg);
+				if (Changed.HasValue) await Changed.Value.InvokeAsync();})" />
+		</RadzenStack>
+		<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
+			<RadzenLabel>センターライン</RadzenLabel>
+			<RadzenSwitch @bind-Value="IsCenterLine" Change="@(async (arg) => {
+				await IsCenterLineChanged.InvokeAsync(arg);
+				if (Changed.HasValue) await Changed.Value.InvokeAsync();})" />
+		</RadzenStack>
+		<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center">
+			<RadzenLabel>標準文字</RadzenLabel>
+			<RadzenSwitch @bind-Value="IsStandard" Change="@(async (arg) => {
+				await IsStandardChanged.InvokeAsync(arg);
+				if (Changed.HasValue) await Changed.Value.InvokeAsync();})" />
+		</RadzenStack>
+	</RadzenStack>
+</RadzenCard>
+
+@code {
+	[Parameter]
+	public bool IsGridLine { get; set; } = false;
+	[Parameter]
+	public bool IsCenterLine { get; set; }= false;
+	[Parameter]
+	public bool IsStandard { get; set; }= false;
+
+	[Parameter]
+	public EventCallback<bool> IsGridChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<bool> IsCenterLineChanged { get; set; }
+
+	[Parameter]
+	public EventCallback<bool> IsStandardChanged { get; set; }
+
+	[Parameter]
+	public EventCallback? Changed { get; set; }
+
+}

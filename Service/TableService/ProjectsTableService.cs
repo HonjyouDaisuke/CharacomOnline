@@ -12,7 +12,8 @@ public class ProjectsTableService(Client supabaseClient)
     string title,
     string description,
     string folderId,
-    string charaFolderId
+    string charaFolderId,
+    Guid userId
   )
   {
     if (await IsProjectTitleExists(title))
@@ -29,6 +30,10 @@ public class ProjectsTableService(Client supabaseClient)
       Description = description,
       FolderId = folderId,
       CharaFolderId = charaFolderId,
+      CreatedAt = DateTime.Now,
+      CreatedBy = userId,
+      UpdatedAt = DateTime.Now,
+      UpdatedBy = userId,
     };
 
     // データベースに挿入
@@ -164,5 +169,53 @@ public class ProjectsTableService(Client supabaseClient)
     }
 
     return projectViewData;
+  }
+
+  public async Task UpdateProjectNameAsync(
+    Guid projectId,
+    string projectName,
+    string projectDescription,
+    Guid userId
+  )
+  {
+    try
+    {
+      var response = await _supabaseClient
+        .From<ProjectsTable>() // 更新するテーブル
+        .Where(x => x.Id == projectId) // 条件を LINQ の形で指定
+        .Set(x => x.Title ?? "", projectName ?? "")
+        .Set(x => x.Description ?? "", projectDescription ?? "")
+        .Set(x => x.UpdatedBy, userId) // UpdatedBy を更新
+        .Set(x => x.UpdatedAt, DateTime.Now) // UpdatedAt を更新
+        .Update();
+
+      // レスポンスを確認
+      if (response != null && response.Models.Count > 0)
+      {
+        Console.WriteLine("プロジェクト情報を更新しました。");
+      }
+      else
+      {
+        Console.WriteLine("更新に失敗しました。");
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
+  }
+
+  public async Task DeleteProjectAsync(Guid projectId)
+  {
+    try
+    {
+      await _supabaseClient.From<ProjectsTable>().Where(x => x.Id == projectId).Delete();
+
+      Console.WriteLine("projectsテーブル、削除成功");
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex.Message);
+    }
   }
 }

@@ -9,169 +9,171 @@
 
 @if(isLoading)
 {
-    <RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
-        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-    </RadzenStack>
+	<RadzenStack AlignItems="AlignItems.Center" class="rz-m-12" Gap="2rem">
+		<RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+	</RadzenStack>
 }
 else if (isLoginError)
 {
-    <h3>ログインエラー</h3>
+	<h3>ログインエラー</h3>
 
-    <p>正しくログインできていません、boxにログインしてください。</p>
+	<p>正しくログインできていません、boxにログインしてください。</p>
 }
 else
 {
-    if (isProgress)
-    {
-        <RadzenCard>
-            <RadzenProgressBar @bind-Value="@progressValue" Max="@progressMax" Unit="@unitString" />
-        </RadzenCard>
+	if (isProgress)
+	{
+		<RadzenCard>
+			<RadzenProgressBar @bind-Value="@progressValue" Max="@progressMax" Unit="@unitString" />
+		</RadzenCard>
 
-    }
-    else
-    {
-        <h3>CharacomImager設定</h3>
-        <RadzenButton Click=@(async () => await StandardProc())>標準字体初期化</RadzenButton>
+	}
+	else
+	{
+		<h3>CharacomImager設定</h3>
+		<RadzenButton Click=@(async () => await StandardProc())>標準字体初期化</RadzenButton>
 
-        <RadzenButton Click=@(async () => await StrokeProc())>筆順書体初期化</RadzenButton>
-        <br />
-        <p>@msg</p>
-    }
-    
+		<RadzenButton Click=@(async () => await StrokeProc())>筆順書体初期化</RadzenButton>
+		<br />
+		<p>@msg</p>
+	}
+
 }
 
 
 
 
 @code {
-    private bool isLoginError = true;
-    private bool isLoading = true;
-    private bool isProgress = false;
-    private string? topFolder;
-    private string? standardFolder;
-    private string? strokeFolder;
-    private double progressValue = 0;
-    private double progressMax = 0;
-    private string unitString = "";
-    private string msg = "";
+	private bool isLoginError = true;
+	private bool isLoading = true;
+	private bool isProgress = false;
+	private string? topFolder;
+	private string? standardFolder;
+	private string? strokeFolder;
+	private double progressValue = 0;
+	private double progressMax = 0;
+	private string unitString = "";
+	private string msg = "";
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-        // アクセストークンを取得
-        var accessToken = await TokenStorage.GetAccessTokenAsync();
-        if (string.IsNullOrEmpty(accessToken))
-        {
-            isLoading = false;
-            throw new Exception("Access token not found. Please authenticate first.");
-        }
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
+		// アクセストークンを取得
+		var accessToken = await TokenStorage.GetAccessTokenAsync();
+		if (string.IsNullOrEmpty(accessToken))
+		{
+			isLoading = false;
+			throw new Exception("Access token not found. Please authenticate first.");
+		}
 
-        topFolder = await SessionStorage.GetTopFolderId();
-        standardFolder = await SessionStorage.GetStandardFolderId();
-        strokeFolder = await SessionStorage.GetStrokeFolderId();
+		topFolder = await SessionStorage.GetTopFolderId();
+		standardFolder = await SessionStorage.GetStandardFolderId();
+		strokeFolder = await SessionStorage.GetStrokeFolderId();
 
-        if (topFolder == ""  || standardFolder == "" || strokeFolder == "")
-        {
-            isLoading = false;
-            throw new Exception("Boxの初期フォルダが読み取れませんでした");
-        }
+		if (topFolder == ""  || standardFolder == "" || strokeFolder == "")
+		{
+			isLoading = false;
+			throw new Exception("Boxの初期フォルダが読み取れませんでした");
+		}
 
-        await GlobalSettingViewModel.FetchAllMasterAsync();
-        isLoginError = false;
-        isLoading = false;
+		await GlobalSettingViewModel.FetchAllMasterAsync();
+		isLoginError = false;
+		isLoading = false;
 
-        await InvokeAsync(StateHasChanged);
-    }
+		await InvokeAsync(StateHasChanged);
+	}
 
-    public async Task StandardProc()
-    {
-        // アクセストークンを取得
-        var accessToken = await TokenStorage.GetAccessTokenAsync();
+	public async Task StandardProc()
+	{
+		// アクセストークンを取得
+		var accessToken = await TokenStorage.GetAccessTokenAsync();
 
-        // 標準書体のファイル数を取得
-        var standardFiles = await BoxFileService.GetFolderFileCountAsync(standardFolder, accessToken);
-
-
-        Console.WriteLine($"TotalFileCount = {standardFiles}");
-        isProgress = true;
-        progressMax = standardFiles;
-        progressValue = 0;
-        int offset = 0;
-        int limit = 100;
-        await InvokeAsync(StateHasChanged);
-        while(true)
-        {
-            // 標準書体のフォルダから標準書体画像をリストアップ
-            var fileList = await BoxFileService.GetFolderItemsAsync(standardFolder, limit, offset, accessToken);
-            if (fileList == null || fileList.Count == 0) break;
-
-            foreach (var item in fileList)
-            {
-                progressValue++;
-                await InvokeAsync(StateHasChanged);
-                if (item.Type != "file") continue;
-                if (item.Name == "") continue;
-                var extension = FileNameService.GetExtension(item.Name);
-                if (extension != ".jpeg" && extension != ".jpg") continue;
-                Console.WriteLine($"installing... No.{(int)progressValue} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}");
-                await GlobalSettingViewModel.InsertStandardMasterAsync(item.Name[0].ToString(), item.Id);
-                msg = $"installing... No.{(int)progressValue} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}";
-                await InvokeAsync(StateHasChanged);
-            }
-
-            if (progressValue > standardFiles) break;
-            offset += limit;
-        }
-        progressMax = 0;
-        progressValue = 0;
-        isProgress = false;
-        await InvokeAsync(StateHasChanged);
-        return;
-    }
-
-    public async Task StrokeProc()
-    {
-        // アクセストークンを取得
-        var accessToken = await TokenStorage.GetAccessTokenAsync();
-
-        // 標準書体のファイル数を取得
-        var strokeFiles = await BoxFileService.GetFolderFileCountAsync(strokeFolder, accessToken);
+		// 標準書体のファイル数を取得
+		var standardFiles = await BoxFileService.GetFolderFileCountAsync(standardFolder, accessToken);
 
 
-        Console.WriteLine($"TotalFileCount = {strokeFiles}");
-        isProgress = true;
-        progressMax = strokeFiles;
-        progressValue = 0;
-        int offset = 0;
-        int limit = 100;
-        await InvokeAsync(StateHasChanged);
-        while (true)
-        {
-            // 標準書体のフォルダから標準書体画像をリストアップ
-            var fileList = await BoxFileService.GetFolderItemsAsync(strokeFolder, limit, offset, accessToken);
-            if (fileList == null || fileList.Count == 0) break;
+		Console.WriteLine($"TotalFileCount = {standardFiles}");
+		isProgress = true;
+		progressMax = standardFiles;
+		progressValue = 0;
+		int offset = 0;
+		int limit = 100;
+		await InvokeAsync(StateHasChanged);
+		while(true)
+		{
+			// 標準書体のフォルダから標準書体画像をリストアップ
+			var fileList = await BoxFileService.GetFolderItemsAsync(standardFolder, limit, offset, accessToken);
+			if (fileList == null || fileList.Count == 0) break;
 
-            foreach (var item in fileList)
-            {
-                progressValue++;
-                await InvokeAsync(StateHasChanged);
-                if (item.Type != "file") continue;
-                if (item.Name == "") continue;
-                var extension = FileNameService.GetExtension(item.Name);
-                if (extension != ".jpeg" && extension != ".jpg") continue;
-                Console.WriteLine($"installing... No.{(int)progressValue} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}");
-                await GlobalSettingViewModel.InsertStrokeMasterAsync(item.Name[0].ToString(), item.Id);
-                msg = $"installing... No.{(int)progressValue} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}";
-                await InvokeAsync(StateHasChanged);
-            }
+			foreach (var item in fileList)
+			{
+				progressValue++;
+				await InvokeAsync(StateHasChanged);
+				if (item.Type != "file") continue;
+				if (item.Name == "") continue;
+				var extension = FileNameService.GetExtension(item.Name);
+				if (extension != ".jpeg" && extension != ".jpg") continue;
+				Console.WriteLine($"installing... No.{(int)progressValue} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}");
+				await GlobalSettingViewModel.InsertStandardMasterAsync(item.Name[0].ToString(), item.Id);
+				msg = $"installing... No.{(int)progressValue} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}";
+				await InvokeAsync(StateHasChanged);
+			}
 
-            if (progressValue > strokeFiles) break;
-            offset += limit;
-        }
-        progressMax = 0;
-        progressValue = 0;
-        isProgress = false;
-        await InvokeAsync(StateHasChanged);
-        return;
-    }
+			if (progressValue > standardFiles) break;
+			offset += limit;
+		}
+		progressMax = 0;
+		progressValue = 0;
+		isProgress = false;
+		await InvokeAsync(StateHasChanged);
+		return;
+	}
+
+	public async Task StrokeProc()
+	{
+		// アクセストークンを取得
+		var accessToken = await TokenStorage.GetAccessTokenAsync();
+		if (string.IsNullOrEmpty(strokeFolder)) return;
+		if (string.IsNullOrEmpty(accessToken)) return;
+
+		// 標準書体のファイル数を取得
+		var strokeFiles = await BoxFileService.GetFolderFileCountAsync(strokeFolder, accessToken);
+
+
+		Console.WriteLine($"TotalFileCount = {strokeFiles}");
+		isProgress = true;
+		progressMax = strokeFiles;
+		progressValue = 0;
+		int offset = 0;
+		int limit = 100;
+		await InvokeAsync(StateHasChanged);
+		while (true)
+		{
+			// 標準書体のフォルダから標準書体画像をリストアップ
+			var fileList = await BoxFileService.GetFolderItemsAsync(strokeFolder, limit, offset, accessToken);
+			if (fileList == null || fileList.Count == 0) break;
+
+			foreach (var item in fileList)
+			{
+				progressValue++;
+				await InvokeAsync(StateHasChanged);
+				if (item.Type != "file") continue;
+				if (item.Name == "") continue;
+				var extension = FileNameService.GetExtension(item.Name);
+				if (extension != ".jpeg" && extension != ".jpg") continue;
+				Console.WriteLine($"installing... No.{(int)progressValue} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}");
+				await GlobalSettingViewModel.InsertStrokeMasterAsync(item.Name[0].ToString(), item.Id);
+				msg = $"installing... No.{(int)progressValue} fileName = {item.Name} type = {item.Type} 拡張子：{FileNameService.GetExtension(item.Name)}";
+				await InvokeAsync(StateHasChanged);
+			}
+
+			if (progressValue > strokeFiles) break;
+			offset += limit;
+		}
+		progressMax = 0;
+		progressValue = 0;
+		isProgress = false;
+		await InvokeAsync(StateHasChanged);
+		return;
+	}
 }

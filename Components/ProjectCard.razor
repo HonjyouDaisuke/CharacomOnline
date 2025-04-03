@@ -1,28 +1,71 @@
 ﻿@using CharacomOnline.Entity
-
+@inject ContextMenuService ContextMenuService
 <RadzenCard @onclick="OnCardClick" Style="@(Project?.GetCardStyle() ?? ";")">
-    <RadzenStack Orientation="Radzen.Orientation.Vertical">
-        <RadzenText class="rz-text-truncate" TextStyle="TextStyle.H6">@Project?.Name</RadzenText>
-        <RadzenText TextStyle="TextStyle.Body1">@Project?.Description</RadzenText>
-        <RadzenStack Orientation="Radzen.Orientation.Horizontal">
-            <RadzenIcon Icon="account_box" /> @(Project?.Users)人
-            <RadzenIcon Icon="image" /> @(Project?.Characters)個
-        </RadzenStack>
-    </RadzenStack>
+	<RadzenStack Orientation="Radzen.Orientation.Vertical">
+		<RadzenStack Orientation="Radzen.Orientation.Horizontal" Style="width: 100%;">
+			<RadzenText class="rz-text-truncate" TextStyle="TextStyle.H6">@Project?.Name</RadzenText>
+			<RadzenButton Icon="more_horiz" ButtonStyle="ButtonStyle.Primary"
+			Click="@((args) => ShowContextMenuItems(args))" Style="margin-left: auto;" 	Size="ButtonSize.Small"/>
+		</RadzenStack>
+		<RadzenText TextStyle="TextStyle.Body1">@Project?.Description</RadzenText>
+		<RadzenStack Orientation="Radzen.Orientation.Horizontal">
+			<RadzenIcon Icon="group" /> @(Project?.Users)人
+			<RadzenIcon Icon="image" /> @(Project?.Characters)個
+		</RadzenStack>
+	</RadzenStack>
 </RadzenCard>
 
 @code {
-    [Parameter]
-    public ProjectViewData? Project { get; set; }
+	[Parameter]
+	public ProjectViewData? Project { get; set; }
 
-    [Parameter]
-    public EventCallback<ProjectViewData> CardClick { get; set; }
+	[Parameter]
+	public EventCallback<ProjectViewData> CardClick { get; set; }
 
-    private async Task OnCardClick()
-    {
-        if (CardClick.HasDelegate)
-        {
-            await CardClick.InvokeAsync(Project);
-        }
-    }
+	[Parameter]
+	public EventCallback<ProjectViewData> RenameClick { get; set; }
+
+	[Parameter]
+	public EventCallback<ProjectViewData> DeleteClick { get; set; }
+
+	private async Task OnCardClick()
+	{
+		if (CardClick.HasDelegate)
+		{
+			await CardClick.InvokeAsync(Project);
+		}
+	}
+
+	private void ShowContextMenuItems(MouseEventArgs args)
+	{
+		ContextMenuService.Open(args,
+			new List<ContextMenuItem> {
+				new ContextMenuItem(){ Text = "名前の変更", Value = 1, Icon="edit_square"},
+				new ContextMenuItem(){ Text = "削除", Value=2,Icon="delete"},
+				},
+			(MenuItemEventArgs args) => Task.Run(async () => await OnMenuItemClick(args))
+		);
+	}
+
+	private async Task OnMenuItemClick(MenuItemEventArgs args)
+	{
+		Console.WriteLine(args.Value);
+		ContextMenuService.Close();
+		switch (args.Value)
+		{
+			case 1:
+				if (RenameClick.HasDelegate)
+				{
+					await RenameClick.InvokeAsync(Project);
+				}
+				break;
+			case 2:
+				if (DeleteClick.HasDelegate)
+				{
+					await DeleteClick.InvokeAsync(Project);
+				}
+				break;
+		}
+		
+	}
 }

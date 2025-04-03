@@ -1,9 +1,9 @@
-﻿using CharacomOnline.Entity;
+﻿using System.Net;
+using System.Net.Http.Headers;
+using CharacomOnline.Entity;
 using Microsoft.AspNetCore.Components;
 using Newtonsoft.Json;
 using SkiaSharp;
-using System.Net;
-using System.Net.Http.Headers;
 
 namespace CharacomOnline.Service;
 
@@ -25,6 +25,26 @@ public class BoxFileService
     _appState = appState ?? throw new ArgumentNullException(nameof(appState));
     Console.WriteLine($"AppState.UserId = {_appState.UserId}");
     Console.WriteLine($"BoxFileService initialized with HttpClient: {_httpClient}");
+  }
+
+  public async Task<bool> IsTokenValidAsync(string accessToken)
+  {
+    try
+    {
+      // API リクエスト設定
+      var request = new HttpRequestMessage(HttpMethod.Get, "https://api.box.com/2.0/users/me");
+      request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+      // API にリクエスト送信
+      var response = await _httpClient.SendAsync(request);
+
+      // 200 OK ならトークンは有効
+      return response.IsSuccessStatusCode;
+    }
+    catch (Exception)
+    {
+      return false;
+    }
   }
 
   public async Task<byte[]?> DownloadFileAsync(string fileId, string accessToken)
@@ -91,7 +111,6 @@ public class BoxFileService
     string accessToken
   )
   {
-    Console.WriteLine($"folderId = {folderId}");
     var url = $"https://api.box.com/2.0/folders/{folderId}/items?limit={limit}&offset={offset}";
     var request = new HttpRequestMessage(HttpMethod.Get, url);
     request.Headers.Add("Authorization", $"Bearer {accessToken}");
