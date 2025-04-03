@@ -117,6 +117,10 @@ else
 	{
 		var folderId = ProjectsViewModel.GetCurrentProjectCharaFolderId();
 		var accessToken = await TokenStorage.GetAccessTokenAsync();
+		if (string.IsNullOrEmpty(folderId) || string.IsNullOrEmpty(accessToken)) {
+			Console.WriteLine("フォルダIDかアクセストークンが取得できていません。");
+			return;
+		}
 		var files = await ProjectsViewModel.GetBoxFileCount(folderId, accessToken);
 		param = new ProgressDialogParameters
 			{
@@ -141,6 +145,10 @@ else
 			{"parameters", param}
 		});
 
+		if(projectId == null || userId == null) {
+			Console.WriteLine("projectIdまたはuserIdがnullでした");
+			return;
+		}
 		_ = ProjectsViewModel.CreateOrUpdateCharaData((Guid)projectId, folderId, accessToken, files, (Guid)userId);
 		
 		// ダイアログが閉じた後に購読解除

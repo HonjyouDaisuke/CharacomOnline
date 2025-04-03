@@ -63,7 +63,6 @@ Drop="@OnDrop">
 </style>
 
 @code {
-	private bool isHovering = false;
 	// Filter items by zone value
 	Func<Overlays, RadzenDropZone<Overlays>, bool> ItemSelector = (item, zone) => item.Area == (Areas)zone.Value;
 	Func<RadzenDropZoneItemEventArgs<Overlays>, bool> CanDrop = request => {
@@ -75,7 +74,7 @@ Drop="@OnDrop">
 	{
 		args.Attributes["class"] = "rz-card ";
 		args.Attributes["style"] = "width: 160px; height: 160px;";
-		
+
 	}
 
 	void OnDrop(RadzenDropZoneItemEventArgs<Overlays> args)
@@ -160,13 +159,13 @@ Drop="@OnDrop">
 			Name = "C",
 			Area = Areas.Select,
 		});
-  }
+	}
 
-    public class Overlays
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public Areas Area { get; set; } = Areas.Select;
+	public class Overlays
+	{
+		public int Id { get; set; }
+		public string Name { get; set; } = "";
+		public Areas Area { get; set; } = Areas.Select;
     }
 
     public enum Areas

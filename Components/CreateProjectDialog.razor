@@ -87,9 +87,18 @@
 		if (topFolder == null || topFolder == "")
 		{
 			var setting = await GlobalSettingViewModel.GetGlobalSettings();
+			if (setting == null) {
+				Console.WriteLine("GlobalSettingが取得できませんでした");
+				return;
+			}
 			topFolder = setting.TopFolderId;
 		}
 
+		if (topFolder == null)
+		{
+				Console.WriteLine("topFolderが取得できませんでした");
+				return;
+		}
 		var boxProjectFolders = await BoxFileService.GetFolderItemsAsync(topFolder, 100, 0, accessToken);
 
 		if (boxProjectFolders == null || boxProjectFolders.Count <= 0)

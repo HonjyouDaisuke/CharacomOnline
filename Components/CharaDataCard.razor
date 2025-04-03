@@ -9,7 +9,7 @@
 }
 else
 {
-	<RadzenCard @onclick="HandleClick" Style="@CharaData.GetCardStyle()">
+	<RadzenCard @onclick="HandleClick" Style="@CharaData!.GetCardStyle()">
 		<RadzenStack AlignItems="AlignItems.Center" Orientation="Radzen.Orientation.Vertical" >
 			@if (string.IsNullOrEmpty(ImageData))
 			{

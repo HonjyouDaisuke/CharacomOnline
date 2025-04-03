@@ -126,13 +126,13 @@ public class CharaDataTableService(
     return null;
   }
 
-  public async Task<List<CharaDataClass>?> FetchCharaDataFromProject(Guid projectId, Guid modelId)
+  public async Task<List<CharaDataClass?>?> FetchCharaDataFromProject(Guid projectId, Guid modelId)
   {
     var response = await _supabaseClient.Rpc(
       "get_chara_data_from_project_id",
       new { project_id_input = projectId, model_id_input = modelId }
     );
-    List<CharaDataClass> resultCharaData = new List<CharaDataClass>();
+    List<CharaDataClass?> resultCharaData = new();
 
     if (string.IsNullOrEmpty(response.Content))
       return null;
@@ -168,12 +168,9 @@ public class CharaDataTableService(
       );
 
       // 全タスクを実行して結果を収集
-      CharaDataClass?[] charaDataClasses = (await Task.WhenAll(tasks));
+      CharaDataClass?[] charaDataClasses = await Task.WhenAll(tasks);
       if (charaDataClasses == null)
-      {
-        Console.WriteLine("charaDataClassesが空です");
         return null;
-      }
       resultCharaData = charaDataClasses.ToList();
     }
     catch (JsonException ex)
