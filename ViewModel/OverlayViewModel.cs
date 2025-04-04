@@ -30,8 +30,6 @@ public class OverlayViewModel
     _boxFileService = boxFileService ?? throw new ArgumentNullException(nameof(boxFileService));
   }
 
-  public event Action<int>? ProgressChanged;
-
   public OverlayDataClass? OverlayA { get; set; }
   public OverlayDataClass? OverlayB { get; set; }
 

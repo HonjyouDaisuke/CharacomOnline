@@ -158,7 +158,9 @@ public class CharaDataViewModel(
   {
     _charaDataRepository.ClearAppraisals();
     var charaDataList = await _charaDataTableService.FetchCharaDataFromProject(projectId, modelId);
-    await _charaDataRepository.AddAppraisalsAsync(charaDataList);
+    if (charaDataList == null)
+      return;
+    await _charaDataRepository.AddAppraisalsAsync(charaDataList!);
   }
 
   public async Task InitCharactersData(Guid projectId)
