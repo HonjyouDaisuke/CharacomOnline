@@ -4,9 +4,9 @@
 @namespace CharacomOnline.Shared
 <div Class="@(PanelExpanded ? "notifications-panel open" : "notifications-panel")">
 	<RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-		@if(notifications != null)
+		@if(Notifications != null)
 		{
-			@foreach (var notification in notifications)
+			@foreach (var notification in Notifications)
 			{
 				<NotificationsCard Title="@notification.Title" Message="@notification.Message" Type="@notification.Type"/>
 			}
@@ -21,85 +21,12 @@
 	[Parameter]
 	public EventCallback<bool> PanelExpandedChanged { get; set; }
 
-	private List<Notification> notifications = new();
+	[Parameter]
+	public List<Notification>? Notifications { get; set; }
 	// RadzenSidebarの状態変更をSidebarExpandedプロパティに反映
 	private async Task ToggleSidebar()
 	{
 		bool newValue = !PanelExpanded;
 		await PanelExpandedChanged.InvokeAsync(newValue);
-	}
-
-	private void makeInital()
-	{
-		notifications.Add(new Notification
-			{
-				Title = "テスト1",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-				Type = NotificationType.System,
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト2",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-				Type = NotificationType.Info,
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト3",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-				Type = NotificationType.Message,
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト4",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-				Type = NotificationType.Error,
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト5",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-				Type = NotificationType.Warning,
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト6",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-				Type = NotificationType.System,
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト7",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト8",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト9",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト10",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト11",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-			});
-			notifications.Add(new Notification
-			{
-				Title = "テスト12",
-				Message = "テストメッセージです。見てくださいね。よくわかりませんがイイでしょう",
-			});
-	}
-	protected override void OnInitialized()
-	{
-		makeInital();
 	}
 }

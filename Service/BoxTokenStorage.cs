@@ -1,6 +1,7 @@
 ﻿using Microsoft.JSInterop;
 
 namespace CharacomOnline.Service;
+
 public class TokenStorage
 {
   private readonly IJSRuntime _jsRuntime;
@@ -12,8 +13,16 @@ public class TokenStorage
 
   public async Task SaveTokenAsync(OAuthTokenResponse tokenResponse)
   {
-    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "accessToken", tokenResponse.AccessToken);
-    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", tokenResponse.RefreshToken);
+    await _jsRuntime.InvokeVoidAsync(
+      "localStorage.setItem",
+      "accessToken",
+      tokenResponse.AccessToken
+    );
+    await _jsRuntime.InvokeVoidAsync(
+      "localStorage.setItem",
+      "refreshToken",
+      tokenResponse.RefreshToken
+    );
   }
 
   public async Task<string?> GetAccessTokenAsync()

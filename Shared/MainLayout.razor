@@ -1,5 +1,7 @@
 ﻿@using CharacomOnline.Components
+@using CharacomOnline.Entity
 @using CharacomOnline.Service
+@using CharacomOnline.Service.TableService
 @using CharacomOnline.ViewModel
 @using Radzen
 @using Radzen.Blazor
@@ -10,6 +12,7 @@
 @inject LocalStorageService LocalStorage
 @inject ProjectsViewModel ProjectsViewModel
 @inject ThemeService ThemeService
+@inject NotificationsTableService NotificationsTableService
 
 <PageTitle>CharacomOnline</PageTitle>
 <RadzenComponents @rendermode="InteractiveServer" />
@@ -25,7 +28,7 @@
 	</RadzenBody>
 
 	<!-- 通知パネルを設置 -->
-	<NotificationsPanel @bind-PanelExpanded="notificationsPanelExpanded" />
+	<NotificationsPanel @bind-PanelExpanded="notificationsPanelExpanded" Notifications="notifications"/>
 
 	<RadzenFooter>
 		Characom Imager Pro Online ©2025 鈴木・三崎法科学研究所
@@ -34,13 +37,11 @@
 	
 </RadzenLayout>
 
-
-
-
 @code {
 	private bool parentSidebarExpanded = true;
 	private bool notificationsPanelExpanded = false;
 
+	private List<Notification>? notifications;
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
@@ -60,7 +61,15 @@
 			AppState.UserName = restoredState.UserName;
 			AppState.UserRole = restoredState.UserRole;
 			AppState.UserPictureUrl = restoredState.UserPictureUrl;
-
+			if (AppState.UserId != null){
+				notifications = await NotificationsTableService.FetchNotificationsFromUserIdAsync((Guid)AppState.UserId);
+				foreach (var n in notifications)
+				{
+					Console.WriteLine($"title {n.Title}, message {n.Message}");
+				}
+			}else{
+				Console.WriteLine($"お知らせがNullでした。userId = {AppState.UserId}");
+			}
 			// 再レンダリングをトリガー
 			StateHasChanged();
 		}

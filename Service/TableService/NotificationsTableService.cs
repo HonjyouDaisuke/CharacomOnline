@@ -28,4 +28,20 @@ public class NotificationsTableService(Client supabaseClient)
       Console.WriteLine($"NotificationTitle {notification.Title} added successfully.");
     }
   }
+
+  public async Task<List<Notification>?> FetchNotificationsFromUserIdAsync(Guid userId)
+  {
+    List<Notification>? projectViewData = new();
+
+    // Supabase から RPC を呼び出す
+    var response = await _supabaseClient.Rpc("get_user_notifications", new { p_user_id = userId });
+    Console.WriteLine(response.Content);
+
+    var json = response.Content;
+    if (json == null)
+      return null;
+    var notifications = JsonConvert.DeserializeObject<List<Notification>>(json);
+
+    return notifications ?? new List<Notification>();
+  }
 }
