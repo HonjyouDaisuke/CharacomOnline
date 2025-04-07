@@ -1,8 +1,11 @@
 ﻿@using CharacomOnline.Entity
 @using CharacomOnline.ViewModel
+@using CharacomOnline.Service.TableService
 @using System.Collections
+
 @inject TooltipService tooltipService
 @inject UsersViewModel UsersViewModel
+@inject NotificationsTableService NotificationsTableService
 @inject ILogger<Index> Logger
 
 <RadzenCard>
@@ -21,7 +24,7 @@
 			}
 		</RadzenColumn>
 		<RadzenColumn>
-			<RadzenButton >招待</RadzenButton>
+			<RadzenButton Click="OnInvitationClick">招待</RadzenButton>
 		</RadzenColumn>
 	</RadzenRow>
 </RadzenCard>
@@ -47,4 +50,8 @@
 		tooltipService.Open(elementReference, tooltipText, options);
 	}
 
+	private async Task OnInvitationClick()
+	{
+		await NotificationsTableService.AddNotificationAsync("テストだよん", "○○サンによって招待されました。", NotificationType.Message, Guid.Parse("1f3d9184-7d01-411d-a487-5351c61eca73"));
+	}
 }

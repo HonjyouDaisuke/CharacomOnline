@@ -1,0 +1,40 @@
+@using CharacomOnline.Entity
+@namespace CharacomOnline.Components
+<RadzenCard>
+	<RadzenStack Orientation="Orientation.Horizontal">
+		<RadzenIcon Icon="@getIconName(Type)" />
+		<h3>@Title</h3>
+		@Type
+	</RadzenStack>
+	@Message
+</RadzenCard>
+
+@code {
+	[Parameter]
+	public string Title { set; get; } = "";
+	[Parameter]
+	public string Message { set; get; } = "";
+	[Parameter]
+	public string Type { set; get; } = "";
+
+	private string getIconName(string type)
+	{
+		Console.WriteLine($"メッセージタイプ={type}");
+		switch (type)
+		{
+			case NotificationType.System:
+				return "release_alert";
+			case NotificationType.Error:
+				return "emergency_home";
+			case NotificationType.Info:
+				return "chat_info";
+			case NotificationType.Message:
+				return "chat";
+			case NotificationType.Warning:
+				return "warning";
+			default:
+				return "chat_info";
+		}
+	}
+	
+}

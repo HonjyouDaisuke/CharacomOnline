@@ -60,28 +60,34 @@ builder.Configuration.AddJsonFile(
 );
 
 // Azure App Configurationの接続
-var appConfig = Environment.GetEnvironmentVariable("ASPNETCORE_APPCONFIG") ?? builder.Configuration["APPCONFIG"];
+var appConfig =
+  Environment.GetEnvironmentVariable("ASPNETCORE_APPCONFIG") ?? builder.Configuration["APPCONFIG"];
 if (!string.IsNullOrEmpty(appConfig))
 {
-    Console.WriteLine("Using Azure App Configuration connection.");
-    builder.Configuration.AddAzureAppConfiguration(options =>
-    {
-        options
-            .Connect(appConfig)
-            .Select(KeyFilter.Any, builder.Environment.EnvironmentName)
-            .Select(KeyFilter.Any);
-    });
+  Console.WriteLine("Using Azure App Configuration connection.");
+  builder.Configuration.AddAzureAppConfiguration(options =>
+  {
+    options
+      .Connect(appConfig)
+      .Select(KeyFilter.Any, builder.Environment.EnvironmentName)
+      .Select(KeyFilter.Any);
+  });
 }
 else
 {
-    Console.WriteLine("Azure App Configuration connection string is missing.");
+  Console.WriteLine("Azure App Configuration connection string is missing.");
 }
 
 // Supabaseの接続情報を取得（環境変数が優先）
-var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL") ?? builder.Configuration["SUPABASE_URL"];
-var supabaseAnonKey = Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY") ?? builder.Configuration["ANON_KEY"];
-var boxClientId = Environment.GetEnvironmentVariable("BOX_CLIENT_ID") ?? builder.Configuration["BOX_CLIENT_ID"];
-var boxClientSecret = Environment.GetEnvironmentVariable("BOX_CLIENT_SECRET") ?? builder.Configuration["BOX_CLIENT_SECRET"];
+var supabaseUrl =
+  Environment.GetEnvironmentVariable("SUPABASE_URL") ?? builder.Configuration["SUPABASE_URL"];
+var supabaseAnonKey =
+  Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY") ?? builder.Configuration["ANON_KEY"];
+var boxClientId =
+  Environment.GetEnvironmentVariable("BOX_CLIENT_ID") ?? builder.Configuration["BOX_CLIENT_ID"];
+var boxClientSecret =
+  Environment.GetEnvironmentVariable("BOX_CLIENT_SECRET")
+  ?? builder.Configuration["BOX_CLIENT_SECRET"];
 
 // デバッグ用ログ
 Console.WriteLine($"設定読み込みをデバッグ");
@@ -156,6 +162,7 @@ builder.Services.AddScoped<SelectingItemsRepository>();
 builder.Services.AddScoped<TokenStorage>();
 builder.Services.AddScoped<BoxFileService>();
 builder.Services.AddScoped<UsersTableService>();
+builder.Services.AddScoped<NotificationsTableService>();
 builder.Services.AddScoped<UsersViewModel>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserSettingsTableService>();
