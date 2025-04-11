@@ -13,70 +13,76 @@
 <h3>ログイン処理中...</h3>
 
 @code {
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await HandleLoginCallback();
-        }
-    }
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await HandleLoginCallback();
+		}
+	}
 
-    private async Task HandleLoginCallback()
-    {
-        try
-        {
-            Console.WriteLine("ログインコールバック処理を開始します...");
+	private async Task HandleLoginCallback()
+	{
+		try
+		{
+			Console.WriteLine("ログインコールバック処理を開始します...");
 
-            // Supabase SDK でセッションを取得
-            var session = await SupabaseClient.Auth.GetSessionFromUrl(new Uri(NavigationManager.Uri));
+			// Supabase SDK でセッションを取得
+			var session = await SupabaseClient.Auth.GetSessionFromUrl(new Uri(NavigationManager.Uri));
 
-            if (session == null || session.User == null)
-            {
-                Console.WriteLine("セッションが取得できませんでした。");
-                NavigationManager.NavigateTo("/login");
-                return;
-            }
+			if (session == null || session.User == null)
+			{
+				Console.WriteLine("セッションが取得できませんでした。");
+				NavigationManager.NavigateTo("/login");
+				return;
+			}
 
-            // トークンをローカルストレージに保存
-            await localStorage.SetItemAsync("access_token", session.AccessToken);
-            await localStorage.SetItemAsync("refresh_token", session.RefreshToken);
-            Console.WriteLine($"sessionUserId : {session.User.Id}");
-            // セッションデータを保存
-            if (Guid.TryParse(session.User.Id, out Guid userId))
-            {
-                await SessionStorage.SetUserIDAsync(userId);
-            }
-            else
-            {
-                Console.WriteLine("User ID が有効な GUID ではありません。");
-                AppState.IsLoggedIn = false;
-                NavigationManager.NavigateTo("/login");
-                return;
-            }
+			// トークンをローカルストレージに保存
+			await localStorage.SetItemAsync("access_token", session.AccessToken);
+			await localStorage.SetItemAsync("refresh_token", session.RefreshToken);
+			Console.WriteLine($"sessionUserId : {session.User.Id}");
+			// セッションデータを保存
+			if (Guid.TryParse(session.User.Id, out Guid userId))
+			{
+				await SessionStorage.SetUserIDAsync(userId);
+			}
+			else
+			{
+				Console.WriteLine("User ID が有効な GUID ではありません。");
+				AppState.IsLoggedIn = false;
+				NavigationManager.NavigateTo("/login");
+				return;
+			}
 
-            await UserViewModel.SetCurrentUser(userId);
-            var user = UserViewModel.GetCurrentUserInfo();
-            if (user != null) AppState.SetUserInfoFromUserTable(user);
+			await UserViewModel.SetCurrentUser(userId);
+			var user = UserViewModel.GetCurrentUserInfo();
+			if (user != null) AppState.SetUserInfoFromUserTable(user);
 
-            Console.WriteLine($"ログイン成功: {session.User.Email}");
-            Console.WriteLine($"ユーザの権限：{UserViewModel.GetCurrentUserRole()}");
+			Console.WriteLine($"ログイン成功: {session.User.Email}");
+			Console.WriteLine($"ユーザの権限：{UserViewModel.GetCurrentUserRole()}");
 
-            Console.WriteLine($"user name = {AppState.UserName}");
-            Console.WriteLine($"user role = {AppState.UserRole}");
-            Console.WriteLine($"user pict = {AppState.UserPictureUrl}");
+			Console.WriteLine($"user name = {AppState.UserName}");
+			Console.WriteLine($"user role = {AppState.UserRole}");
+			Console.WriteLine($"user pict = {AppState.UserPictureUrl}");
+			AppState.AppStateData.UserId = Guid.Parse(session.User.Id);
+			AppState.AppStateData.UserName = AppState.UserName;
+			AppState.AppStateData.UserRole = AppState.UserRole;
+			AppState.AppStateData.UserPictureUrl = AppState.UserPictureUrl;
+			await AppState.SaveAppStateDataToLocalStorage();
+			Console.WriteLine("ローカルストレージに保存しました！");
+			Console.WriteLine($"ストレージ：{AppState.AppStateData}");
 
-
-            //AppState.UserName = UserViewModel.GetUserName();
-            //AppState.UserPictureUrl = UserViewModel.GetUserPicture();
-            //AppState.UserRole = UserViewModel.GetCurrentUserRole();
-            //AppState.UserId = UserViewModel.ge();
-            //AppState.IsLoggedIn = true;
-            NavigationManager.NavigateTo("/projects", true);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"認証処理中にエラーが発生しました: {ex.Message}");
-            NavigationManager.NavigateTo("/login");
-        }
-    }
+			//AppState.UserName = UserViewModel.GetUserName();
+			//AppState.UserPictureUrl = UserViewModel.GetUserPicture();
+			//AppState.UserRole = UserViewModel.GetCurrentUserRole();
+			//AppState.UserId = UserViewModel.ge();
+			//AppState.IsLoggedIn = true;
+			NavigationManager.NavigateTo("/projects", true);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"認証処理中にエラーが発生しました: {ex.Message}");
+			NavigationManager.NavigateTo("/login");
+		}
+	}
 }

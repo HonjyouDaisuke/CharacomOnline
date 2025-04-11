@@ -14,11 +14,17 @@ public class AppState : INotifyPropertyChanged
   private string? _userPictureUrl;
   private string? _userRole;
   private Guid? _userId;
+  public AppStateData AppStateData = new();
 
   public AppState(LocalStorageService _localStorage, SessionStorageService _sessionStorage)
   {
     this.sessionStorage = _sessionStorage;
     this.localStorage = _localStorage;
+  }
+
+  public async Task SaveAppStateDataToLocalStorage()
+  {
+    await localStorage.SaveAppStateAsync(AppStateData);
   }
 
   public bool IsLoggedIn
@@ -124,19 +130,19 @@ public class AppState : INotifyPropertyChanged
 
   public event PropertyChangedEventHandler? PropertyChanged;
 
-  private async void OnPropertyChanged(string propertyName)
+  private void OnPropertyChanged(string propertyName)
   {
     // LocalStorage にも保存
-    if (propertyName == nameof(CurrentProjectId))
-    {
-      await localStorage.SetCurrentProjectIdAsync(CurrentProjectId ?? Guid.Empty);
-      Console.WriteLine($"LocalStorageにprojectIdを保存 projectId={CurrentProjectId}");
-    }
+    // if (propertyName == nameof(CurrentProjectId))
+    // {
+    //   await localStorage.SetCurrentProjectIdAsync(CurrentProjectId ?? Guid.Empty);
+    //   Console.WriteLine($"LocalStorageにprojectIdを保存 projectId={CurrentProjectId}");
+    // }
 
     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     if (sessionStorage != null) // sessionStorage が null かどうかを確認
     {
-      await sessionStorage.SaveAppStateAsync(this);
+      sessionStorage.SaveAppStateAsync(this);
     }
   }
 }
