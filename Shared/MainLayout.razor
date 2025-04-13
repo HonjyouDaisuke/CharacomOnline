@@ -17,7 +17,7 @@
 <PageTitle>CharacomOnline</PageTitle>
 <RadzenComponents @rendermode="InteractiveServer" />
 <RadzenLayout>
-	<MainHeader @bind-SidebarExpanded="parentSidebarExpanded" @bind-PanelExpanded="notificationsPanelExpanded"/>
+	<MainHeader @bind-SidebarExpanded="parentSidebarExpanded" @bind-PanelExpanded="notificationsPanelExpanded" />
 	<NavMenu @bind-SidebarExpanded="parentSidebarExpanded" />
 	<!-- NotificationManagerを配置 -->
 	<NotificationManager />
@@ -28,13 +28,13 @@
 	</RadzenBody>
 
 	<!-- 通知パネルを設置 -->
-	<NotificationsPanel @bind-PanelExpanded="notificationsPanelExpanded" Notifications="notifications"/>
+	<NotificationsPanel @bind-PanelExpanded="notificationsPanelExpanded" Notifications="notifications" />
 
 	<RadzenFooter>
 		Characom Imager Pro Online ©2025 鈴木・三崎法科学研究所
 	</RadzenFooter>
 
-	
+
 </RadzenLayout>
 
 @code {
@@ -52,6 +52,32 @@
 		};
 		ThemeService.SetTheme(option);
 		// SessionStorage から AppState を復元
+		try
+		{
+			Console.WriteLine($"!!!!!!!AppStateDataのuserId={AppState.AppStateData.UserId}");
+			if (AppState.AppStateData.UserId == null)
+			{
+				await AppState.LoadAppStateDataFromLocalStorage();
+				Console.WriteLine($"!!!!!!!AppStateDataのuserId={AppState.AppStateData.UserId}");
+
+			}
+
+
+			Console.WriteLine($"!!!!!!!お知らせ取得します。");
+
+			notifications = await NotificationsTableService.FetchNotificationsFromUserIdAsync((Guid)AppState.AppStateData.UserId);
+			Console.WriteLine($"結果-----------------");
+			foreach (var n in notifications)
+			{
+				Console.WriteLine($"title {n.Title}, message {n.Message}");
+			}
+			Console.WriteLine($"<-----------------");
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error: {ex.Message}");
+		}
 		var restoredState = await SessionStorage.LoadAppStateAsync();
 		if (string.IsNullOrEmpty(restoredState.UserId.ToString()))
 		{
@@ -61,7 +87,7 @@
 			AppState.UserName = restoredState.UserName;
 			AppState.UserRole = restoredState.UserRole;
 			AppState.UserPictureUrl = restoredState.UserPictureUrl;
-			if (AppState.UserId != null){
+			@* if (AppState.UserId != null){
 				notifications = await NotificationsTableService.FetchNotificationsFromUserIdAsync((Guid)AppState.UserId);
 				foreach (var n in notifications)
 				{
@@ -69,7 +95,7 @@
 				}
 			}else{
 				Console.WriteLine($"お知らせがNullでした。userId = {AppState.UserId}");
-			}
+			} *@
 			// 再レンダリングをトリガー
 			StateHasChanged();
 		}

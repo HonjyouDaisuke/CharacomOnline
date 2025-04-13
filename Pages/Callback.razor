@@ -38,11 +38,11 @@
 			}
 
 			// トークンをローカルストレージに保存
-			await localStorage.SetItemAsync("access_token", session.AccessToken);
-			await localStorage.SetItemAsync("refresh_token", session.RefreshToken);
-			Console.WriteLine($"sessionUserId : {session.User.Id}");
+			// await localStorage.SetItemAsync("access_token", session.AccessToken);
+			// await localStorage.SetItemAsync("refresh_token", session.RefreshToken);
+			// Console.WriteLine($"sessionUserId : {session.User.Id}");
 			// セッションデータを保存
-			if (Guid.TryParse(session.User.Id, out Guid userId))
+			@* if (Guid.TryParse(session.User.Id, out Guid userId))
 			{
 				await SessionStorage.SetUserIDAsync(userId);
 			}
@@ -52,9 +52,9 @@
 				AppState.IsLoggedIn = false;
 				NavigationManager.NavigateTo("/login");
 				return;
-			}
+			} *@
 
-			await UserViewModel.SetCurrentUser(userId);
+			await UserViewModel.SetCurrentUser(Guid.Parse(session.User.Id));
 			var user = UserViewModel.GetCurrentUserInfo();
 			if (user != null) AppState.SetUserInfoFromUserTable(user);
 
@@ -64,6 +64,8 @@
 			Console.WriteLine($"user name = {AppState.UserName}");
 			Console.WriteLine($"user role = {AppState.UserRole}");
 			Console.WriteLine($"user pict = {AppState.UserPictureUrl}");
+			AppState.AppStateData.SupabaseAccessToken = session.AccessToken;
+			AppState.AppStateData.SupabaseRefreshToken = session.RefreshToken;
 			AppState.AppStateData.UserId = Guid.Parse(session.User.Id);
 			AppState.AppStateData.UserName = AppState.UserName;
 			AppState.AppStateData.UserRole = AppState.UserRole;

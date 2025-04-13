@@ -109,6 +109,13 @@ public class UsersViewModel
         appState.UserName = user?.Name;
         appState.UserPictureUrl = user?.PictureUrl;
         appState.IsLoggedIn = true;
+        appState.AppStateData.UserId = user?.Id;
+        appState.AppStateData.SupabaseAccessToken = session.AccessToken;
+        appState.AppStateData.SupabaseRefreshToken = session.RefreshToken;
+        appState.AppStateData.UserRole = user?.UserRole;
+        appState.AppStateData.UserName = user?.Name;
+        appState.AppStateData.UserPictureUrl = user?.PictureUrl;
+
         Console.WriteLine($" set AppState UserName = {user?.Name}");
       }
       else

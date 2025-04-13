@@ -18,21 +18,25 @@
 <RadzenHeader>
 	<RadzenRow AlignItems="AlignItems.Center" Gap="1">
 		<RadzenColumn>
-			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Start" Gap="2px">
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center"
+				JustifyContent="JustifyContent.Start" Gap="2px">
 				<RadzenSidebarToggle Click="@ChangeExpand" />
 				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.H5">Characom Imapger Pro Online</RadzenText>
 			</RadzenStack>
 		</RadzenColumn>
 		<RadzenColumn>
-			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center"
+				JustifyContent="JustifyContent.Center">
 				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.Subtitle1">@AppState.CurrentProjectName</RadzenText>
 			</RadzenStack>
 		</RadzenColumn>
-		<RadzenColumn >
-			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End" Style="padding-right: 1rem;">
+		<RadzenColumn>
+			<RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="JustifyContent.End"
+				Style="padding-right: 1rem;">
 				<RadzenAppearanceToggle />
-				<RadzenSidebarToggle Click="@ChangePanelExpand" Icon="notifications"/>
-				<ProfileMenu UserPicture="@userPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName" />
+				<RadzenSidebarToggle Click="@ChangePanelExpand" Icon="notifications" />
+				<ProfileMenu UserPicture="@userPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin"
+					IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName" />
 			</RadzenStack>
 		</RadzenColumn>
 	</RadzenRow>
@@ -67,19 +71,20 @@
 		if (string.IsNullOrEmpty(userPictureUrl))
 		{
 			userPictureUrl = "/images/no_user_icon.png";
-		} 
+		}
 		userName = AppState.UserName;
 		isBoxLogin = OAuthService.IsLogin();
 		isDBLogin = AppState.IsLoggedIn;
 		currentProjectId = AppState.CurrentProjectId;
 		currentProjectName = AppState.CurrentProjectName;
+
 		await InvokeAsync(StateHasChanged);
 	}
 
 	private async Task ChangeExpand()
 	{
 		bool newValue = !SidebarExpanded;
-		await SidebarExpandedChanged.InvokeAsync(newValue);  // 親に新しい値を送信
+		await SidebarExpandedChanged.InvokeAsync(newValue); // 親に新しい値を送信
 	}
 
 	private async Task ChangePanelExpand()

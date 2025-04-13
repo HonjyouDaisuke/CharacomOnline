@@ -11,6 +11,9 @@ public class AppStateData
   public Guid? ProjectId { get; set; }
   public string? ProjectName { get; set; }
 
+  public string? SupabaseAccessToken { get; set; }
+  public string? SupabaseRefreshToken { get; set; }
+
   public override string ToString()
   {
     return $"userId {UserId} userName {UserName} pict {UserPictureUrl} userRole {UserRole} projectId {ProjectId} projectName {ProjectName}";

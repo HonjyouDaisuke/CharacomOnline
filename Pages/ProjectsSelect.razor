@@ -17,8 +17,8 @@
 
 @if (isStandard)
 {
-	<RadzenButton Click=@(async ()=>
-              await OnNewButtonClick()) Icon="add_circle" Text="新規作成" ButtonStyle="ButtonStyle.Primary" />
+	<RadzenButton Click=@(async () => await OnNewButtonClick()) Icon="add_circle" Text="新規作成"
+		ButtonStyle="ButtonStyle.Primary" />
 
 }
 <RadzenText>@message</RadzenText>
@@ -27,11 +27,12 @@
 <RadzenPanel Style="width: 100%; overflow-x: hidden;">
 	<!-- 横幅制限と折り返し対応 -->
 	<div style="display: flex; flex-wrap: wrap; justify-content: start; gap: 16px; max-width: 100%;">
-		@if(projects != null)
+		@if (projects != null)
 		{
 			@foreach (var project in projects)
 			{
-				<ProjectCard Project="project" CardClick="OnCardClick" RenameClick="OnProjectRenameClick" DeleteClick="OnProjectDeleteClick"/>
+				<ProjectCard Project="project" CardClick="OnCardClick" RenameClick="OnProjectRenameClick"
+					DeleteClick="OnProjectDeleteClick" />
 			}
 		}
 	</div>
@@ -54,7 +55,7 @@
 	private void CheckInitialSelect(Guid? projectId)
 	{
 		if (projects == null) return;
-		foreach(ProjectViewData p in projects)
+		foreach (ProjectViewData p in projects)
 		{
 			if (p.Id == projectId) p.IsSelected = true;
 		}
@@ -71,8 +72,8 @@
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
-		await UsersViewModel.SetUserInfoToAppState(); 
-		userId = AppState.UserId;
+		await UsersViewModel.SetUserInfoToAppState();
+		userId = AppState.AppStateData.UserId;
 		var storageProjectId = await LocalStorage.GetCurrentProjectIdAsync();
 		if (storageProjectId != null)
 		{
@@ -82,7 +83,7 @@
 		{
 			projectId = AppState.CurrentProjectId;
 		}
-
+		projectId = AppState.AppStateData.ProjectId;
 		isStandard = isStandardUser();
 		if (userId == null) return;
 		projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
@@ -102,20 +103,21 @@
 	private async Task OnNewButtonClick()
 	{
 		var result = await DialogService.OpenAsync<CreateProjectDialog>("プロジェクトの新規作成", new Dictionary<string, object>
-        {
-            { nameof(CreateProjectDialog.OnDialogClosed), EventCallback.Factory.Create<CreateProjectDialogResults>(this, OnDialogClosed) }
-        });
+{
+{ nameof(CreateProjectDialog.OnDialogClosed), EventCallback.Factory.Create<CreateProjectDialogResults>(this,
+OnDialogClosed) }
+});
 	}
 
 	private void ShowError(string title, string msg)
 	{
 		NotificationService.Notify(new NotificationMessage
-            {
-                Severity = NotificationSeverity.Error,
-                Summary = title,
-                Detail = msg,
-                Duration = 2000
-            }
+		{
+			Severity = NotificationSeverity.Error,
+			Summary = title,
+			Detail = msg,
+			Duration = 2000
+		}
 		);
 	}
 
@@ -149,20 +151,21 @@
 		var _userId = await SessionStorage.GetUserIDAsync();
 		if (_userId == null) return;
 		userId = _userId;
-		var projectId = await ProjectsViewModel.CreateNewProject(result.Title, result.Description, (Guid)_userId, result.FolderId, result.CharaFolderId);
+		var projectId = await ProjectsViewModel.CreateNewProject(result.Title, result.Description, (Guid)_userId,
+		result.FolderId, result.CharaFolderId);
 		message = $"projectId = {projectId} を新規作成しました。";
 
-		await InstallCharaDataAsync((Guid)projectId, result.Title, result.CharaFolderId,(Guid)_userId);
+		await InstallCharaDataAsync((Guid)projectId, result.Title, result.CharaFolderId, (Guid)_userId);
 		await ProjectsViewModel.SetCurrentProject((Guid)projectId, result.Title);
 		AppState.CurrentProjectId = projectId;
 		AppState.CurrentProjectName = result.Title;
 		NotificationService.Notify(new NotificationMessage
-      {
-        Severity = NotificationSeverity.Success,
-        Summary = "プロジェクト作成完了",
-        Detail = "プロジェクトを作成しデータをインストールしました。",
-        Duration = 2000
-      }
+		{
+			Severity = NotificationSeverity.Success,
+			Summary = "プロジェクト作成完了",
+			Detail = "プロジェクトを作成しデータをインストールしました。",
+			Duration = 2000
+		}
 		);
 		StateHasChanged();
 	}
@@ -199,7 +202,8 @@
 			Console.WriteLine("ユーザが不明です。");
 			return;
 		}
-		await ProjectsViewModel.UpdateProjectNameAsync(result.ProjectId, result.ProjectName, result.ProjectDescription, (Guid)userId);
+		await ProjectsViewModel.UpdateProjectNameAsync(result.ProjectId, result.ProjectName, result.ProjectDescription,
+		(Guid)userId);
 		//DialogService.Close();
 	}
 	private async Task OnRunDelete(Guid projectId)
@@ -208,12 +212,12 @@
 		Console.WriteLine($"ProjectId = {projectId}");
 		await ProjectsViewModel.DeleteProjectAsync(projectId);
 		NotificationService.Notify(new NotificationMessage
-      {
-        Severity = NotificationSeverity.Success,
-        Summary = "プロジェクト削除完了",
-        Detail = "プロジェクトを削除しました。",
-        Duration = 2000
-      }
+		{
+			Severity = NotificationSeverity.Success,
+			Summary = "プロジェクト削除完了",
+			Detail = "プロジェクトを削除しました。",
+			Duration = 2000
+		}
 		);
 	}
 	private void OnCancel()
@@ -225,23 +229,24 @@
 	{
 		if (projects == null) return;
 		var result = await DialogService.OpenAsync<RenameProjectDialog>("プロジェクトの編集", new Dictionary<string, object>
-				{
-					//{ nameof(RenameProjectDialog.OnRun), EventCallback.Factory.Create<RenameProjectDialogResult>(this, OnRunRename) },
-					{ nameof(RenameProjectDialog.OnDialogClosed), EventCallback.Factory.Create<RenameProjectDialogResult?>(this, OnRenameDialogClosed) },
-					{ nameof(RenameProjectDialog.ProjectId), clickedProject.Id },
-					{ nameof(RenameProjectDialog.ProjectName), clickedProject.Name! },
-					{ nameof(RenameProjectDialog.Description), clickedProject.Description! },
-				});
+{
+//{ nameof(RenameProjectDialog.OnRun), EventCallback.Factory.Create<RenameProjectDialogResult>(this, OnRunRename) },
+{ nameof(RenameProjectDialog.OnDialogClosed), EventCallback.Factory.Create<RenameProjectDialogResult?>(this,
+OnRenameDialogClosed) },
+{ nameof(RenameProjectDialog.ProjectId), clickedProject.Id },
+{ nameof(RenameProjectDialog.ProjectName), clickedProject.Name! },
+{ nameof(RenameProjectDialog.Description), clickedProject.Description! },
+});
 	}
 	private async Task OnProjectDeleteClick(ProjectViewData clickedProject)
 	{
 		if (projects == null) return;
 		var result = await DialogService.OpenAsync<DeleteProjectDialog>("プロジェクトの削除", new Dictionary<string, object>
-			{
-				{ nameof(DeleteProjectDialog.OnDialogClosed), EventCallback.Factory.Create<Guid?>(this, OnDeleteDialogClosed) },
-				{ nameof(DeleteProjectDialog.ProjectId), clickedProject.Id },
-				{ nameof(DeleteProjectDialog.ProjectName), clickedProject.Name! },
-			});
+{
+{ nameof(DeleteProjectDialog.OnDialogClosed), EventCallback.Factory.Create<Guid?>(this, OnDeleteDialogClosed) },
+{ nameof(DeleteProjectDialog.ProjectId), clickedProject.Id },
+{ nameof(DeleteProjectDialog.ProjectName), clickedProject.Name! },
+});
 	}
 
 	private async Task OnCardClick(ProjectViewData clickedProject)
@@ -266,17 +271,17 @@
 		if (string.IsNullOrEmpty(accessToken)) return;
 		var files = await ProjectsViewModel.GetBoxFileCount(charaFolderId, accessToken);
 		param = new ProgressDialogParameters
+		{
+			Message = $"プロジェクト名：{projectName} ファイル数：{files}個",
+			Value = 0,
+			MaxValue = files,
+			Unit = $" / {files}",
+			OnCancel = new EventCallback(this, () =>
 			{
-				Message = $"プロジェクト名：{projectName} ファイル数：{files}個",
-				Value = 0,
-				MaxValue = files,
-				Unit = $" / {files}",
-				OnCancel = new EventCallback(this, () =>
-				{
 				// ViewModel側でキャンセルを実行
-					ProjectsViewModel.CancelOperation();
-				})
-			};
+				ProjectsViewModel.CancelOperation();
+			})
+		};
 		// ViewModelでキャンセル用トークンの初期化
 		ProjectsViewModel.InitializeCancellationToken();
 
@@ -284,9 +289,9 @@
 		ProjectsViewModel.OnProgressUpdated += OnProgressUpdated;
 
 		var dialogTask = DialogService.OpenAsync<ProgressDialog>("プロジェクトにデータをインストールします", new Dictionary<string, object>
-		{
-			{"parameters", param}
-		});
+{
+{"parameters", param}
+});
 
 		_ = ProjectsViewModel.CreateOrUpdateCharaData((Guid)projectId, charaFolderId, accessToken, files, (Guid)_userId);
 
@@ -304,11 +309,11 @@
 	{
 		if (param == null) return;
 		// 進行状況更新
-		if (progress >= param.MaxValue) 
+		if (progress >= param.MaxValue)
 		{
 			DialogService.Close();
 			StateHasChanged();
-			return;	
+			return;
 		}
 		param.Value = progress;
 		DialogService.Refresh();

@@ -26,12 +26,15 @@ Welcome to your new app.
 		if (!firstRender) return;
 
 		await UsersViewModel.SetUserInfoToAppState();
-
+		await AppState.LoadAppStateDataFromLocalStorage();
+		Console.WriteLine("<<<----------------->>>");
+		Console.WriteLine($"State = {AppState.AppStateData.ToString()}");
 		// TODO: ここは、アプリ全体でログインさせるように変更する
-		Console.WriteLine("LoginCheck...");
-		if (AppState.IsLoggedIn) return;
-		NavigationManager.NavigateTo("/login");
+		//Console.WriteLine("LoginCheck...");
+		//if (AppState.IsLoggedIn) return;
+		//NavigationManager.NavigateTo("/login");
 		// ここまで
+		NavigationManager.NavigateTo("/projects", true);
 	}
 
 }

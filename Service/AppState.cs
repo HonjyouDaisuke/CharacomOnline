@@ -27,6 +27,21 @@ public class AppState : INotifyPropertyChanged
     await localStorage.SaveAppStateAsync(AppStateData);
   }
 
+  public async Task LoadAppStateDataFromLocalStorage()
+  {
+    var appStateData = await localStorage.LoadAppStateAsync();
+
+    if (appStateData != null)
+    {
+      AppStateData = appStateData;
+    }
+    else
+    {
+      // 必要に応じてデフォルト値を設定
+      AppStateData = new AppStateData();
+    }
+  }
+
   public bool IsLoggedIn
   {
     get => _isLoggedIn;

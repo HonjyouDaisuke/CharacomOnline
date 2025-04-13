@@ -1,4 +1,11 @@
-﻿<RadzenTheme Theme="standard-dark" @rendermode="InteractiveAuto" />
+﻿@using CharacomOnline.Service
+@using CharacomOnline.Entity
+
+@inject NavigationManager Navi
+@inject AppState AppState
+@inject LocalStorageService LocalStorage
+
+<RadzenTheme Theme="standard-dark" @rendermode="InteractiveAuto" />
 <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <Microsoft.AspNetCore.Components.RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
@@ -10,3 +17,24 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        if (!string.IsNullOrEmpty(AppState.AppStateData.SupabaseAccessToken))
+        {
+            Console.WriteLine($"AppStateがありました。{AppState.AppStateData.ToString()}");
+            return;
+        }
+        var tmpAppState = await LocalStorage.LoadAppStateAsync();
+        if (tmpAppState == null)
+        {
+            Console.WriteLine("appStateが保存されていませんでした。");
+            Navi.NavigateTo("/login");
+            return;
+        }
+        AppState.AppStateData = tmpAppState;
+        Console.WriteLine($"◆◆◆GetしたAppState = {AppState.AppStateData.ToString()}");
+    }
+}

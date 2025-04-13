@@ -17,7 +17,7 @@ using Supabase;
 var builder = WebApplication.CreateBuilder(args);
 string logTemplate = "| {Timestamp:HH:mm:ss} | {Level:u4} | {Message:j}{NewLine}";
 
-string logFilePathHead = $"logs\\{nameof(CharacomOnline)}";
+string logFilePathHead = $"logs/{nameof(CharacomOnline)}";
 
 // Serilog の設定
 Log.Logger = new LoggerConfiguration()
