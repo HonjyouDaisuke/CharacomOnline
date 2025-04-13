@@ -29,6 +29,11 @@ Welcome to your new app.
 		await AppState.LoadAppStateDataFromLocalStorage();
 		Console.WriteLine("<<<----------------->>>");
 		Console.WriteLine($"State = {AppState.AppStateData.ToString()}");
+		if (string.IsNullOrEmpty(AppState.AppStateData.SupabaseAccessToken))
+		{
+			Console.WriteLine("ログイン情報が見つかりませんでした。");
+			NavigationManager.NavigateTo("/login", true);
+		}
 		// TODO: ここは、アプリ全体でログインさせるように変更する
 		//Console.WriteLine("LoginCheck...");
 		//if (AppState.IsLoggedIn) return;
