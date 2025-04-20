@@ -103,6 +103,7 @@
 			{
 				Console.WriteLine($"title {n.Title}, message {n.Message}");
 			}
+			Console.WriteLine($"更新しますよー{AppState.AppStateData.ToString()}");
 			StateHasChanged();
 		}
 		catch (JSDisconnectedException jsEx)
