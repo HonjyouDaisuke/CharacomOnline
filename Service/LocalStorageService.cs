@@ -1,5 +1,6 @@
 ﻿using CharacomOnline.Entity;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.JSInterop;
 
 namespace CharacomOnline.Service;
 
@@ -31,8 +32,16 @@ public class LocalStorageService(ProtectedLocalStorage localStorage)
 
   public async Task<Guid?> GetCurrentProjectIdAsync()
   {
-    var result = await _localStorage.GetAsync<Guid>("CurrentProjectId");
-    return result.Success ? result.Value : null;
+    try
+    {
+      var result = await _localStorage.GetAsync<Guid>("CurrentProjectId");
+      return result.Success ? result.Value : null;
+    }
+    catch (JSDisconnectedException)
+    {
+      Console.WriteLine("JS interop failed (GetCurrentProjectIdAsync)");
+      return null;
+    }
   }
 
   public async Task ClearAsync()

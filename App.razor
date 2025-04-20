@@ -22,19 +22,21 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        if (!string.IsNullOrEmpty(AppState.AppStateData.SupabaseAccessToken))
-        {
-            Console.WriteLine($"AppStateがありました。{AppState.AppStateData.ToString()}");
-            return;
-        }
-        var tmpAppState = await LocalStorage.LoadAppStateAsync();
-        if (tmpAppState == null)
-        {
-            Console.WriteLine("appStateが保存されていませんでした。");
-            Navi.NavigateTo("/login");
-            return;
-        }
-        AppState.AppStateData = tmpAppState;
-        Console.WriteLine($"◆◆◆GetしたAppState = {AppState.AppStateData.ToString()}");
+        /**
+if (!string.IsNullOrEmpty(AppState.AppStateData.SupabaseAccessToken))
+{
+Console.WriteLine($"AppStateがありました。{AppState.AppStateData.ToString()}");
+return;
+}
+var tmpAppState = await LocalStorage.LoadAppStateAsync();
+if (tmpAppState == null)
+{
+Console.WriteLine("appStateが保存されていませんでした。");
+Navi.NavigateTo("/login");
+return;
+}
+AppState.AppStateData = tmpAppState;
+Console.WriteLine($"◆◆◆GetしたAppState = {AppState.AppStateData.ToString()}");
+        **/
     }
 }

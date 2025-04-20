@@ -13,6 +13,8 @@
 @inject ProjectsViewModel ProjectsViewModel
 @inject ThemeService ThemeService
 @inject NotificationsTableService NotificationsTableService
+@inject LoginService LoginService
+@inject NavigationManager Navi
 
 <PageTitle>CharacomOnline</PageTitle>
 <RadzenComponents @rendermode="InteractiveServer" />
@@ -42,76 +44,116 @@
 	private bool notificationsPanelExpanded = false;
 
 	private List<Notification>? notifications;
+
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
+		if (Navi.Uri.Contains("/login") || Navi.Uri.Contains("/callback"))
+			return;
 
+		// ここで少し待って Circuit が安定するのを待つ
+		await Task.Delay(500); // 200～500ms くらいが一般的に安定します
+
+		if (string.IsNullOrEmpty(AppState.AppStateData.UserId.ToString()))
+		{
+			var state = await LocalStorage.LoadAppStateAsync();
+			if (state != null)
+			{
+				AppState.AppStateData = state;
+			}
+		}
+
+		if (!LoginService.IsSupabaseLoggedIn())
+		{
+			if (AppState.AppStateData.SupabaseAccessToken == null || AppState.AppStateData.SupabaseRefreshToken == null)
+			{
+				Navi.NavigateTo("/login", true);
+				return;
+			}
+
+			var restored = await LoginService.TryRestoreLoginAsync(AppState.AppStateData.SupabaseAccessToken,
+			AppState.AppStateData.SupabaseRefreshToken);
+			if (!restored)
+			{
+				Navi.NavigateTo("/login", true);
+				return;
+			}
+		}
 		var option = new ThemeOptions
 		{
 			Theme = "standard",
 		};
 		ThemeService.SetTheme(option);
+
 		// SessionStorage から AppState を復元
 		try
 		{
 			Console.WriteLine($"!!!!!!!AppStateDataのuserId={AppState.AppStateData.UserId}");
+			Console.WriteLine($"spabaseLogin = {LoginService.IsSupabaseLoggedIn()}");
 			if (AppState.AppStateData.UserId == null)
 			{
 				await AppState.LoadAppStateDataFromLocalStorage();
 				Console.WriteLine($"!!!!!!!AppStateDataのuserId={AppState.AppStateData.UserId}");
-
 			}
 
-
-			Console.WriteLine($"!!!!!!!お知らせ取得します。");
-
-			notifications = await NotificationsTableService.FetchNotificationsFromUserIdAsync((Guid)AppState.AppStateData.UserId);
-			Console.WriteLine($"結果-----------------");
+			Console.WriteLine($"!!!!!!!お知らせ取得します。userId = {AppState.AppStateData.UserId}");
+			notifications = await NotificationsTableService.FetchNotificationsFromUserIdAsync((Guid)AppState.AppStateData.UserId,
+			AppState.AppStateData.SupabaseAccessToken, AppState.AppStateData.SupabaseRefreshToken);
 			foreach (var n in notifications)
 			{
 				Console.WriteLine($"title {n.Title}, message {n.Message}");
 			}
-			Console.WriteLine($"<-----------------");
 			StateHasChanged();
+		}
+		catch (JSDisconnectedException jsEx)
+		{
+			Console.WriteLine($"[JSInterop Error] Circuit disconnected: {jsEx.Message}");
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"Error: {ex.Message}");
+			Console.WriteLine($"[General Error] {ex.Message}");
 		}
-		var restoredState = await SessionStorage.LoadAppStateAsync();
-		if (string.IsNullOrEmpty(restoredState.UserId.ToString()))
+		/*
+		try
 		{
-			// AppState にデータを設定
-			AppState.CurrentProjectId = restoredState.CurrentProjectId;
-			AppState.UserId = restoredState.UserId;
-			AppState.UserName = restoredState.UserName;
-			AppState.UserRole = restoredState.UserRole;
-			AppState.UserPictureUrl = restoredState.UserPictureUrl;
-			@* if (AppState.UserId != null){
-				notifications = await NotificationsTableService.FetchNotificationsFromUserIdAsync((Guid)AppState.UserId);
-				foreach (var n in notifications)
-				{
-					Console.WriteLine($"title {n.Title}, message {n.Message}");
-				}
-			}else{
-				Console.WriteLine($"お知らせがNullでした。userId = {AppState.UserId}");
-			} *@
-			// 再レンダリングをトリガー
-			StateHasChanged();
+		var restoredState = await SessionStorage.LoadAppStateAsync();
+		if (!string.IsNullOrEmpty(restoredState.UserId.ToString()))
+		{
+		AppState.CurrentProjectId = restoredState.CurrentProjectId;
+		AppState.UserId = restoredState.UserId;
+		AppState.UserName = restoredState.UserName;
+		AppState.UserRole = restoredState.UserRole;
+		AppState.UserPictureUrl = restoredState.UserPictureUrl;
+		StateHasChanged();
 		}
-		// LocalStorage から currentProjectIdを復元
+		}
+		catch (JSDisconnectedException jsEx)
+		{
+		Console.WriteLine($"[JSInterop Error] Restore state failed: {jsEx.Message}");
+		}
+
+		*/
+		/*
+		try
+		{
 		var currentProjectId = await LocalStorage.GetCurrentProjectIdAsync();
 		if (!string.IsNullOrEmpty(currentProjectId.ToString()))
 		{
-			AppState.CurrentProjectId = currentProjectId;
-			var projectName = await ProjectsViewModel.GetProjectNameFromProjectId((Guid)currentProjectId);
-			if (!string.IsNullOrEmpty(projectName))
-			{
-				await ProjectsViewModel.SetCurrentProject((Guid)currentProjectId, projectName);
-				AppState.CurrentProjectName = projectName;
-			}
+		AppState.CurrentProjectId = currentProjectId;
+		var projectName = await ProjectsViewModel.GetProjectNameFromProjectId((Guid)currentProjectId);
+		if (!string.IsNullOrEmpty(projectName))
+		{
+		await ProjectsViewModel.SetCurrentProject((Guid)currentProjectId, projectName);
+		AppState.CurrentProjectName = projectName;
 		}
-
-
+		}
+		}
+		catch (JSDisconnectedException jsEx)
+		{
+		Console.WriteLine($"[JSInterop Error] Failed to get project ID: {jsEx.Message}");
+		}
+		*/
 	}
+
+
 }

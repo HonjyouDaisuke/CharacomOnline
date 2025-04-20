@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Blazored.LocalStorage;
 using Supabase;
+using Supabase.Gotrue;
 
 namespace CharacomOnline.Service;
 
@@ -29,10 +30,10 @@ public class SupabaseService
   public string AnonKey => _appSettings.ANON_KEY;
 
   // public Supabase.Client GetClient() => _supabaseClient;
-  public async Task<Supabase.Client> GetClientAsync()
+  public async Task<Supabase.Client> GetClientAsync(string accessToken, string refreshToken)
   {
-    var accessToken = await _localStorage.GetItemAsync<string>("access_token");
-    var refreshToken = await _localStorage.GetItemAsync<string>("refresh_token");
+    //var accessToken = await _localStorage.GetItemAsync<string>("access_token");
+    //var refreshToken = await _localStorage.GetItemAsync<string>("refresh_token");
 
     if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
     {
@@ -48,6 +49,33 @@ public class SupabaseService
     }
 
     return _supabaseClient;
+  }
+
+  public bool IsSupabaseLogin()
+  {
+    var session = _supabaseClient.Auth.CurrentSession;
+    bool isLoggedIn = session != null && !string.IsNullOrEmpty(session.AccessToken);
+    return isLoggedIn;
+  }
+
+  public async Task<bool> RefreshSessionAsync(string accessToken, string refreshToken)
+  {
+    // var session = new Supabase.Gotrue.Session
+    // {
+    // 	AccessToken = accessToken,
+    // 	RefreshToken = refreshToken,
+    // 	TokenType = "bearer"
+    // };
+
+    await _supabaseClient.Auth.SetSession(accessToken, refreshToken);
+    // 念のためログインチェック
+    var user = _supabaseClient.Auth.CurrentUser;
+    if (user != null)
+    {
+      Console.WriteLine($"✅ Session restored for user: {user.Email}");
+      return true;
+    }
+    return false;
   }
 
   public string? GetUserProfilePicture()

@@ -15,17 +15,13 @@
 <h3>プロジェクトの管理</h3>
 @if (userId == null)
 {
-	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー"
-	ErrorMessage="ログインできていません。ログインしてください"
-	LinkMsg="ログインへ"
-	LinkClick=" () => OnNaviClick(loginUrl)" />
+	<SelectingErrorMessage ErrorMessageTitle="ユーザ認証エラー" ErrorMessage="ログインできていません。ログインしてください" LinkMsg="ログインへ"
+		LinkClick=" () => OnNaviClick(loginUrl)" />
 }
 else if (isProjectIdSelected == false)
 {
-	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー"
-	ErrorMessage="プロジェクトを選択してください。"
-	LinkMsg="プロジェクト選択へ"
-	LinkClick=" () => OnNaviClick(projectsUrl)" />
+	<SelectingErrorMessage ErrorMessageTitle="プロジェクト認識エラー" ErrorMessage="プロジェクトを選択してください。" LinkMsg="プロジェクト選択へ"
+		LinkClick=" () => OnNaviClick(projectsUrl)" />
 
 }
 else if (isLoading)
@@ -37,9 +33,11 @@ else if (isLoading)
 else
 {
 	<RadzenStack Gap="10">
-		<ProjectSummary ProjectName="@projectName" ProjectDescription="@projectDescription" CreatedUserName="@createdUserName" CreatedAt="@createdAt"/>
+		<ProjectSummary ProjectName="@projectName" ProjectDescription="@projectDescription" CreatedUserName="@createdUserName"
+			CreatedAt="@createdAt" />
 		<ProjectSummaryUser ProjectUsers="@users" />
-		<ProjectSummaryChart CharaDataCount="@charaDataCount" BoxFolderFiles="@boxFileCount" SelectedCount="@selectedCharaCount" UpdateClick="@projectUpdate"/>
+		<ProjectSummaryChart CharaDataCount="@charaDataCount" BoxFolderFiles="@boxFileCount"
+			SelectedCount="@selectedCharaCount" UpdateClick="@projectUpdate" />
 		<ProjectSummaryProgress ProgressData="@progressData" />
 	</RadzenStack>
 }
@@ -77,9 +75,8 @@ else
 		if (!firstRender) return;
 		await UsersViewModel.SetUserInfoToAppState();
 
-		userId = AppState.UserId;
-		if (AppState.UserId != null) await UserSettingsViewModel.GetUserSettings((Guid)AppState.UserId);
-		projectId = ProjectsViewModel.GetCurrentProjectId();
+		userId = AppState.AppStateData.UserId;
+		projectId = AppState.AppStateData.ProjectId;
 		if (projectId == null)
 		{
 			return;
@@ -87,6 +84,7 @@ else
 
 		isProjectIdSelected = true;
 		await InvokeAsync(StateHasChanged);
+		if (userId != null) await UserSettingsViewModel.GetUserSettings((Guid)userId);
 
 		projectName = ProjectsViewModel.GetCurrentProjectName();
 		projectDescription = ProjectsViewModel.GetCurrentProjectDescription();
@@ -117,23 +115,24 @@ else
 	{
 		var folderId = ProjectsViewModel.GetCurrentProjectCharaFolderId();
 		var accessToken = await TokenStorage.GetAccessTokenAsync();
-		if (string.IsNullOrEmpty(folderId) || string.IsNullOrEmpty(accessToken)) {
+		if (string.IsNullOrEmpty(folderId) || string.IsNullOrEmpty(accessToken))
+		{
 			Console.WriteLine("フォルダIDかアクセストークンが取得できていません。");
 			return;
 		}
 		var files = await ProjectsViewModel.GetBoxFileCount(folderId, accessToken);
 		param = new ProgressDialogParameters
+		{
+			Message = $"プロジェクト名：{projectName} ファイル数：{files}個",
+			Value = 0,
+			MaxValue = files,
+			Unit = $" / {files}",
+			OnCancel = new EventCallback(this, () =>
 			{
-				Message = $"プロジェクト名：{projectName} ファイル数：{files}個",
-				Value = 0,
-				MaxValue = files,
-				Unit = $" / {files}",
-				OnCancel = new EventCallback(this, () =>
-				{
 				// ViewModel側でキャンセルを実行
-					ProjectsViewModel.CancelOperation();
-				})
-			};
+				ProjectsViewModel.CancelOperation();
+			})
+		};
 		// ViewModelでキャンセル用トークンの初期化
 		ProjectsViewModel.InitializeCancellationToken();
 
@@ -141,31 +140,32 @@ else
 		ProjectsViewModel.OnProgressUpdated += OnProgressUpdated;
 
 		var dialogTask = DialogService.OpenAsync<ProgressDialog>("データをアップデートします", new Dictionary<string, object>
-		{
-			{"parameters", param}
-		});
+{
+{"parameters", param}
+});
 
-		if(projectId == null || userId == null) {
+		if (projectId == null || userId == null)
+		{
 			Console.WriteLine("projectIdまたはuserIdがnullでした");
 			return;
 		}
 		_ = ProjectsViewModel.CreateOrUpdateCharaData((Guid)projectId, folderId, accessToken, files, (Guid)userId);
-		
+
 		// ダイアログが閉じた後に購読解除
 		await dialogTask.ContinueWith((task) =>
 		{
 			// ダイアログが閉じたら購読解除
 			ProjectsViewModel.OnProgressUpdated -= OnProgressUpdated;
 			NotificationService.Notify(new NotificationMessage
-      {
-        Severity = NotificationSeverity.Success,
-        Summary = "プロジェクトアップデート",
-        Detail = "プロジェクトをアップデートしました。",
-        Duration = 2000
-      }
-    );
+			{
+				Severity = NotificationSeverity.Success,
+				Summary = "プロジェクトアップデート",
+				Detail = "プロジェクトをアップデートしました。",
+				Duration = 2000
+			}
+	);
 		});
-		
+
 	}
 
 	// プログレス更新時の処理
@@ -173,15 +173,15 @@ else
 	{
 		if (param == null) return;
 		// 進行状況更新
-		if (progress >= param.MaxValue) 
+		if (progress >= param.MaxValue)
 		{
 			DialogService.Close();
 			StateHasChanged();
-			return;	
+			return;
 		}
 		param.Value = progress;
 		DialogService.Refresh();
 		StateHasChanged(); // ダイアログの再描画を強制
 	}
-	
+
 }

@@ -15,7 +15,7 @@ public class StorageService
   // 公開バケットにファイルをアップロードするメソッド
   public async Task UploadFileAsync(IBrowserFile selectedFile, string uploadFileName)
   {
-    var supabaseClient = await _supabaseService.GetClientAsync();
+    //var supabaseClient = await _supabaseService.GetClientAsync();
 
     // ストリームを開く (最大サイズを 10MB に設定)
     using var stream = selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
@@ -25,12 +25,12 @@ public class StorageService
     var fileBytes = memoryStream.ToArray();
 
     var filePath = $"Images/{uploadFileName}";
-    var storage = supabaseClient.Storage;
-    var bucket = storage.From("Characom");
+    //var storage = supabaseClient.Storage;
+    //var bucket = storage.From("Characom");
 
     try
     {
-      await bucket.Upload(fileBytes, filePath);
+      //await bucket.Upload(fileBytes, filePath);
       Console.WriteLine("アップロード成功");
     }
     catch (Exception ex)
@@ -42,25 +42,26 @@ public class StorageService
   // SKBitmapでファイルをダウンロードするメソッド
   public async Task<SKBitmap?> DownloadFileAsBitmapAsync(string filePath, string fileName)
   {
-    var supabaseClient = await _supabaseService.GetClientAsync();
-    var fullPath = $"{filePath}{fileName}";
-    var storage = supabaseClient.Storage;
-    var bucket = storage.From("Characom");
+    // var supabaseClient = await _supabaseService.GetClientAsync();
+    // var fullPath = $"{filePath}{fileName}";
+    // var storage = supabaseClient.Storage;
+    // var bucket = storage.From("Characom");
 
-    try
-    {
-      Console.WriteLine($"fullPath =[{fullPath}]");
-      var fileBytes = await bucket.Download(fullPath, null); // ファイルをバイト配列として取得
-      Console.WriteLine("ダウンロード成功: " + fullPath);
+    // try
+    // {
+    //   Console.WriteLine($"fullPath =[{fullPath}]");
+    //   var fileBytes = await bucket.Download(fullPath, null); // ファイルをバイト配列として取得
+    //   Console.WriteLine("ダウンロード成功: " + fullPath);
 
-      // バイト配列からSKBitmapを生成
-      using var stream = new SKMemoryStream(fileBytes);
-      return SKBitmap.Decode(stream);
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"エラー（ここかも）: {ex.Message}");
-      return null; // エラー時は nullを返す
-    }
+    //   // バイト配列からSKBitmapを生成
+    //   using var stream = new SKMemoryStream(fileBytes);
+    //   return SKBitmap.Decode(stream);
+    // }
+    // catch (Exception ex)
+    // {
+    //   Console.WriteLine($"エラー（ここかも）: {ex.Message}");
+    //   return null; // エラー時は nullを返す
+    // }
+    return null;
   }
 }

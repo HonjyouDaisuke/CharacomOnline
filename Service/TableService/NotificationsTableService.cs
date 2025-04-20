@@ -29,10 +29,18 @@ public class NotificationsTableService(Client supabaseClient)
     }
   }
 
-  public async Task<List<Notification>?> FetchNotificationsFromUserIdAsync(Guid userId)
+  public async Task<List<Notification>?> FetchNotificationsFromUserIdAsync(
+    Guid userId,
+    string accessToken,
+    string refreshToken
+  )
   {
     List<Notification>? projectViewData = new();
-
+    if (_supabaseClient.Auth.CurrentSession == null)
+    {
+      Console.WriteLine("CurrentSessionがnullでござる");
+      var session = await _supabaseClient.Auth.SetSession(accessToken, refreshToken);
+    }
     // Supabase から RPC を呼び出す
     var response = await _supabaseClient.Rpc("get_user_notifications", new { p_user_id = userId });
     Console.WriteLine(response.Content);
