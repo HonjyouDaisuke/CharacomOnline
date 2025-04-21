@@ -57,6 +57,7 @@
 		if (projects == null) return;
 		foreach (ProjectViewData p in projects)
 		{
+			Console.WriteLine($"CheckInitialSelect = {p.Id} {p.Name} <--> {projectId}");
 			if (p.Id == projectId) p.IsSelected = true;
 		}
 	}
@@ -71,15 +72,24 @@
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
+		Console.WriteLine("ProjectsSelect after render");
 		if (!firstRender) return;
 		await UsersViewModel.SetUserInfoToAppState();
+		if (AppState.AppStateData.UserId == null)
+		{
+			AppState.AppStateData = await LocalStorage.LoadAppStateAsync();
+		}
 		userId = AppState.AppStateData.UserId;
 		projectId = AppState.AppStateData.ProjectId;
 		isStandard = isStandardUser();
+		Console.WriteLine($"プロジェクトを取得するUser {userId}");
 		if (userId == null) return;
+		Console.WriteLine("プロジェクトを取得しに行く");
 		projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
 		await InvokeAsync(StateHasChanged);
+		Console.WriteLine($"projectIdはNull? {projectId}");
 		if (projectId == null) return;
+		Console.WriteLine("checkへ");
 		CheckInitialSelect(projectId);
 		await InvokeAsync(StateHasChanged);
 
@@ -148,6 +158,9 @@ OnDialogClosed) }
 
 		await InstallCharaDataAsync((Guid)projectId, result.Title, result.CharaFolderId, (Guid)_userId);
 		await ProjectsViewModel.SetCurrentProject((Guid)projectId, result.Title);
+		AppState.AppStateData.ProjectId = projectId;
+		AppState.AppStateData.ProjectName = result.Title;
+		await AppState.SaveAppStateDataToLocalStorage();
 		AppState.CurrentProjectId = projectId;
 		AppState.CurrentProjectName = result.Title;
 		NotificationService.Notify(new NotificationMessage
@@ -253,7 +266,9 @@ OnRenameDialogClosed) },
 		await ProjectsViewModel.SetCurrentProject(clickedProject.Id, clickedProject.Name!);
 		AppState.CurrentProjectId = clickedProject.Id;
 		AppState.CurrentProjectName = clickedProject.Name;
-
+		AppState.AppStateData.ProjectId = clickedProject.Id;
+		AppState.AppStateData.ProjectName = clickedProject.Name;
+		await AppState.SaveAppStateDataToLocalStorage();
 	}
 
 	private async Task InstallCharaDataAsync(Guid projectId, string projectName, string charaFolderId, Guid _userId)

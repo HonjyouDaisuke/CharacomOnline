@@ -4,6 +4,7 @@
 @using CharacomOnline.Enums
 @using CharacomOnline.ViewModel
 @using Blazored.LocalStorage
+@using System.ComponentModel
 
 @inject ILocalStorageService localStorage
 @inject SessionStorageService SessionStorage
@@ -27,7 +28,8 @@
 		<RadzenColumn>
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center"
 				JustifyContent="JustifyContent.Center">
-				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.Subtitle1">@AppState.CurrentProjectName</RadzenText>
+				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.Subtitle1">@AppState.AppStateData.ProjectName
+				</RadzenText>
 			</RadzenStack>
 		</RadzenColumn>
 		<RadzenColumn>
@@ -35,8 +37,9 @@
 				Style="padding-right: 1rem;">
 				<RadzenAppearanceToggle />
 				<RadzenSidebarToggle Click="@ChangePanelExpand" Icon="notifications" />
-				<ProfileMenu UserPicture="@userPictureUrl" UserName="@AppState.UserName" IsDBLogin="@isDBLogin"
-					IsBoxLogin="@isBoxLogin" Logout="Logout" ProjectName="@currentProjectName" />
+				<ProfileMenu UserPicture="@AppState.AppStateData.UserPictureUrl" UserName="@AppState.AppStateData.UserName"
+					IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout"
+					ProjectName="@AppState.AppStateData.ProjectName" />
 			</RadzenStack>
 		</RadzenColumn>
 	</RadzenRow>
@@ -54,6 +57,7 @@
 	[Parameter]
 	public EventCallback<bool> PanelExpandedChanged { get; set; }
 
+	private PropertyChangedEventHandler? appStateHandler;
 	private string? userPictureUrl;
 	private string? userName;
 	private bool isBoxLogin = false;
@@ -64,7 +68,7 @@
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
-
+		Console.WriteLine($"Headerのレンダリング appState={AppState.AppStateData.ToString()}");
 		await UsersViewModel.SetUserInfoToAppState();
 		Console.WriteLine($"userPict = {AppState.UserPictureUrl}");
 		userPictureUrl = AppState.AppStateData.UserPictureUrl;
@@ -121,17 +125,22 @@
 
 	protected override void OnInitialized()
 	{
-		AppState.PropertyChanged += (_, e) =>
+		appStateHandler = (_, e) =>
 		{
 			if (e.PropertyName == nameof(AppState.CurrentProjectName) || e.PropertyName == nameof(AppState.UserName))
 			{
-				StateHasChanged();
+				InvokeAsync(StateHasChanged);
 			}
 		};
+
+		AppState.PropertyChanged += appStateHandler;
 	}
 
 	public void Dispose()
 	{
-		AppState.PropertyChanged -= async (_, e) => await InvokeAsync(StateHasChanged);
+		if (appStateHandler is not null)
+		{
+			AppState.PropertyChanged -= appStateHandler;
+		}
 	}
 }
