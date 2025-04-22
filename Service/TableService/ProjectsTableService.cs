@@ -136,9 +136,40 @@ public class ProjectsTableService(Client supabaseClient)
   {
     List<ProjectViewData>? projectViewData = new List<ProjectViewData>();
 
-    // Supabase から RPC を呼び出す
-    var response = await _supabaseClient.Rpc("get_projects_with_counts", new { user_id = userId });
-    Console.WriteLine(response.Content);
+    if (_supabaseClient == null)
+    {
+      Console.WriteLine("supabaseがnull");
+    }
+    var session = _supabaseClient.Auth.CurrentSession;
+    if (session != null)
+    {
+      Console.WriteLine("✅ Supabaseログイン中");
+      Console.WriteLine($"ユーザーID（auth.uid()）: {session.User.Id}");
+      Console.WriteLine($"accessToken: {session.AccessToken}");
+    }
+    else
+    {
+      Console.WriteLine("❌ Supabaseにログインしていません！");
+    }
+    try
+    {
+      Console.WriteLine("デバッグ開始--------------------------------------");
+      // Supabase から RPC を呼び出す
+      var response2 = await _supabaseClient.Rpc(
+        "get_projects_with_counts",
+        new { user_id = userId.ToString() }
+      );
+      Console.WriteLine($"RPC Response Raw: {response2.Content}");
+      Console.WriteLine("デバッグ修了--------------------------------------");
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"RPC呼び出し中にエラー発生: {ex.Message}");
+    }
+    var response = await _supabaseClient.Rpc(
+      "get_projects_with_counts",
+      new { user_id = userId.ToString() }
+    );
     // レスポンスの Content は string 型なので、JSON としてデシリアライズ
     if (!string.IsNullOrEmpty(response.Content))
     {
@@ -158,12 +189,13 @@ public class ProjectsTableService(Client supabaseClient)
       // エラーハンドリング（必要に応じて）
       Console.WriteLine("Error: No content returned");
     }
+    Console.WriteLine($"projectのロードが完了->{projectViewData.Count} userId -> {userId} ");
 
     if (projectViewData != null)
     {
       foreach (ProjectViewData p in projectViewData)
       {
-        Console.Write($"id: {p.Id} title:{p.Name} desc:{p.Description} users:{p.Users} ");
+        Console.WriteLine($"id: {p.Id} title:{p.Name} desc:{p.Description} users:{p.Users} ");
       }
       Console.Write(projectViewData.ToString());
     }

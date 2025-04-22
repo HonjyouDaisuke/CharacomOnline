@@ -6,7 +6,7 @@
 @using Blazored.LocalStorage
 @using System.ComponentModel
 
-@inject ILocalStorageService localStorage
+@inject LocalStorageService localStorage
 @inject SessionStorageService SessionStorage
 @inject OAuthService OAuthService
 @inject Supabase.Client SupabaseClient
@@ -15,6 +15,7 @@
 @inject UsersViewModel UsersViewModel
 @inject NotificationsTableService NotificationsTableService
 @inject AppState AppState
+@inject LoginService LoginService
 
 <RadzenHeader>
 	<RadzenRow AlignItems="AlignItems.Center" Gap="1">
@@ -24,6 +25,9 @@
 				<RadzenSidebarToggle Click="@ChangeExpand" />
 				<RadzenText Style="padding-top: 10px;" TextStyle="TextStyle.H5">Characom Imapger Pro Online</RadzenText>
 			</RadzenStack>
+		</RadzenColumn>
+		<RadzenColumn>
+			<RadzenButton Click="@DebugPrint">Debug</RadzenButton>
 		</RadzenColumn>
 		<RadzenColumn>
 			<RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center"
@@ -37,9 +41,15 @@
 				Style="padding-right: 1rem;">
 				<RadzenAppearanceToggle />
 				<RadzenSidebarToggle Click="@ChangePanelExpand" Icon="notifications" />
-				<ProfileMenu UserPicture="@AppState.AppStateData.UserPictureUrl" UserName="@AppState.AppStateData.UserName"
-					IsDBLogin="@isDBLogin" IsBoxLogin="@isBoxLogin" Logout="Logout"
-					ProjectName="@AppState.AppStateData.ProjectName" />
+				<ProfileMenu 
+					UserName="@AppState.AppStateData.UserName"
+					UserPict="@AppState.AppStateData.UserPictureUrl"
+					ProjectName="@AppState.AppStateData.ProjectName"
+					UserRole="@AppState.AppStateData.UserRole"
+					IsAppLogin="@AppState.AppStateData.IsAppLogin"
+					IsBoxLogin="@AppState.AppStateData.IsBoxLogin"
+					Logout="Logout" 
+				/>
 			</RadzenStack>
 		</RadzenColumn>
 	</RadzenRow>
@@ -68,23 +78,75 @@
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
-		Console.WriteLine($"Headerのレンダリング appState={AppState.AppStateData.ToString()}");
-		await UsersViewModel.SetUserInfoToAppState();
-		Console.WriteLine($"userPict = {AppState.UserPictureUrl}");
-		userPictureUrl = AppState.AppStateData.UserPictureUrl;
-		if (string.IsNullOrEmpty(userPictureUrl))
+		Console.WriteLine($"[Header]始めますよ。{NavigationManager.Uri.ToString()}");
+		if (NavigationManager.Uri.Contains("/login") || NavigationManager.Uri.Contains("/callback"))
+			return;
+
+		// AppStateがあるかどうかの確認
+		if (string.IsNullOrEmpty(AppState.AppStateData.UserId.ToString()))
 		{
-			userPictureUrl = "/images/no_user_icon.png";
+			// もし存在しなければLocalStorageからGet!
+			var tmpState = await localStorage.LoadAppStateAsync();
+			if (tmpState != null)
+				AppState.AppStateData = tmpState; 
 		}
-		userName = AppState.AppStateData.UserName;
+
+		// AppStateをチェックして、まだないようであれば、loginへ誘導
+		if (string.IsNullOrEmpty(AppState.AppStateData.UserId.ToString()))
+		{
+			NavigationManager.NavigateTo("/login", true);
+			return;
+		}
+
+		// AppStateが存在したら、Supabaseにログインしているかどうかのチェック
+		// ログインしてなければデバッグ文を出してログイン
+		if (LoginService.IsSupabaseLoggedIn())
+		{
+			Console.WriteLine("[Header] Supabaseにログインしていないのでログインしなおします。");
+			if (AppState.AppStateData.SupabaseAccessToken == null || AppState.AppStateData.SupabaseRefreshToken == null ){
+				Console.WriteLine("[Header] AccessTokenまたはRefreshTokenが見つかりませんでした");
+				NavigationManager.NavigateTo("/login", true);
+				return;
+			}
+			var isReLogin = await LoginService.TryRestoreLoginAsync(AppState.AppStateData.SupabaseAccessToken, AppState.AppStateData.SupabaseRefreshToken);
+			if (!isReLogin) {
+				Console.WriteLine("[Header] リフレッシュログインできませんでした");
+				NavigationManager.NavigateTo("/login", true);
+				return;
+			}
+		}
+
+		//ログインできたのでAppStateを表示
+		Console.WriteLine($"[Header] ログインできたと思います AppState={AppState.AppStateData.ToString()}");
+
+
+		Console.WriteLine($"Headerのレンダリング appState={AppState.AppStateData.ToString()}");
+
+		await UsersViewModel.SetUserInfoToAppState();
+		Console.WriteLine($"[Header] userName = {AppState.AppStateData.UserName}");
+		//userPictureUrl = AppState.AppStateData.UserPictureUrl;
+		//if (string.IsNullOrEmpty(userPictureUrl))
+		//{
+		//	userPictureUrl = "/images/no_user_icon.png";
+		//}
+		//userName = AppState.AppStateData.UserName;
 		isBoxLogin = OAuthService.IsLogin();
 		isDBLogin = AppState.AppStateData.IsAppLogin;
-		currentProjectId = AppState.AppStateData.ProjectId;
-		currentProjectName = AppState.AppStateData.ProjectName;
+		//currentProjectId = AppState.AppStateData.ProjectId;
+		//currentProjectName = AppState.AppStateData.ProjectName;
 
 		await InvokeAsync(StateHasChanged);
 	}
 
+	private async Task DebugPrint()
+	{
+		Console.WriteLine($"Debug1 AppState = {AppState.AppStateData.ToString()}");
+		var result = await localStorage.LoadAppStateAsync();
+		Console.WriteLine($"Debug2 AppState = {result.ToString()}");
+		if (LoginService == null) return;
+		var isLogin = LoginService.IsSupabaseLoggedIn();
+		Console.WriteLine($"Supabase Login ? = {isLogin}");
+	}
 	private async Task ChangeExpand()
 	{
 		bool newValue = !SidebarExpanded;
@@ -107,8 +169,8 @@
 				await SupabaseClient.Auth.SignOut();
 
 				// ローカルストレージのトークンを削除
-				await localStorage.RemoveItemAsync("access_token");
-				await localStorage.RemoveItemAsync("refresh_token");
+				//await localStorage.RemoveItemAsync("access_token");
+				//await localStorage.RemoveItemAsync("refresh_token");
 
 				// SessionStorageをクリア
 				await SessionStorage.ClearAsync();

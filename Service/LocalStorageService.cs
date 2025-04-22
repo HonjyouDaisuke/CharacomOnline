@@ -12,6 +12,7 @@ public class LocalStorageService(ProtectedLocalStorage localStorage)
   public async Task SaveAppStateAsync(AppStateData appState)
   {
     await _localStorage.SetAsync(AppStateKey, appState);
+    Console.WriteLine("LocalStorageにAppStateDataを保存しました");
   }
 
   public async Task<AppStateData?> LoadAppStateAsync()

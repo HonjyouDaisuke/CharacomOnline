@@ -12,6 +12,7 @@
 @inject UsersViewModel UsersViewModel
 @inject AppState AppState
 @inject LocalStorageService LocalStorage
+@inject LoginService LoginService
 
 <h3>ProjectsSelect</h3>
 
@@ -85,6 +86,14 @@
 		Console.WriteLine($"プロジェクトを取得するUser {userId}");
 		if (userId == null) return;
 		Console.WriteLine("プロジェクトを取得しに行く");
+		if (!LoginService.IsSupabaseLoggedIn())
+		{
+			var isLogin = await LoginService.TryRestoreLoginAsync(AppState.AppStateData.SupabaseAccessToken, AppState.AppStateData.SupabaseRefreshToken);
+			if (!isLogin) {
+				Console.WriteLine("ログインできませんでした");
+				
+			}
+		}
 		projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
 		await InvokeAsync(StateHasChanged);
 		Console.WriteLine($"projectIdはNull? {projectId}");
