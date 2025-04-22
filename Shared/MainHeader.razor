@@ -17,6 +17,7 @@
 @inject AppState AppState
 @inject LoginService LoginService
 
+@namespace CHaracomOnline.Components
 <RadzenHeader>
 	<RadzenRow AlignItems="AlignItems.Center" Gap="1">
 		<RadzenColumn>
@@ -142,7 +143,7 @@
 	{
 		Console.WriteLine($"Debug1 AppState = {AppState.AppStateData.ToString()}");
 		var result = await localStorage.LoadAppStateAsync();
-		Console.WriteLine($"Debug2 AppState = {result.ToString()}");
+		if (result != null)Console.WriteLine($"Debug2 AppState = {result.ToString()}");
 		if (LoginService == null) return;
 		var isLogin = LoginService.IsSupabaseLoggedIn();
 		Console.WriteLine($"Supabase Login ? = {isLogin}");
