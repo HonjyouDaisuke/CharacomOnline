@@ -85,7 +85,8 @@ else
 		isProjectIdSelected = true;
 		await InvokeAsync(StateHasChanged);
 		if (userId != null) await UserSettingsViewModel.GetUserSettings((Guid)userId);
-
+		await ProjectsViewModel.SetCurrentProject((Guid)projectId, "");
+		
 		projectName = ProjectsViewModel.GetCurrentProjectName();
 		projectDescription = ProjectsViewModel.GetCurrentProjectDescription();
 		createdUserName = await ProjectsViewModel.GetCurrentProjectCreatedBy();

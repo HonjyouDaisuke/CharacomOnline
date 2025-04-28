@@ -95,6 +95,7 @@
 			}
 		}
 		projects = await ProjectsViewModel.FetchProjectsFromUserAsync((Guid)userId);
+		
 		await InvokeAsync(StateHasChanged);
 		Console.WriteLine($"projectIdはNull? {projectId}");
 		if (projectId == null) return;
